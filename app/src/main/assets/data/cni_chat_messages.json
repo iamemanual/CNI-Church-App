@@ -1,0 +1,16 @@
+{
+  "congregation": {
+    "id": "congregation",
+    "name": "CNI Congregation",
+    "avatar": "⛪",
+    "status": "Presbyter, Pastor, Elders, You",
+    "messages": []
+  },
+  "youth": {
+    "id": "youth",
+    "name": "CNI Youth",
+    "avatar": "🕊️",
+    "status": "Youth President, Deacon Joseph, Choir, You",
+    "messages": []
+  }
+}

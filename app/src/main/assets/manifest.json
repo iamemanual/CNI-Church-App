@@ -1,0 +1,22 @@
+{
+  "name": "All Saints' Church Library",
+  "short_name": "All Saints' Church",
+  "version": "v04092026",
+  "description": "All Saints' Church Library Application — Prayer Books, Songs & Timeline of Church",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0a0d14",
+  "theme_color": "#0a0d14",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "assets/app_icon.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "permissions": [
+    "camera"
+  ]
+}

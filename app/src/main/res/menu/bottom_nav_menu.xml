@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_almanac"
+        android:icon="@drawable/ic_almanac"
+        android:title="Almanac" />
+
+    <item
+        android:id="@+id/nav_hymnal"
+        android:icon="@drawable/ic_hymnal"
+        android:title="Hymnal" />
+
+    <item
+        android:id="@+id/nav_chat"
+        android:icon="@drawable/ic_chat"
+        android:title="Fellowship" />
+
+    <item
+        android:id="@+id/nav_library"
+        android:icon="@drawable/ic_library"
+        android:title="Library" />
+
+    <item
+        android:id="@+id/nav_parish"
+        android:icon="@drawable/ic_parish"
+        android:title="Parish" />
+</menu>

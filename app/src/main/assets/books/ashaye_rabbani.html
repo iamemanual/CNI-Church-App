@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+<title>कलाम की बशारत और दुआएं</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --safe-area-top: 44px;
+    --safe-area-bottom: 24px;
+    --num-col-w: 2.2em;
+    --lbl-col-w: 5.4em;
+    --dialogue-indent: calc(var(--num-col-w) + var(--lbl-col-w) + 0.6em);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; background: #fff;
+    touch-action: pan-x pan-y pinch-zoom;
+  }
+  main, article.page {
+    touch-action: pan-x pan-y pinch-zoom;
+  }
+  body {
+    color: #000;
+    font-family: "Noto Sans Devanagari", "Nirmala UI", "Mangal", sans-serif;
+    line-height: 1.75;
+    font-size: 17px;
+  }
+
+  body:not(.in-deck) {
+    overflow: hidden !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    overscroll-behavior: none !important;
+  }
+  body:not(.in-deck) main {
+    display: none !important;
+  }
+
+  /* cover */
+  #cover {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    text-align: center;
+    box-sizing: border-box;
+  }
+  #cover h1 { font-size: 1.7rem; font-weight: 700; margin: 0 0 32px; }
+  #cover p { margin: 0 0 32px; font-size: 0.95rem; }
+  #cover button {
+    font: inherit; font-size: 1.1rem; font-weight: 700;
+    color: #000; background: #fff;
+    border: 2px solid #000; padding: 18px 28px; cursor: pointer;
+  }
+  #cover button:hover, #cover button:focus { background: #000; color: #fff; outline: none; }
+  body.in-deck #cover { display: none !important; }
+
+  /* floating slide chrome */
+  #deckbar, #decknav { display: none; }
+  body.in-deck #deckbar {
+    display: flex; justify-content: space-between; align-items: center;
+    position: fixed; top: calc(max(env(safe-area-inset-top, 0px), var(--safe-area-top, 44px)) + 12px); left: 16px; right: 16px; z-index: 20;
+    background: transparent; border: none; padding: 0; font-size: 0.9rem;
+    pointer-events: none;
+  }
+  body.in-deck #deckbar > * { pointer-events: auto; }
+  body.in-deck #decknav {
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    position: fixed; bottom: calc(max(env(safe-area-inset-bottom, 0px), var(--safe-area-bottom, 24px)) + 16px); left: 16px; right: 16px; z-index: 20;
+    background: transparent; border: none; padding: 0;
+    pointer-events: none;
+  }
+  body.in-deck #decknav > * { pointer-events: auto; }
+
+  #deckbar, #decknav {
+    transition: opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1), transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  body.hide-controls #deckbar {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-22px);
+  }
+  body.hide-controls #decknav {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(22px);
+  }
+
+  #deckbar button, #decknav button {
+    font: inherit; font-weight: 600; color: #000;
+    background: rgba(255, 255, 255, 0.94);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    border: 1.5px solid #000; padding: 9px 18px; cursor: pointer; min-width: 0;
+    border-radius: 999px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  }
+  #deckbar button:hover, #decknav button:hover:not(:disabled) { background: #000; color: #fff; }
+  #decknav button:disabled { opacity: 0.35; cursor: default; box-shadow: none; }
+  #close, #menu {
+    width: 38px;
+    height: 38px;
+    padding: 0 !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1;
+    border-radius: 50% !important;
+  }
+  #count {
+    font-weight: 600; letter-spacing: 0.05em;
+    background: rgba(255, 255, 255, 0.94);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    border: 1.5px solid #000;
+    border-radius: 999px;
+    padding: 7px 15px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  }
+
+  /* Full screen slide deck mode with natural scrolling to prevent text cutoff */
+  body.in-deck {
+    height: 100vh;
+    height: 100dvh;
+    position: fixed;
+    width: 100%;
+    inset: 0;
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+    line-height: 1.6;
+  }
+  body.in-deck main {
+    position: fixed;
+    top: calc(max(env(safe-area-inset-top, 0px), var(--safe-area-top, 44px)) + 64px);
+    bottom: calc(max(env(safe-area-inset-bottom, 0px), var(--safe-area-bottom, 24px)) + 68px);
+    left: 0;
+    right: 0;
+    max-width: 680px;
+    margin: 0 auto;
+    overflow: hidden !important;
+    overflow-y: hidden !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: none !important;
+    padding: 8px 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    box-sizing: border-box;
+    z-index: 10;
+  }
+  body.in-deck main::-webkit-scrollbar {
+    display: none;
+  }
+  body.in-deck article.page {
+    display: none;
+    margin: 0 auto;
+    border: none;
+    padding: 0;
+    width: 100%;
+    max-width: 680px;
+    box-sizing: border-box;
+    min-height: min-content;
+  }
+  body.in-deck article.page.active {
+    display: block;
+    animation: slideIn 0.3s ease;
+  }
+  body.in-deck article.page.active .pnum { display: none; }
+
+  /* Compact deck mode typography */
+  body.in-deck .group { margin: 6px 0 8px; }
+  body.in-deck .line { margin: 0 0 4px; line-height: 1.55; }
+  body.in-deck .block { margin: 6px 0 8px; line-height: 1.55; }
+  body.in-deck h3.sec { margin: 10px 0 6px; padding-bottom: 2px; font-size: 1.05rem; }
+  body.in-deck .poem { margin: 6px 0 8px; line-height: 1.55; }
+  body.in-deck .instr { margin: 4px 0 6px; line-height: 1.4; font-size: 0.9em; }
+  body.in-deck .note { margin-top: 8px; padding-top: 6px; line-height: 1.4; }
+  body.in-deck .pnum { margin: 0 0 6px; padding-bottom: 4px; }
+
+  @keyframes slideIn { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+
+  .pnum {
+    display: block; font-size: 0.8rem; text-align: right;
+    margin: 0 0 10px; padding-bottom: 6px; border-bottom: 1px solid #000;
+  }
+  h3.sec {
+    font-size: 1.05rem; font-weight: 700; margin: 20px 0 8px;
+    padding-bottom: 4px; border-bottom: 1px solid #000; text-align: center;
+  }
+  h3.sec:first-of-type { margin-top: 0; }
+  .num { font-weight: 700; }
+  .block {
+    position: relative;
+    margin: 10px 0 12px;
+    padding-left: var(--num-col-w);
+  }
+  .block > .num {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: var(--num-col-w);
+  }
+  .instr { font-style: italic; margin: 8px 0 12px; padding-left: var(--num-col-w); }
+  .silence { font-style: italic; margin: 10px 0; padding-left: var(--num-col-w); }
+  .or { font-style: italic; margin: 14px 0 6px; padding-left: var(--num-col-w); }
+  .group { margin: 10px 0 14px; }
+  .line {
+    position: relative;
+    margin: 0 0 8px;
+    padding-left: var(--dialogue-indent) !important;
+    min-height: 1.75em;
+    line-height: 1.75;
+    word-break: break-word;
+  }
+  .line > .num {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: var(--num-col-w);
+    font-weight: 700;
+    text-align: left;
+  }
+  .line > .lbl {
+    position: absolute;
+    left: var(--num-col-w);
+    top: 0;
+    width: var(--lbl-col-w);
+    font-weight: 700;
+    text-align: left;
+    white-space: nowrap;
+  }
+  .line > .lbl:first-child {
+    left: 0;
+    width: calc(var(--num-col-w) + var(--lbl-col-w));
+  }
+  .resp { font-weight: 700; }
+  p.resp {
+    margin: 0 0 8px;
+    padding-left: var(--dialogue-indent);
+    line-height: 1.75;
+    word-break: break-word;
+  }
+  .poem { margin: 10px 0 14px; padding-left: var(--num-col-w); }
+  .poem p { margin: 0 0 8px; }
+  .note {
+    font-size: 0.85rem; margin-top: 18px; padding-top: 10px;
+    border-top: 1px solid #000; line-height: 1.6;
+  }
+  .rule { border: 0; border-top: 1px solid #000; margin: 18px 0; }
+
+  @media (max-width: 480px) {
+    body { font-size: 16px; }
+    :root {
+      --num-col-w: 2.0em;
+      --lbl-col-w: 5.0em;
+      --dialogue-indent: calc(var(--num-col-w) + var(--lbl-col-w) + 0.5em);
+    }
+    body.in-deck main {
+      top: calc(max(env(safe-area-inset-top, 0px), var(--safe-area-top, 44px)) + 58px);
+      bottom: calc(max(env(safe-area-inset-bottom, 0px), var(--safe-area-bottom, 24px)) + 62px);
+      padding: 6px 14px;
+      overflow: hidden !important;
+      overflow-y: hidden !important;
+      overflow-x: hidden !important;
+    }
+    #deckbar button, #decknav button {
+      padding: 7px 14px;
+      font-size: 0.85rem;
+    }
+    #close, #menu {
+      width: 34px;
+      height: 34px;
+      font-size: 1rem;
+    }
+    #count {
+      padding: 6px 12px;
+      font-size: 0.8rem;
+    }
+    #cover .cover-close-btn,
+    #cover button.cover-close-btn,
+    .cover-close-btn {
+      top: calc(max(env(safe-area-inset-top, 0px), var(--safe-area-top, 44px)) + 12px) !important;
+      right: 14px !important;
+      width: 34px !important;
+      height: 34px !important;
+      min-width: 34px !important;
+      min-height: 34px !important;
+      max-width: 34px !important;
+      max-height: 34px !important;
+      font-size: 1rem !important;
+      padding: 0 !important;
+    }
+    article.page { padding: 16px 16px 18px; }
+  }
+
+  @media print {
+    #cover, #deckbar, #decknav { display: none !important; }
+    article.page { display: block !important; animation: none; break-inside: avoid; }
+  }
+  /* ===== iOS-style polish ===== */
+  button {
+    -webkit-appearance: none;
+    appearance: none;
+    -webkit-tap-highlight-color: transparent;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Noto Sans Devanagari", sans-serif;
+    transition: transform 0.15s ease, background-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+  }
+  button:active:not(:disabled) { transform: scale(0.96); }
+  #cover button {
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  }
+  #cover .cover-close-btn,
+  #cover button.cover-close-btn,
+  .cover-close-btn {
+    position: fixed !important;
+    top: calc(max(env(safe-area-inset-top, 0px), var(--safe-area-top, 44px)) + 16px) !important;
+    right: 16px !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    max-width: 38px !important;
+    max-height: 38px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 50% !important;
+    border: 1.5px solid #000 !important;
+    background: rgba(255, 255, 255, 0.94) !important;
+    color: #000 !important;
+    font-size: 1.15rem !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    z-index: 30 !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15) !important;
+    box-sizing: border-box !important;
+    aspect-ratio: 1 / 1 !important;
+  }
+  #cover .cover-close-btn:hover,
+  #cover button.cover-close-btn:hover {
+    background: #000 !important;
+    color: #fff !important;
+  }
+  body.in-deck .cover-close-btn { display: none !important; }
+  article.page { border-radius: 16px; }
+
+  .decknav-right {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    pointer-events: auto;
+  }
+  #themeToggle {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    max-width: 38px !important;
+    max-height: 38px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+    aspect-ratio: 1 / 1 !important;
+    box-sizing: border-box !important;
+  }
+  #themeToggle .icon-sun { display: none; }
+  #themeToggle .icon-moon { display: block; }
+  @media (max-width: 480px) {
+    #themeToggle {
+      width: 34px !important;
+      height: 34px !important;
+      min-width: 34px !important;
+      min-height: 34px !important;
+      max-width: 34px !important;
+      max-height: 34px !important;
+    }
+    #themeToggle svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  /* ===== AMOLED Invert Theme ===== */
+  html[data-theme="amoled"],
+  body.amoled-mode {
+    background: #000000 !important;
+    color: #ffffff !important;
+  }
+  html[data-theme="amoled"] body,
+  body.amoled-mode {
+    background: #000000 !important;
+  }
+  html[data-theme="amoled"] #cover,
+  body.amoled-mode #cover {
+    background: #000000 !important;
+    color: #ffffff !important;
+  }
+  html[data-theme="amoled"] #cover h1,
+  html[data-theme="amoled"] #cover p,
+  body.amoled-mode #cover h1,
+  body.amoled-mode #cover p {
+    color: #ffffff !important;
+  }
+  html[data-theme="amoled"] #cover button:not(.cover-close-btn),
+  body.amoled-mode #cover button:not(.cover-close-btn) {
+    background: #111111 !important;
+    color: #ffffff !important;
+    border-color: #ffffff !important;
+  }
+  html[data-theme="amoled"] #cover button:not(.cover-close-btn):hover,
+  body.amoled-mode #cover button:not(.cover-close-btn):hover {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  html[data-theme="amoled"] #deckbar button,
+  html[data-theme="amoled"] #decknav button,
+  html[data-theme="amoled"] #count,
+  html[data-theme="amoled"] .cover-close-btn,
+  body.amoled-mode #deckbar button,
+  body.amoled-mode #decknav button,
+  body.amoled-mode #count,
+  body.amoled-mode .cover-close-btn {
+    background: rgba(22, 22, 24, 0.95) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.75) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.8) !important;
+  }
+  html[data-theme="amoled"] #deckbar button:hover:not(:disabled),
+  html[data-theme="amoled"] #decknav button:hover:not(:disabled),
+  html[data-theme="amoled"] .cover-close-btn:hover,
+  body.amoled-mode #deckbar button:hover:not(:disabled),
+  body.amoled-mode #decknav button:hover:not(:disabled),
+  body.amoled-mode .cover-close-btn:hover {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  html[data-theme="amoled"] #decknav button:disabled,
+  body.amoled-mode #decknav button:disabled {
+    opacity: 0.3 !important;
+    background: rgba(22, 22, 24, 0.5) !important;
+    color: rgba(255, 255, 255, 0.3) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+  }
+  html[data-theme="amoled"] #themeToggle .icon-sun,
+  body.amoled-mode #themeToggle .icon-sun {
+    display: block !important;
+  }
+  html[data-theme="amoled"] #themeToggle .icon-moon,
+  body.amoled-mode #themeToggle .icon-moon {
+    display: none !important;
+  }
+  html[data-theme="amoled"] article.page,
+  html[data-theme="amoled"] h3.sec,
+  html[data-theme="amoled"] .line,
+  html[data-theme="amoled"] .block,
+  html[data-theme="amoled"] .poem,
+  html[data-theme="amoled"] .resp,
+  html[data-theme="amoled"] .num,
+  html[data-theme="amoled"] .lbl,
+  body.amoled-mode article.page,
+  body.amoled-mode h3.sec,
+  body.amoled-mode .line,
+  body.amoled-mode .block,
+  body.amoled-mode .poem,
+  body.amoled-mode .resp,
+  body.amoled-mode .num,
+  body.amoled-mode .lbl {
+    color: #ffffff !important;
+  }
+  html[data-theme="amoled"] .instr,
+  html[data-theme="amoled"] .note,
+  html[data-theme="amoled"] .pnum,
+  html[data-theme="amoled"] .silence,
+  html[data-theme="amoled"] .or,
+  body.amoled-mode .instr,
+  body.amoled-mode .note,
+  body.amoled-mode .pnum,
+  body.amoled-mode .silence,
+  body.amoled-mode .or {
+    color: #9ca3af !important;
+  }
+  html[data-theme="amoled"] h3.sec,
+  html[data-theme="amoled"] .pnum,
+  html[data-theme="amoled"] .note,
+  html[data-theme="amoled"] .rule,
+  html[data-theme="amoled"] article.page,
+  body.amoled-mode h3.sec,
+  body.amoled-mode .pnum,
+  body.amoled-mode .note,
+  body.amoled-mode .rule,
+  body.amoled-mode article.page {
+    border-color: rgba(255, 255, 255, 0.25) !important;
+  }
+</style>
+</head>
+<body>
+
+<div id="cover">
+  <button type="button" class="cover-close-btn" aria-label="बंद करें" title="बंद करें" onclick="if(window.parent&&window.parent!==window){window.parent.postMessage({type:'CLOSE_BOOK'},'*');if(typeof window.parent.closePdfBook==='function')window.parent.closePdfBook();}else{window.history.back();}">✕</button>
+  <h1>कलाम की बशारत और दुआएं</h1>
+  <p>पृष्ठ ४ से २७ तक का डिजिटल रूप · स्वाइप करके आगे-पीछे जाएं</p>
+  <button type="button" id="start">शुरू करें</button>
+</div>
+
+<div id="deckbar">
+  <span id="count"></span>
+  <button type="button" id="close" aria-label="बंद करें" title="बंद करें">✕</button>
+</div>
+
+<div id="decknav">
+  <button type="button" id="prev">‹ पिछला</button>
+  <div class="decknav-right">
+    <button type="button" id="themeToggle" aria-label="AMOLED Invert Switch" title="AMOLED डार्क/लाइट मोड">
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+    </button>
+    <button type="button" id="next">अगला ›</button>
+  </div>
+</div>
+
+<main>
+
+<!-- Page 4 -->
+<article class="page" data-page="४">
+  <span class="pnum">४</span>
+  <h3 class="sec">कलाम की बशारत और दुआएं</h3>
+  <h3 class="sec">तैयारी</h3>
+  <p class="block"><span class="num">१</span> इबादत के शुरू में ख़ादिम हिस्से ४७ में दी गयी आयात में से एक पढ़ कर इबादत की दावत दे सकता है।</p>
+  <p class="block"><span class="num">२</span> इस दावत से पहिले या बाद में गीत, कैंटिकल या ज़बूर पढ़ा या गाया जा सकता है।</p>
+  <p class="block"><span class="num">३</span> ख़ादिम इन अल्फ़ाज़ से जमाअत का स्वागत करे :</p>
+  <div class="poem"><p>हमारे ख़ुदावन्द यीसू मसीह का फ़ज़्ल, ख़ुदा की महब्बत और रूहुल-क़ुद्दूस की शिराकत आप सब के साथ होती रहे।<br>(२ कुरि. १३:१४)</p></div>
+  <div class="group">
+    <p class="line"><span class="lbl">जमाअत</span> और आप के साथ भी।</p>
+  </div>
+  <p class="or">या</p>
+  <div class="group">
+    <p class="line"><span class="lbl">ख़ादिम</span> ख़ुदावन्द आप के साथ हो;</p>
+    <p class="line"><span class="lbl">जमाअत</span> और आप के साथ भी।</p>
+  </div>
+  <p class="block"><span class="num">४</span> ख़ादिम और जमाअत सब मिल कर कहें</p>
+  <div class="poem"><p class="resp">ऐ तमाम क़ुदरत के ख़ुदा,<br>तेरे आगे सब के दिल का हाल खुला है,<br>तुझे सब की मुरादें मालूम हैं,<br>और तुझ से कोई भेद छिपा नहीं;<br>अपने पाक रूह के असर से<br>हमारे दिल के ख़यालों को पाक कर,<br>ताकि हम तुझ से कामिल महब्बत रखें<br>और लायक़ तौर पर तेरे पाक नाम की बड़ाई करें,<br>हमारे ख़ुदावन्द मसीह के वसीले से। आमीन।</p></div>
+</article>
+
+<!-- Page 5 -->
+<article class="page" data-page="५">
+  <span class="pnum">५</span>
+  <p class="block"><span class="num">५</span> सब मिलकर गाएं या कहें :</p>
+  <div class="poem"><p class="resp">आल्मे-बाला पर ख़ुदा का जलाल<br>और ज़मीन पर उसके लोगों में सुलह।</p></div>
+  <div class="poem"><p>ख़ुदावन्द ख़ुदा, आसमानी बादशाह,<br>तमाम क़ुदरत के ख़ुदा बाप,<br>हम तेरी परस्तिश करते, तेरा शुक्र करते<br>और तेरे जलाल के लिये तेरी हम्द करते हैं।</p></div>
+  <div class="poem"><p>ऐ ख़ुदावन्द यीसू मसीह, बाप के एकलौते बेटे,<br>ऐ ख़ुदावन्द ख़ुदा, ख़ुदा के बर्रे,<br>तू जहान का गुनाह उठा ले जाता है,<br>हम पर रहम कर;<br>तू बाप के दहिने बैठा है,<br>हमारी दुआ क़बूल कर।</p></div>
+  <div class="poem"><p>क्योंकि, ऐ यीसू मसीह, तू ही क़ुद्दूस है,<br>तू ही ख़ुदावन्द है,<br>तू ही पाक रूह के साथ,<br>ख़ुदा बाप के जलाल में आला है। आमीन।</p></div>
+  <p class="block">या किरिये :</p>
+  <div class="group">
+    <p class="line"><span class="lbl">ख़ादिम</span> ख़ुदावन्द रहम कर।</p>
+    <p class="line"><span class="lbl">जमाअत</span> <span class="resp">ख़ुदावन्द रहम कर।</span></p>
+    <p class="line"><span class="lbl">ख़ादिम</span> मसीह रहम कर।</p>
+    <p class="line"><span class="lbl">जमाअत</span> <span class="resp">मसीह रहम कर।</span></p>
+    <p class="line"><span class="lbl">ख़ादिम</span> ख़ुदावन्द रहम कर।</p>
+    <p class="line"><span class="lbl">जमाअत</span> <span class="resp">ख़ुदावन्द रहम कर।</span></p>
+  </div>
+</article>
+
+<!-- Page 6 -->
+<article class="page" data-page="६">
+  <span class="pnum">६</span>
+  <p class="instr">या पुराना पूर्वी कलीसिया का गीत तीन बार बोला या गाया जाए :</p>
+  <div class="group">
+    <p class="line"><span class="lbl">ख़ादिम</span> ऐ क़ुद्दूस ख़ुदा,</p>
+    <p class="line"><span class="lbl">जमाअत</span> <span class="resp">क़ुद्दूस और क़ादिर,<br>क़ुद्दूस और ग़ैरफ़ानी,<br>हम पर रहम कर।</span></p>
+  </div>
+  <p class="block"><span class="num">६</span> ख़ादिम अपने लफ़्ज़ों में मुख़्तसर दुआ करे।</p>
+  <p class="block"><span class="num">७</span> तब अगर चाहे ख़ादिम उस दिन की ख़ास दुआ पढ़े।</p>
+  <h3 class="sec">कलाम की बशारत</h3>
+  <p class="block"><span class="num">८</span> अब पुराने अहदनामे में से विर्द पढ़ा जा सकता है। विर्द के ख़ातिमा पर पढ़नेवाला कह सकता है :</p>
+  <p class="instr" style="margin-left:2em">यह ख़ुदावन्द का कलाम है।</p>
+  <p class="line"><span class="lbl">जमाअत</span> <span class="resp">ख़ुदा का शुक्र हो।</span></p>
+  <p class="silence">कलाम के इस हिस्से पर ध्यान के लिये ख़ामोशी का वक़फ़ा।</p>
+  <p class="block"><span class="num">९</span> एक ज़बूर पढ़ा जा सकता है।</p>
+  <p class="block"><span class="num">१०</span> अब ख़त पढ़ा जाए। ख़त के ख़ातिमा पर पढ़नेवाला कह सकता है :</p>
+  <p class="instr" style="margin-left:2em">यह ख़ुदावन्द का कलाम है।</p>
+  <p class="line"><span class="lbl">जमाअत</span> <span class="resp">ख़ुदा का शुक्र हो।</span></p>
+  <p class="silence">कलाम के इस हिस्से पर ध्यान के लिये ख़ामोशी का वक़फ़ा।</p>
+  <p class="block"><span class="num">११</span> यहां कैंटिकल, गीत या ज़बूर गाया या पढ़ा जा सकता है।</p>
+  <p class="block"><span class="num">१२</span> अब इन्जील पढ़ी जाए। इन्जील के पढ़े जाने से पहले यूं कहा जा सकता है :</p>
+  <p class="line"><span class="lbl">जमाअत</span> <span class="resp">ऐ यीसू मसीह, तेरा जलाल हो।</span></p>
+</article>
+
+<!-- Page 7 -->
+<article class="page" data-page="७">
+  <span class="pnum">७</span>
+  <p class="block">इन्जील के ख़ातिमा पर पढ़नेवाला कह सकता है :</p>
+  <p class="instr" style="margin-left:2em">यह मसीह की इन्जील है।</p>
+  <p class="line"><span class="lbl">जमाअत</span> <span class="resp">ऐ ख़ुदावन्द यीसू, तेरी तारीफ़ हो।</span></p>
+  <p class="silence">कलाम के इस हिस्से पर ध्यान के लिए ख़ामोशी का वक़फ़ा।</p>
+  <p class="block"><span class="num">१३</span> वाज़। यह मुख़्तसर मुनासिब दुआ के साथ शुरू किया जाए।</p>
+  <p class="block"><span class="num">१४</span> निकाया का अक़ीदा पढ़ा या गाया जाए। यह कम अज़ कम हर इतवार और बड़े तेवहारों पर ज़रूर इस्तेमाल हो।</p>
+  <div class="poem"><p>हम एक ख़ुदा क़ादिरे-मुतलक़ बाप पर ईमान रखते हैं;<br>वह आसमान और ज़मीन<br>और सब देखी और अनदेखी चीज़ों का ख़ालिक है।</p></div>
+  <div class="poem"><p>हम एक ख़ुदावन्द यीसू मसीह पर ईमान रखते हैं<br>जो ख़ुदा का एकलौता बेटा है।<br>वह अज़ल से बाप से मौलूद,<br>ख़ुदा से ख़ुदा, नूर से नूर,<br>हक़ीक़ी ख़ुदा से हक़ीक़ी ख़ुदा,<br>मसनू नहीं बल्कि मौलूद है।<br>उसका और बाप का एक ही जौहर है।<br>उसके वसीले से कुल चीज़ें बनीं।<br>वह हम इन्सानों के लिए और हमारी नजात के वास्ते<br>आसमान पर से उतर आया,<br>रूहुल-क़ुद्दूस की क़ुदरत से<br>कुंआरी मरियम से मुजस्सम हुआ और इन्सान बना।<br>पुन्तियुस पीलातुस के अहद में हमारे लिए मसलूब हुआ;<br>उसने दुख उठाया, मर गया और दफ़्न हुआ।<br>तीसरे दिन पाक नविश्तों के बमूजिब जी उठा,</p></div>
+</article>
+
+<!-- Page 8 -->
+<article class="page" data-page="८">
+  <span class="pnum">८</span>
+  <div class="poem"><p>आसमान पर चढ़ गया,<br>और बाप के दहिने बैठा है।<br>वह जलाल के साथ ज़िन्दों और मुर्दों की अदालत के लिए<br>फिर आएगा,<br>और उसकी सलतनत कभी ख़त्म न होगी।</p></div>
+  <div class="poem"><p>हम रूहुल-क़ुद्दूस पर ईमान रखते हैं,<br>जो ख़ुदावन्द है और ज़िन्दगी बख़्शनेवाला है।<br>वह बाप और बेटे से सादिर है।<br>उसकी बाप और बेटे के साथ परस्तिशो-ताज़ीम होती है।<br>वह नबियों की ज़बानी बोला।</p></div>
+  <div class="poem"><p>हम एक पाक कैथुलिक और रसूली कलीसिया पर ईमान रखते हैं।<br>हम एक बपतिस्मे का जो गुनाहों की मुआफ़ी के लिए है<br>इक़रार करते हैं;<br>और मुर्दों की क़ियामत और आयन्दा जहान की हयात का<br>इन्तिज़ार करते हैं। आमीन।</p></div>
+  <p class="instr">या निकाया के अक़ीदे की जगह रसूलों का अक़ीदा इस्तेमाल किया जा सकता है।</p>
+  <div class="poem"><p>मैं ख़ुदा क़ादिरे-मुतलक़ बाप पर ईमान रखता हूँ<br>जो आसमान और ज़मीन का ख़ालिक़ है।</p></div>
+  <div class="poem"><p>मैं यीसू मसीह पर ईमान रखता हूँ,<br>जो ख़ुदा का एकलौता बेटा और हमारा ख़ुदावन्द है।<br>वह रूहुल-क़ुद्दूस की क़ुदरत से पेट में पड़ा,<br>कुंवारी मरियम से पैदा हुआ,<br>पुन्तियुस पीलातुस के अहद में दुख उठाया,<br>मसलूब गया, मर गया और दफ़्न हुआ,</p></div>
+</article>
+
+<!-- Page 9 -->
+<article class="page" data-page="९">
+  <span class="pnum">९</span>
+  <div class="poem"><p>आल्मे-अरवाह में उतर गया;<br>तीसरे दिन जी उठा,<br>आसमान पर चढ़ गया<br>और बाप के दहिने बैठा है।<br>वह ज़िन्दों और मुर्दों की अदालत के लिए फिर आएगा।</p></div>
+  <div class="poem"><p>मैं रूहुल-क़ुद्दूस पर,<br>पाक कैथुलिक कलीसिया पर,<br>मुक़द्दसों की शिराकत,<br>गुनाहों की मुआफ़ी,<br>बदन की क़ियामत<br>और अबदी ज़िन्दगी पर ईमान रखता हूं। आमीन।</p></div>
+  <p class="instr">या कोई मुनासिब कैंटिकल, गीत या भजन या नग़मा जो कलीसियाई ईमान की तसदीक़ करता हो, गाया जा सकता है।</p>
+  <p class="block"><span class="num">१५</span> यहां या किसी और मुनासिब मौक़े पर मुख़्तसर इश्तिहार दिये जा सकते हैं।</p>
+  <h3 class="sec">सिफ़ारशी दुआएँ</h3>
+  <p class="block"><span class="num">१६</span> नीचे दी हुई दो तरतीबो में से कोई एक इस्तेमाल की जाये (नोट ७, सफ़ा ४५)।</p>
+  <p class="silence" style="text-align:center">(क)</p>
+  <p class="instr">इन सिफ़ारिशी दुआओं के साथ मक़ामी ज़रूरतों का ध्यान रखते हुए दूसरे मज़ामीन भी मौज़ूं जगह पर पेश किये जा सकते हैं।</p>
+  <div class="group">
+    <p class="line"><span class="lbl">ख़ादिम</span> आइए, हम सब इन्सानों के लिए दुआ करें और अपनी दुआओं को ख़ुदावन्द यीसू मसीह की दाइमी सिफ़ारिश के साथ पेश करें।</p>
+  </div>
+</article>
+
+<!-- Page 10 -->
+<article class="page" data-page="१०">
+  <span class="pnum">१०</span>
+  <div class="group">
+    <p class="line"><span class="lbl">ख़ादिम</span> ऐ आसमानी बाप, हम तुझ से दुआ करते हैं कि सारे जहान में इन्साफ़ और सुल्ह क़ायम हो और हर इन्सान बहुतायत से ज़िन्दगी पाए।</p>
+    <p class="line"><span class="lbl">ख़ादिम</span> ऐ रहीम ख़ुदावन्द,</p>
+    <p class="line"><span class="lbl">जमाअत</span> <span class="resp">हमारी दुआ सुन।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">ख़ादिम</span> उन सब के लिए जो इस गांव/शहर में बसते हैं; और उन तमाम बातों को दूर करने के लिए भी, जो एक दूसरे में फूट और झगड़े पैदा करती हैं, ताकि हमारे मुल्क में सच्ची एकता और मेल मिलाप की तरक़्क़ी हो;</p>
+    <p class="line"><span class="lbl">ख़ादिम</span> ऐ रहीम ख़ुदावन्द,</p>
+    <p class="line"><span class="lbl">जमाअत</span> <span class="resp">हमारी दुआ सुन।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">ख़ादिम</span> उन सब के लिए जो खेती बाड़ी, उद्योग धन्धे या व्यापार में लगे हुए हैं, सब मज़दूरों और कारीगरों के लिए और उन सारे लोगों के लिए भी जो हमारी ज़रूरतों को पूरा करते हैं,</p>
+    <p class="line"><span class="lbl">ख़ादिम</span> ऐ रहीम ख़ुदावन्द</p>
+    <p class="line"><span class="lbl">जमाअत</span> <span class="resp">हमारी दुआ सुन।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">ख़ादिम</span> तमाम उस्तादों, पढ़ने वालों, गाइन्सदानों, लेखकों, हुनरमंदों और उन सबके लिए भी जो दूसरे लोगों के दिलो-दिमाग़ पर असर डालते हैं;</p>
+    <p class="line"><span class="lbl">ख़ादिम</span> ऐ रहीम ख़ुदावन्द,</p>
+    <p class="line"><span class="lbl">जमाअत</span> <span class="resp">हमारी दुआ सुन।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">ख़ादिम</span> उन सब के लिए जो दुख या तकलीफ़ उठा रहे हैं, बेरोज़गार हैं, ग़रीब और भूखे हैं, मोहताज या कुचले हुए हैं, जो बीमार या मरने के क़रीब हैं, और उन सबके लिए भी जो उनकी मदद करते हैं;</p>
+    <p class="line"><span class="lbl">ख़ादिम</span> ऐ रहीम ख़ुदावन्द,</p>
+    <p class="line"><span class="lbl">जमाअत</span> <span class="resp">हमारी दुआ सुन।</span></p>
+  </div>
+</article>
+
+<!-- Page 11 -->
+<article class="page" data-page="११">
+  <span class="pnum">११</span>
+  <div class="group">
+    <p class="line"><span class="lbl">ख़ादिम</span> उन सब के लिए जिन्हें इस मुल्क और दूसरे मुल्कों में इख़्तियार दिया गया है, ख़ास कर हमारे राष्ट्रपति, प्रधानमन्त्री, इस सूबह के गवर्नर और मुख्यमंत्री और उन सब के लिए भी जो किसी भी तरह का इख़्तियार रखते हैं;</p>
+    <p class="line"><span class="lbl">ख़ादिम</span> ऐ रहीम ख़ुदावन्द,</p>
+    <p class="line"><span class="lbl">जमाअत</span> <span class="resp">हमारी दुआ सुन।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">ख़ादिम</span> सब मसीही लोगों की एकता और मेल मिलाप के लिए और दुनिया में उनके मुनासिब तौर से गवाही देने और ख़िदमत करने के लिए;</p>
+    <p class="line"><span class="lbl">ख़ादिम</span> ऐ रहीम ख़ुदावन्द,</p>
+    <p class="line"><span class="lbl">जमाअत</span> <span class="resp">हमारी दुआ सुन।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">ख़ादिम</span> इस मुल्क में तेरी तमाम कलीसिया के लिए, उसकी कौंसिलों और रहनुमाओं के लिए, ख़ास कर हमारे मॉडरेटर ..., दक्षिण भारत की कलीसिया के मॉडरेटर ... और मारथोमा कलीसिया के मैट्रोपोलिटन ..., हमारे बिशप ... और तेरी कलीसिया के तमाम दोगर ख़ादिमों के लिए, कि वह अपनी ख़िदमत को वफ़ादारी से बजा लाएं;</p>
+    <p class="line"><span class="lbl">ख़ादिम</span> ऐ रहीम ख़ुदावन्द,</p>
+    <p class="line"><span class="lbl">जमाअत</span> <span class="resp">हमारी दुआ सुन।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">ख़ादिम</span> यह बख़्श कि तेरे उन तमाम लोगों के साथ जिन्होंने वफ़ादारी से इस दुनिया में तेरी ख़िदमत की है, हम भी तेरी बादशाही की अबदी ख़ुशी में शरीक हों।</p>
+    <p class="line"><span class="lbl">ख़ादिम</span> ऐ रहीम ख़ुदावन्द,</p>
+    <p class="line"><span class="lbl">जमाअत</span> <span class="resp">हमारी दुआ सुन।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">सब</span> <span class="resp">ऐ आसमानी बाप, अपनी बादशाही जल्द ला,<br>और हमारी इन दुआओं को क़बूल फ़रमा,<br>जो हम तेरे बेटे अपने ख़ुदावन्द और मुनजी यीसू मसीह के नाम के वसीले से पेश करते हैं। आमीन।</span></p>
+  </div>
+</article>
+
+<!-- Page 12 -->
+<article class="page" data-page="१२">
+  <span class="pnum">१२</span>
+  <p class="silence" style="text-align:center">(ख)</p>
+  <p class="instr">या ऊपर की सिफ़ारशी दुआओं की जगह नीचे दी गई दुआओं को पेश किया जा सकता है। लेकिन ख़याल रहे कि इस तरतीब के इस्तेमाल में मुनासिब तैयारी ज़रूरी है। (१) यह ज़रूरी नहीं कि सब दिये गये मज़ामीन पढ़े जाएं, बल्कि सिर्फ़ वही जो इस मौक़े के मुताबिक़ हों। (२) मौक़े के मुताबिक़ ख़ादिम अपनी तरफ़ से मुनासिब मज़मून तैयार कर सकता है। (३) या मज़मून पढ़े बग़ैर सिर्फ़ दी गई दुआएं ही इस्तेमाल की जा सकतो हैं।</p>
+  <div class="group">
+    <p class="line"><span class="lbl">ख़ादिम</span> आइए, हम ख़ुदा की मिहरबानियों के लिए उसका शुक्र अदा करें। और हम तमाम दुनिया और कलीसिया के लिए भी उसके हुज़ूर दुआएं पेश करें।</p>
+  </div>
+  <div class="poem"><p>ऐ तमाम क़ुदरत के ख़ुदा, हमारे आसमानी बाप, तूने अपने बेटे यीसू मसीह के ज़रिये वादा किया है कि जब भी हम ईमान से दुआ करें, तो तू हमारी सुनेगा।</p></div>
+  <h3 class="sec">दुनिया के मौजूदा हालात और वाक़िआत के लिए</h3>
+  <p class="block">हम तेरा शुक्र अदा करते हैं ... के लिए<br>तजवीज़ किये हुए मज़ामीन :</p>
+  <div class="poem" style="text-align:left;padding-left:2em">
+    <p>तमाम कायनात की तरफ़ सही रवैये के लिए ...<br>दुनिया की क़ौमों के लिए ख़ासकर ...<br>अपनी क़ौम के लिए ...<br>(समाज की किसी ख़ास ज़रूरत के लिए ...)</p>
+  </div>
+  <p class="silence">ख़ामोशी का वक़फ़ा</p>
+  <div class="poem"><p>ऐ ख़ुदा, तमाम क़ौमों के रहनुमाओं को समझ-दानाई इनायत कर, ख़ास तौर से हमारे राष्ट्रपति, प्रधानमंत्री, इस सूबह के गवर्नर</p></div>
+</article>
+
+<!-- Page 13 -->
+<article class="page" data-page="१३">
+  <span class="pnum">१३</span>
+  <div class="poem"><p>और मुख्यमंत्री को और उन सबको जो उनकी तरफ़ से इख़्तियार रखते हैं; हमारी क़ौम और दूसरी तमाम क़ौमों को इन्साफ़ और सुल्ह की राह पर चला, कि हम एक दूसरे की इज़्ज़त करें और तमाम लोगों की भलाई और बेहतरी की तलाश करें।</p></div>
+  <div class="group">
+    <p class="line"><span class="lbl">ख़ादिम</span> ऐ रहीम ख़ुदावन्द,</p>
+    <p class="line"><span class="lbl">जमाअत</span> <span class="resp">हमारी दुआ सुन।</span></p>
+  </div>
+  <h3 class="sec">कलीसिया के लिए</h3>
+  <p class="block">हम तेरा शुक्र अदा करते हैं ... के लिए<br>तजवीज़ किये हुए मज़ामीन :</p>
+  <div class="poem" style="text-align:left;padding-left:2em">
+    <p>दुनिया में और इस मुल्क में तेरी तमाम कलीसिया,<br>ख़ास कर उत्तर भारत की कलीसिया के लिए ...<br>उसकी कौंसिलों, रहनुमाओं और ख़ादिमों,<br>ख़ास कर हमारे मॉडरेटर ...,<br>दक्षिण भारत की कलीसिया के मॉडरेटर ...,<br>मार थोमा कलीसिया के मैट्रोपोलिटन ... के लिए;<br>हमारे बिशप ... के लिए;<br>सब मसीहियों की एकता के लिए।<br>(कलीसिया की किसी ख़िदमत या ज़रूरत के लिए)</p>
+  </div>
+  <p class="silence">ख़ामोशी का वक़फ़ा</p>
+  <div class="poem"><p>ऐ ख़ुदा, मसीह के काम को तरक़्क़ी देने के लिए अपनी कलीसिया को मज़बूत कर, ताकि तमाम लोग जो उसके नाम का इक़रार करते हैं तेरी सच्चाई में एक हो जाएं, तेरी महब्बत में इकट्ठे ज़िन्दगी बसर करें और दुनिया में तेरा जलाल ज़ाहिर करें।</p></div>
+  <div class="group">
+    <p class="line"><span class="lbl">ख़ादिम</span> ऐ रहीम ख़ुदावन्द,</p>
+    <p class="line"><span class="lbl">जमाअत</span> <span class="resp">हमारी दुआ सुन।</span></p>
+  </div>
+</article>
+
+<!-- Page 14 -->
+<article class="page" data-page="१४">
+  <span class="pnum">१४</span>
+  <h3 class="sec">ख़ानदान, दोस्त और पड़ोसियों के लिए</h3>
+  <p class="block">हम तेरा शुक्र अदा करते हैं ... के लिए<br>तजवीज़ किये हुए मज़ामीन :</p>
+  <div class="poem" style="text-align:left;padding-left:2em">
+    <p>अपने पड़ोसियों के लिए ...<br>अपने हम-ख़िदमतों के लिए ...<br>अपने ख़ानदान और दोस्तों के लिए ...<br>(किसी ख़ास शख़्स या शख़्सों के लिए)</p>
+  </div>
+  <p class="silence">ख़ामोशी का वक़फ़ा</p>
+  <div class="poem"><p>ऐ ख़ुदा, हमें, हमारे ख़ानदानों और दोस्तों को, हमारे पड़ोसियों और उनको जिनके साथ हम काम करते हैं अपना फ़ज़्ल अता फ़रमा, ताकि हम एक दूसरे की मदद करने से तेरी ख़िदमत बजा लाएं और एक दूसरे से ऐसा प्यार करें जैसा तू हम से प्यार करता है।</p></div>
+  <div class="group">
+    <p class="line"><span class="lbl">ख़ादिम</span> ऐ रहीम ख़ुदावन्द,</p>
+    <p class="line"><span class="lbl">जमाअत</span> <span class="resp">हमारी दुआ सुन।</span></p>
+  </div>
+  <hr class="rule">
+  <h3 class="sec">मुसीबत ज़दा और बीमारों के लिए</h3>
+  <p class="block">तजवीज़ किये हुए मज़ामीन :</p>
+  <div class="poem" style="text-align:left;padding-left:2em">
+    <p>भूकों और मोहताजों के लिए ...<br>सताये हुए लोगों और उनके सताने वालों के लिए ...<br>बेरोज़गारों के लिए ...<br>उनके लिए जो बीमार या मरने के क़रीब हैं ...<br>उनके लिए जो मायूस और ना-उम्मीद हैं ...</p>
+  </div>
+  <p class="block">हम उन सबके लिए तेरा शुक्र करते हैं और दुआ भी करते हैं जो ऐसे लोगों के मददगार हैं।</p>
+</article>
+
+<!-- Page 15 -->
+<article class="page" data-page="१५">
+  <span class="pnum">१५</span>
+  <p class="silence">ख़ामोशी का वक़फ़ा</p>
+  <div class="poem"><p>ऐ ख़ुदा, तू उन सब को ताक़त बख़्श और सम्भाल जो किसी जिस्मानी, दिमाग़ी या रूहानी तकलीफ़ में मुब्तला हैं; ज़रूरत के वक़्त उन्हें हिम्मत और उम्मेद अता कर, और अपनी हुज़ूरी की ख़ुशी का इहसास बख़्श दे।</p></div>
+  <div class="group">
+    <p class="line"><span class="lbl">ख़ादिम</span> ऐ रहीम ख़ुदावन्द,</p>
+    <p class="line"><span class="lbl">जमाअत</span> <span class="resp">हमारी दुआ सुन।</span></p>
+  </div>
+  <h3 class="sec">उन के लिए जो इन्तक़ाल कर गये हैं</h3>
+  <p class="block">हम उन ईमानदारों को तेरे हुज़ूर याद करते हैं जो इस दुनिया से इन्तक़ाल कर गये हैं, ख़ास तौर से ...</p>
+  <p class="silence">ख़ामोशी का वक़फ़ा</p>
+  <div class="poem"><p>ऐ ख़ुदा, हम तमाम लोगों को तेरी बे-तब्दील महब्बत के सुपुर्द करते हैं ताकि उनमें तेरी मर्ज़ी पूरी हो, और हर ज़माने में तेरे मुक़द्दसों की वफ़ादार गवाही के लिए ख़ुशी के साथ तेरा जलाल ज़ाहिर करते; और तुझ से दुआ करते हैं कि हम भी उन के साथ तेरी अबदी बादशाही में शरीक हों।</p></div>
+  <div class="group">
+    <p class="line"><span class="lbl">ख़ादिम</span> ऐ आसमानी बाप, हमारी सुन,</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">और अपने बेटे हमारे मुनजी यीसू मसीह की ख़ातिर से हमारी इन दुआओं को क़बूल फ़रमा। आमीन।</span></p>
+  </div>
+  <h3 class="sec">गुनाहों का इक़रार</h3>
+  <p class="block"><span class="num">१७</span> ख़ादिम हुक्मों का खुलासा पढ़ सकता है :</p>
+  <div class="poem"><p>ऐ अज़ीज़ो, हमारे ख़ुदावन्द यीसू मसीह ने फ़रमाया : ख़ुदावन्द हमारा ख़ुदा एक ही ख़ुदावन्द हैं; तू ख़ुदावन्द अपने ख़ुदा से अपने सारे दिल और अपनी सारी जान और अपनी सारी अक़्ल और अपनी सारी ताक़त से महब्बत रख। पहिला हुक्म यही है। दूसरा यह है कि तू अपने पड़ोसी से अपने बराबर महब्बत रख। इन से बड़ा और कोई हुक्म नहीं।</p></div>
+</article>
+
+<!-- Page 16 -->
+<article class="page" data-page="१६">
+  <span class="pnum">१६</span>
+  <p class="block"><span class="num">१८</span> ख़ादिम कहे :</p>
+  <div class="poem"><p>ख़ुदा ने दुनिया से ऐसी महब्बत रखी कि उसने अपना एकलौता बेटा यीसू मसीह बख़्श दिया कि वह हमें गुनाहों से बचाए, आसमान में हमारे लिए सिफ़ारिश करे और हमें हमेशा की ज़िन्दगी को पहुंचाए।</p></div>
+  <div class="poem"><p>इसलिए आइए, हम तौबा और ईमान के साथ अपने गुनाहों का इक़रार करे; हम ख़ुदा के फ़ज़्ल से उसके हुक्मों को मानने का और सब लोगों के साथ मेले-महब्बत से रहने का पक्का इरादा करें।</p></div>
+  <p class="block"><span class="num">१९</span> ख़ामोशी के मुख़्तसर वक़फ़े के बाद प्रेसबिटर और जमाअत मिल कर कहें :</p>
+  <div class="group">
+    <p class="line"><span class="lbl">सब</span> <span class="resp">ऐ तमाम क़ुदरत के ख़ुदा, हमारे आसमानी बाप,<br>हमने ख़याल, क़ौल और फ़ेल से<br>तेरे और अपने साथियों के ख़िलाफ़ गुनाह किया है।<br>हम ने अपनी नादानी और कमज़ोरी के बाइस<br>और जान बूझ कर भी बुराई की है<br>और भलाई करने में नाकामयाब रहे हैं।<br>इन सब के लिए हम निहायत ग़मगीन हैं और तौबा करते हैं।<br>तेरे बेटे यीसू मसीह ने हमारे लिए अपनी जान क़ुरबान की है;</span></p>
+  </div>
+</article>
+
+<!-- Page 17 -->
+<article class="page" data-page="१७">
+  <span class="pnum">१७</span>
+  <div class="group">
+    <p class="line"><span class="lbl">सब</span> <span class="resp">उसी की ख़ातिर हम से जो कुछ हुआ है मुआफ़ फ़रमा<br>और यह बख़्श<br>कि हम आगे नई ज़िन्दगी में तेरी ख़िदमत बजा लाएं<br>ताकि तेरे पाक नाम का जलाल ज़ाहिर हो। आमीन।</span></p>
+  </div>
+  <p class="block"><span class="num">२०</span> तब प्रेसबिटर कहे :</p>
+  <div class="poem"><p>तमाम क़ुदरत का ख़ुदा उन सबको मुआफ़ करता है जो अपने साथियों को मुआफ़ करते और सच्चे दिल से तौबा करते हैं। वह तुम पर रहम करे, तुम्हारे सब गुनाहों को बख़्शे और उन से तुम को रिहाई दे; हर तरह का नेकी में तुम को मुस्तहकमो-मज़बूत करे और तुम्हें हमेशा की ज़िन्दगी में क़ायम रखे; हमारे ख़ुदावन्द यीसू मसीह के वसीले से।</p></div>
+  <div class="group">
+    <p class="line"><span class="lbl">जमाअत</span> आमीन। ख़ुदा का शुक्र हो।</p>
+  </div>
+  <p class="instr">प्रेसबिटर अगर चाहे, तो "तुम" और "तुम्हारे" की बजाए "हम" और "हमारे" कह सकता है।</p>
+  <h3 class="sec">पाक शिराकत की सैक्रामेन्ट</h3>
+  <p class="block"><span class="num">२१</span> जहां कहीं दस्तूर हो, यहां या हिस्से २७ के बाद किताबे-मुक़द्दस में से यक़ीन-दहानी पढ़ी जाए :</p>
+  <div class="group">
+    <p class="line"><span class="lbl">प्रेसबिटर</span> ख़ुदावन्द में ऐ अज़ीज़ो, आइए हम इस पाक सैक्रामेन्ट के मुक़र्रर किए जाने के बारे में उन अल्फ़ाज़ को ग़ौर से सुनें जो मुक़द्दस पौलूस ने क़ुरिन्थियों के पहिले ख़त में लिखे हैं– "यह बात मुझे ख़ुदावन्द से पहुंची और मैंने तुम को भी पहुंचा दी कि ख़ुदावन्द यीसू ने, जिस रात वह पकड़वाया गया, रोटी ली; और शुक्र कर के तोड़ी और कहा : यह मेरा बदन है जो तुम्हारे लिये है; मेरी यादगारी के वास्ते यही किया करो। इसी तरह उसने खाने के बाद पियाला भी लिया और कहा : यह पियाला मेरे ख़ून में नया</p>
+  </div>
+</article>
+
+<!-- Page 18 -->
+<article class="page" data-page="१८">
+  <span class="pnum">१८</span>
+  <div class="poem"><p>अहद है; जब कभी पियो, मेरी यादगारी के लिए यही किया करो। क्योंकि जब कभी तुम यह रोटी खाते और इस पियाले में से पीते हो, तो ख़ुदावन्द की मौत का इज़हार करते हो जब तक वह न आए।"</p></div>
+  <p class="instr" style="text-align:right">१ कुरि० ११:२३-२६</p>
+  <h3 class="sec">सलाम</h3>
+  <p class="block"><span class="num">२२</span> प्रेसबिटर कहें :</p>
+  <div class="poem"><p>हम मिल कर मसीह का बदन हैं। हम सब ने एक ही रूह के वसीले से एक बदन होने के लिए बपतिस्मा लिया। पर हम उन बातों के तालिब रहें जिन से मेल मिलाप और बाहमी तरक़्क़ी हो। १ कुरि. १२:२७,१३; रोमि. १४:१९</p></div>
+  <div class="group">
+    <p class="line"><span class="lbl">प्रेसबिटर</span> ख़ुदावन्द का इत्मीनान हमेशा आप के साथ हो।</p>
+    <p class="line"><span class="lbl">जमाअत</span> <span class="resp">और आप के साथ भी।</span></p>
+  </div>
+  <p class="block"><span class="num">२३</span> यहां मक़ामी दस्तूर के मुताबिक़ सलाम का इज़हार किया जा सकता है।</p>
+  <h3 class="sec">रोटी और मै का तैयार करना</h3>
+  <p class="block"><span class="num">२४</span> यहां कोई गीत या भजन गाया जा सकता है; और जमाअत से इकट्ठी की हुई भेंट पेश की जा सकती है।</p>
+  <p class="block"><span class="num">२५</span> रोटी और मै लाई जाएं और मेज़ पर रखी जाएं; या मक़ामी दस्तूर के मुताबिक़ अगर वह पेशतर ही मेज़ पर रखी हों तो उनपर से कपड़ा हटा दिया जाए।</p>
+  <p class="block"><span class="num">२६</span> प्रेसबिटर यह कहें :</p>
+  <div class="poem"><p>आइए, हम यह भेंट और उसके साथ अपने आप को भी ख़ुदा की ख़िदमत के लिए पेश करें।</p></div>
+  <div class="group">
+    <p class="line"><span class="lbl">जमाअत</span> <span class="resp">ऐ तमाम क़ुदरत के ख़ुदा, दुनिया के ख़ालिक़,<br>सब चीज़ें तेरी तरफ़ से मिलती हैं</span></p>
+  </div>
+</article>
+
+<!-- Page 19 -->
+<article class="page" data-page="१९">
+  <span class="pnum">१९</span>
+  <div class="group">
+    <p class="line"><span class="lbl">जमाअत</span> <span class="resp">और तेरी ही चीज़ों में से हम ने तुझे दिया है।<br>हम तुझ से अर्ज़ करते हैं<br>कि (*यह दान और) रोटी और मै की यह भेंट<br>अपने नाम के जलाल और अपने लोगों की भलाई के लिए क़बूल फ़रमा;<br>हमारे ख़ुदावन्द यीसू मसीह के वसीले से। आमीन।</span></p>
+  </div>
+  <h3 class="sec">शुक्रगुज़ारी</h3>
+  <p class="block"><span class="num">२८</span> प्रेसबिटर कहे :</p>
+  <div class="group">
+    <p class="line"><span class="lbl">प्रेसबिटर</span> ख़ुदावन्द यहां मौजूद है।</p>
+    <p class="line"><span class="lbl">जमाअत</span> उसका रूह हमारे साथ है।</p>
+    <p class="line"><span class="lbl">प्रेसबिटर</span> अपने दिल आल्मे-बाला पर लगाओ।</p>
+    <p class="line"><span class="lbl">जमाअत</span> <span class="resp">हम उनको ख़ुदावन्द की तरफ़ लगाते हैं।</span></p>
+    <p class="line"><span class="lbl">प्रेसबिटर</span> हम ख़ुदावन्द अपने ख़ुदा का शुक्र करें।</p>
+    <p class="line"><span class="lbl">जमाअत</span> <span class="resp">उसका शुक्रो-तमजीद करना वाजिबो-मुनासिब है।</span></p>
+  </div>
+  <p class="block"><span class="num">२९</span> <span class="lbl" style="min-width:0">प्रेसबिटर</span> ऐ क़ुद्दूस बाप, आसमानी बादशाह, तमाम क़ुदरत के मालिक और अज़ली ख़ुदा, यह न सिर्फ़ मुनासिब, बल्कि हमारा फ़र्ज़ और ख़ुशी भी है कि हम हर वक़्त और हर जगह तेरे एकलौते बेटे यीसू मसीह के वसीले तेरा शुक्रो-तमजीद करें;</p>
+  <div class="poem"><p>वह ही तेरा सच्चा और ज़िन्दा कलाम है; उसीके वसीले तू ने शुरू ही से तमाम चीज़ें पैदा कीं और हमें अपनी सूरत पर बनाया;<br>उसी के वसीले तू दुनिया में हर आने वाले इन्सान को रोशन करता है</p></div>
+  <p class="note">* अगर मा सिवा रोटी और मै के और भेंट न हो, तो यह अल्फ़ाज़ छोड़ दिये जाएं।</p>
+</article>
+
+<!-- Page 20 -->
+<article class="page" data-page="२०">
+  <span class="pnum">२०</span>
+  <div class="poem"><p>करता है और हर ज़माने में तूने नबियों और दानाओं को भेजा कि वह तेरे बन्दों को तेरी तरफ़ रुजु कराएं;<br>उसी के वसीले तू ने हमें गुनाह से छुटकारा बख़्शा है; वह हमारे लिए इन्सान बना, हमारी ख़ातिर सलीब पर चढ़ाया गया और तीसरे दिन फिर जी उठा;<br>उसी के ज़रिए तू हमें अपना पाक और ज़िन्दगी देनेवाला रूह इनायत करता है, ताकि हम तेरे बच्चे ठहरें और तेरी नई मख़्लूक़ात के पहिले फल हों।</p></div>
+  <p class="block"><span class="num">३०</span> कलीसियाई मौसम के मुताबिक़ या और किसी ख़ास मौक़े पर मुनासिब और मुक़र्रा शुक्रगुज़ारी अगर हो तो यहां पढ़ी जाए (देखिए हिस्सा ४७)</p>
+  <p class="block"><span class="num">३१</span> <span class="resp">सब</span> इसलिए तेरे मुक़द्दसों और फ़िरिश्तों के साथ जो दिनो-रात तेरे तख़्त के सामने तेरी हम्दो-तमजीद करते हैं, हम भी तेरे पाक नाम की सिताइश करते और गं कहते हैं</p>
+  <div class="poem"><p class="resp">क़ुद्दूस, क़ुद्दूस, क़ुद्दूस ख़ुदावन्द,<br>क़ुदरत और क़ुव्वत के ख़ुदा,<br>आसमानो-ज़मीन तेरे जलाल से मामूर हैं।<br>आल्मे-बाला पर होशाना।</p></div>
+  <div class="group">
+    <p class="line"><span class="lbl">प्रेसबिटर</span> ऐ आसमानी बाप, अपने बेटे हमारी मुनजी यीसू मसीह के ज़रिये हमारी हम्दो-दमजीद क़बूल फ़रमा। हमें जो उसके नमूने की पैरवी करते और उसके हुक्म को मानते हैं यह बख़्श कि तेरे रूह की क़ुव्वत से यह रोटी और मै की निअमतें हमारे लिए उसी का बदन और ख़ून हों, जो हमारे वास्ते मुआ और फिर जी उठा।</p>
+  </div>
+</article>
+
+<!-- Page 21 -->
+<article class="page" data-page="२१">
+  <span class="pnum">२१</span>
+  <div class="group">
+    <p class="line"><span class="lbl" style="min-width:2.4em">३२*</span> जिस रात वह हवाला कर दिया गया, उसने रोटी ली और तेरा शुक्र कर के तोड़ी और अपने शागिर्दों को दे कर कहा : लो, खाओ, यह मेरा बदन है जो तुम्हारे लिए दिया जाता है; मेरी यादगारी में ऐसा ही किया करो। इसी तरह खाने के बाद उसने पियाले को लिया और तेरा शुक्र कर के उनको दिया और कहा: तुम सब इसमें से पियो, क्योंकि नये अहद का यह मेरा ख़ून है जो तुम्हारे और बहुतों के गुनाहों की मुआफ़ी के वास्ते बहाया जाता है; जब इसे पियो, मेरी यादगारी में ऐसा ही किया करो।</p>
+  </div>
+  <p class="block"><span class="num">३३</span> इसलिए, ऐ आसमानी बाप, इसी की यादगारी में हम इस रोटी और मै की तख़्सीस करते हैं; हम उस कामिल क़ुरबानी को मनाते और उसका इज़हार करते हैं जो उसने एक ही बार जान देकर सलीब पर नज़र चढ़ाई; हम उसके जी उठने और आसमान पर जाने का ऐलान करते हैं और इस इन्तिज़ार में हैं कि वह जलाल के साथ फिर आएगा।</p>
+  <div class="group">
+    <p class="line"><span class="lbl">सब</span> <span class="resp">मसीह हमारे लिए मुआ।<br>मसीह अब ज़िन्दा है।<br>मसीह फिर आने वाला है।</span></p>
+    <p class="line"><span class="lbl">प्रेसबिटर</span> इसलिए, ऐ रहीम ख़ुदा, उसी हमारे सरदार-काहिन के वसीले से हमारी हम्दो-शुक्र की इस क़ुरबानी को मंज़ूर कर; और जब हम तेरी इन पाक बख़्शिशों को तेरी जनाबे-इलाही की हुज़ूरी में खाते और पीते हैं, अपने रूह के वसीले से हमें नया इन्सान बना, अपनी महब्बत से हमें उभार, और अपने बेटे हमारे ख़ुदावन्द यीसू मसीह के बदन में हमें मुत्तहिद कर।</p>
+  </div>
+  <p class="note">* जब हिस्से २१ के मुताबिक़ किताबे-मुक़द्दस में से यक़ीन-दहानी पढ़ी जा चुकी हो, तो यह हिस्सा छोड़ा जा सकता है।</p>
+</article>
+
+<!-- Page 22 -->
+<article class="page" data-page="२२">
+  <span class="pnum">२२</span>
+  <div class="poem"><p>उसी के साथ और उसमें और उसी के वसीले, पाक रूह की क़ुव्वत से, ऐ क़ादिरे-मुतलक़ बाप, उन सब के साथ जो आसमान और ज़मीन पर तेरे हुज़ूर रहते हैं, हम तेरी परस्तिश करते और हमेशा यूं तेरी सिताइश के गीत गाते हैं :</p></div>
+  <div class="group">
+    <p class="line"><span class="lbl">सब</span> <span class="resp">हम्द और इज़्ज़त और जलाल और क़ुदरत अबदुल-आबाद तेरी ही होती रहे। आमीन।</span></p>
+  </div>
+  <h3 class="sec">शिरकत :</h3>
+  <p class="block" style="text-align:center">रोटी का तोड़ना, रोटी और मै में शरीक होना।</p>
+  <p class="block"><span class="num">३४</span> प्रेसबिटर तक़दीस की हुई रोटी को तोड़ते वक़्त कहे :</p>
+  <div class="group">
+    <p class="line"><span class="lbl">प्रेसबिटर</span> हम इस रोटी को तोड़ते हैं ताकि हम मसीह के बदन में शरीक हों।</p>
+    <p class="line"><span class="lbl">जमाअत</span> <span class="resp">हम बाहम एक बदन हैं, क्योंकि हम एक ही रोटी में शरीक हैं।</span></p>
+  </div>
+  <p class="block"><span class="num">३५</span> प्रेसबिटर लोगों के सामने पियाला हाथ में लेकर यह कह सकता है :</p>
+  <div class="group">
+    <p class="line"><span class="lbl">प्रेसबिटर</span> यह पियाला जिस पर हमने बरकत मांगी है मसीह के ख़ून की शिराकत है।</p>
+    <p class="line"><span class="lbl">जमाअत</span> <span class="resp">उसकी ज़िन्दगी हम में है और उसी में हम ज़िन्दा हैं।</span></p>
+  </div>
+  <p class="block"><span class="num">३६</span> प्रेसबिटर जैसे हमारे मुनजी मसीह ने हमें सिखाया है, हम यूं दुआ करते हैं :</p>
+  <div class="group">
+    <p class="line"><span class="lbl">सब</span> <span class="resp">ऐ हमारे आसमानी बाप,<br>तेरा नाम पाक माना जाए,<br>तेरी बादशाही आए,</span></p>
+  </div>
+</article>
+
+<!-- Page 23 -->
+<article class="page" data-page="२३">
+  <span class="pnum">२३</span>
+  <div class="group">
+    <p class="line"><span class="lbl">सब</span> <span class="resp">तेरी मर्ज़ी जैसे आसमान में पूरी होती है,<br>ज़मीन पर भी हो।<br>हमारी रोज़ की रोटी आज हमें दे।<br>हमारे क़ुसूरों को मुआफ़ कर,<br>कि हम भी अपने क़ुसूरवारों को मुआफ़ करते हैं।<br>हमें आज़माइश में न पड़ने दे,<br>बल्कि बुराई से बचा।<br>क्योंकि बादशाही और क़ुदरत और जलाल<br>अबद तक तेरा ही है। आमीन।</span></p>
+  </div>
+  <p class="silence">ख़ामोशी का वक़फ़ा।</p>
+  <p class="block"><span class="num">३७</span> दुआए-सराई पढ़ी जा सकती है :</p>
+  <div class="poem" style="text-align:left;padding-left:2em">
+    <p>ऐ रहीम ख़ुदावन्द,<br>हम अपनी रास्तबाज़ी पर नहीं,<br>बल्कि तेरी गूनागून और बड़ी रहमतों पर भरोसा कर के<br>तेरी इस मेज़ के पास आने की जुरअत करते हैं!<br>हम तो इस लाइक़ भी नहीं<br>कि जो टुकड़े तेरी मेज़ पर से गिरते हैं चुनें;<br>लेकिन तू वह ख़ुदावन्द है<br>जिस का ख़ास्सा हमेशा रहम फ़रमाना है।<br>इसलिये, ऐ करीम ख़ुदावन्द, यह बख़्श<br>कि हम तेरे अज़ीज़ बेटे यीसू मसीह का गोश्त इस तौर से खाएं<br>और उसका ख़ून इस वज़ा से पीएं<br>कि हमारे गुनाह-आलूदा बदन और रूहें<br>उसके निहायत बेशक़ीमत बदन और ख़ून से धोई जाएं<br>और हम उस में और वह हम में हमेशा बसे। आमीन।</p>
+  </div>
+  <p class="instr">नीचे दिये हुए तरानों में से एक या दोनों ही पढ़े या गाये जा सकते हैं।</p>
+  <div class="poem"><p class="resp">मुबारक है वह जो ख़ुदावन्द के नाम से आता है।<br>आल्मे-बाला पर होशाना।</p></div>
+  <div class="poem"><p>ऐ यीसू, ख़ुदा के बर्रे, हम पर रहम कर।<br>ऐ यीसू, हमारे गुनाहों का बोझ उठाने वाले, हम पर रहम कर।<br>ऐ यीसू, जहान का फ़िदिया देने वाले, अपना इत्मीनान हमें बख़्श।</p></div>
+</article>
+
+<!-- Page 24 -->
+<article class="page" data-page="२४">
+  <span class="pnum">२४</span>
+  <p class="block"><span class="num">३८</span> प्रेसबिटर यह कहें :</p>
+  <div class="poem"><p>ईमान के साथ पास आओ। ख़ुदावन्द यीसू मसीह के बदन को जो उसने तुम्हारे लिए दिया, और उसके ख़ून को जो उसने तुम्हारे लिए बहाया, लो। याद रखो कि वह तुम्हारी ख़ातिर मुआ, और शुक्र करते हुए मसीह को अपने दिलों में ईमान से खाओ।</p></div>
+  <p class="block"><span class="num">३९</span> तब ख़ादिमान और जमाअत रोटी और मै लें।</p>
+  <p class="block"><span class="num">४०</span> ख़ादिम रोटी और मै देते वक़्त नीचे दिये हुए अल्फ़ाज़ इस्तेमाल करे (या नीचे हाशिया में दिये गये अल्फ़ाज़* इस्तेमाल कर सकता है)</p>
+  <div class="poem"><p class="resp">ख़ुदावन्द यीसू मसीह का बदन जो तुम्हारे लिए दिया गया।<br>ख़ुदावन्द यीसू मसीह का ख़ून जो तुम्हारे लिए बहाया गया।</p></div>
+  <p class="instr">शिराकत लेने वाला हर मर्तबा "आमीन" कह सकता है।</p>
+  <p class="block"><span class="num">४१</span> तक़दीस की हुई रोटी और मै जो बच गई हों, शिराकत के बाद या जमाअत को रुख़सत करने के बाद, ख़त्म कर ली जाएं।</p>
+  <p class="note">* या (१) हमारे ख़ुदावन्द यीसू मसीह का बदन जो तेरे वास्ते दिया गया, तेरे बदन और रूह को अबदी ज़िन्दगी के लिए बचाए रखे।</p>
+</article>
+
+<!-- Page 25 -->
+<article class="page" data-page="२५">
+  <span class="pnum">२५</span>
+  <h3 class="sec">शिराकत के बाद</h3>
+  <p class="block"><span class="num">४२</span> प्रेसबिटर हिस्से ४७ में से एक आयत पढ़ सकता है।</p>
+  <p class="silence">ख़ामोशी का वक़फ़ा।</p>
+  <p class="block"><span class="num">४३</span> <span class="lbl" style="min-width:0">प्रेसबिटर</span> हम ने इस पाक सैक्रामेन्ट को ईमान से लिया है। इसलिए आइए, हम ख़ुदा का शुक्र अदा करें।</p>
+  <hr class="rule">
+  <p class="instr">यह अल्फ़ाज़ भी साथ इस्तेमाल किये जा सकते हैं :</p>
+  <div class="poem"><p>इसे ले और खा, इस बात की यादगारी में कि मसीह तेरे वास्ते मुआ, और शुक्र करता हुआ मसीह को अपने दिल में ईमान से खा।</p></div>
+  <p class="block" style="padding-left:2em"><span class="lbl" style="min-width:0">और</span> हमारे ख़ुदावन्द यीसू मसीह का ख़ून जो तेरे वास्ते बहाया गया, तेरे बदन और रूह को अबदी ज़िन्दगी के लिए बचाए रखे।</p>
+  <p class="instr">यह अल्फ़ाज़ भी साथ इस्तेमाल किये जा सकते हैं :</p>
+  <div class="poem"><p>इसे पी, इस बात की यादगारी में कि मसीह का ख़ून तेरे लिये बहाया गया, और शुक्र कर।</p></div>
+  <p class="block"><span class="lbl" style="min-width:0">या (२)</span> मसीह का बदन जो ज़िन्दगी की रोटी है।<br><span class="lbl" style="min-width:0;margin-left:2.8em">और</span> मसीह का ख़ून जो अंगूर का हक़ीक़ी दरख़्त है।</p>
+  <p class="block"><span class="lbl" style="min-width:0">या (३)</span> लो, खाओ। यह मसीह का बदन है जो तुम्हारे लिए तोड़ा गया। उसकी यादगारी मे ऐसा ही करो।<br><span class="lbl" style="min-width:0;margin-left:2.8em">और</span> यह पियाला मसीह के ख़ून में नया अहद है, जो बहुत के गुनाहों की मुआफ़ी के लिए बहाया गया। तुम सब इसमें से पियो।</p>
+</article>
+
+<!-- Page 26 -->
+<article class="page" data-page="२६">
+  <span class="pnum">२६</span>
+  <p class="block"><span class="num">४४</span> प्रेसबिटर अपने अल्फ़ाज़ में मुख़्तसर दुआ कर सकता है। जमाअत मिलकर नीचे दी हुई दुआओं में से एक पढ़े :</p>
+  <div class="poem"><p>ऐ तमाम क़ुदरत के ख़ुदा,<br>हम दिलो-जान से तेरा शुक्र करते हैं<br>कि तू ने हमें अपने बेटे यीसू मसीह के बदन और ख़ून की<br>रूहानी ख़ुराक से सेर किया है।<br>हम उसी के वसीले से अपने आपको<br>ज़िन्दा क़ुरबानी होने के लिए तेरी नज़र करते हैं।<br>यह बख़्श कि हम तेरे रूह की क़ुव्वत से मामूर होकर<br>यहां से रुख़सत हों<br>और अपनी ज़िन्दगी और ख़िदमत से<br>हर वक़्त तेरा जलाल ज़ाहिर करें। आमीन।</p></div>
+  <p class="or">या</p>
+  <div class="poem"><p>ऐ आसमानी बाप,<br>तू ने हमें अपने बेटे हमारे मुनजी यीसू मसीह के निहायत बेशक़ीमत बदन और ख़ून की रूहानी ख़ुराक खिलाई है।<br>तू ने इन पाक राज़ों के ज़रिए अपना फ़ज़्लो-करम हम पर साबित किया है;<br>और यह यक़ीन दिलाया है<br>कि हम तेरे बेटे के रूहानी बदन में ज़िन्दा अंग हैं<br>और तेरी अबदी बादशाही के वारिस भी हैं।<br>हम तेरी इन बड़ी बरकतों के लिए<br>तेरा शुक्र करते हैं<br>और तेरे बेटे की यगानगी में अपने आपको<br>ज़िन्दा क़ुरबानी होने के लिए तेरी नज़र करते हैं।<br>अब, ऐ बाप, हमें यहां से रुख़सत कर</p></div>
+  <p class="block"><span class="num">४५</span> तब प्रेसबिटर नीचे दिया गया बरकत का कलिमा या कलीसियाई मौसम के मुताबिक़ हिस्से ४७ में से दीगर कलिमा पढ़ कर जमाअत को रुख़सत करें :</p>
+  <div class="poem"><p>ख़ुदा का इत्मीनान जो समझ से बिलकुल बाहर है तुम्हारे दिलों और ख़यालों को ख़ुदा और उसके बेटे हमारे ख़ुदावन्द यीसू मसीह की पहचान और महब्बत में महफ़ूज़ रखें: और क़ादिरे-मुतलक़ ख़ुदा, बाप, बेटे और रूहुल-क़ुद्दूस की बरकत तुम पर हो और तुम्हारे साथ हमेशा रहे।</p></div>
+  <div class="group"><p class="line"><span class="lbl">जमाअत</span> आमीन।</p></div>
+  <p class="block"><span class="num">४६</span> <span class="lbl" style="min-width:0">प्रेसबिटर</span> सलामती से जाओ; ख़ुदावन्द से महब्बत रखो और उसकी ख़िदमत करो।</p>
+  <div class="group"><p class="line"><span class="lbl">जमाअत</span> <span class="resp">ख़ुदावन्द मसीह के नाम से। आमीन।</span></p></div>
+  <p class="instr">ख़ादिम और जमाअत आपस में एक-दूसरे से मुलक़ात कर के रुख़सत हों।</p>
+</article>
+
+<!-- Page 27 -->
+<article class="page" data-page="२७">
+  <span class="pnum">२७</span>
+  <div class="poem"><p>कि जो नेक काम तू ने हमारे लिए मुक़र्रर किये हैं उनको पूरा करें;<br>और बख़्श कि हम अपने ख़ुदावन्द मसीह के वफ़ादार गवाहों की तरह<br>तुझ से महब्बत रखें और तेरी ख़िदमत बजा लाएं।<br>ऐ बाप, तेरी और तेरे बेटे और रूहुल-क़ुद्दूस की<br>तमाम इज़्ज़तो-ताज़ीम अबदुल-आबाद होती रहे। आमीन।</p></div>
+  <p class="block"><span class="num">४५</span> तब प्रेसबिटर नीचे दिया गया बरकत का कलिमा या कलीसियाई मौसम के मुताबिक़ हिस्से ४७ में से दीगर कलिमा पढ़ कर जमाअत को रुख़सत करें :</p>
+  <div class="poem"><p>ख़ुदा का इत्मीनान जो समझ से बिलकुल बाहर है तुम्हारे दिलों और ख़यालों को ख़ुदा और उसके बेटे हमारे ख़ुदावन्द यीसू मसीह की पहचान और महब्बत में महफ़ूज़ रखें: और क़ादिरे-मुतलक़ ख़ुदा, बाप, बेटे और रूहुल-क़ुद्दूस की बरकत तुम पर हो और तुम्हारे साथ हमेशा रहे।</p></div>
+  <div class="group"><p class="line"><span class="lbl">जमाअत</span> आमीन।</p></div>
+  <p class="block"><span class="num">४६</span> <span class="lbl" style="min-width:0">प्रेसबिटर</span> सलामती से जाओ; ख़ुदावन्द से महब्बत रखो और उसकी ख़िदमत करो।</p>
+  <div class="group"><p class="line"><span class="lbl">जमाअत</span> <span class="resp">ख़ुदावन्द मसीह के नाम से। आमीन।</span></p></div>
+  <p class="instr">ख़ादिम और जमाअत आपस में एक-दूसरे से मुलाक़ात कर के रुख़सत हों।</p>
+</article>
+
+</main>
+
+<script>
+(function () {
+  var all = Array.prototype.slice.call(document.querySelectorAll('article.page'));
+  var idx = 0;
+  var count = document.getElementById('count');
+  var prevBtn = document.getElementById('prev');
+  var nextBtn = document.getElementById('next');
+
+  // Zoom & Pan state
+  var baseScale = 1;
+  var userZoom = 1;
+  var panX = 0, panY = 0;
+  var pinchStartDist = 0;
+  var pinchStartZoom = 1;
+  var touchStartMidX = 0, touchStartMidY = 0;
+  var panStartX = 0, panStartY = 0;
+  var lastTapTime = 0;
+
+  function applyTransform(targetPage) {
+    var page = targetPage || all[idx];
+    if (!page) return;
+    if (userZoom <= 1.02) {
+      panX = 0;
+      panY = 0;
+    }
+    var totalScale = baseScale * userZoom;
+    page.style.transform = 'translate(' + panX.toFixed(1) + 'px, ' + panY.toFixed(1) + 'px) scale(' + totalScale.toFixed(3) + ')';
+    page.style.transformOrigin = 'top center';
+  }
+
+  function autoFit() {
+    if (!document.body.classList.contains('in-deck')) return;
+    var page = all[idx];
+    if (!page) return;
+    page.style.transform = '';
+    page.style.transformOrigin = 'top center';
+
+    var main = document.querySelector('main');
+    if (!main) return;
+    main.scrollTop = 0;
+    var availH = main.clientHeight;
+    var availW = main.clientWidth;
+    var contentH = page.scrollHeight;
+    var contentW = page.scrollWidth;
+    baseScale = 1;
+    if (availH > 50 && contentH > 0) {
+      var scaleH = (availH - 6) / contentH;
+      var scaleW = availW > 0 && contentW > availW ? (availW - 6) / contentW : 1;
+      var fitScale = Math.min(scaleH, scaleW);
+      if (fitScale < 1) {
+        baseScale = fitScale;
+      }
+    }
+    applyTransform(page);
+  }
+
+  var singleTapTimer = null;
+  var lastTouchEndTime = 0;
+  function toggleControls() {
+    document.body.classList.toggle('hide-controls');
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          type: 'SET_CONTROLS_VISIBILITY',
+          hidden: document.body.classList.contains('hide-controls')
+        }, '*');
+      }
+    } catch (_) {}
+  }
+
+  function show() {
+    userZoom = 1;
+    panX = 0;
+    panY = 0;
+    var main = document.querySelector('main');
+    if (main) main.scrollTop = 0;
+    document.body.classList.remove('hide-controls');
+    all.forEach(function (p) { p.classList.remove('active'); p.style.transform = ''; });
+    var page = all[idx];
+    void page.offsetWidth;
+    page.classList.add('active');
+    count.textContent = 'पृष्ठ ' + page.getAttribute('data-page') + ' · ' + (idx + 1) + ' / ' + all.length;
+    prevBtn.disabled = idx === 0;
+    nextBtn.disabled = idx === all.length - 1;
+    autoFit();
+  }
+
+  function start() {
+    document.body.classList.add('in-deck');
+    idx = 0;
+    show();
+  }
+  function back() {
+    userZoom = 1;
+    panX = 0;
+    panY = 0;
+    document.body.classList.remove('hide-controls');
+    all.forEach(function (p) { p.classList.remove('active'); p.style.transform = ''; });
+    document.body.classList.remove('in-deck');
+    window.scrollTo(0, 0);
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'CLOSE_BOOK' }, '*');
+        if (typeof window.parent.closePdfBook === 'function') {
+          window.parent.closePdfBook();
+        }
+      }
+    } catch (_) {}
+  }
+
+  window.addEventListener('resize', autoFit);
+  window.addEventListener('orientationchange', function () { setTimeout(autoFit, 150); });
+  function next() { if (idx < all.length - 1) { idx++; show(); } }
+  function prev() { if (idx > 0) { idx--; show(); } }
+
+  document.getElementById('start').addEventListener('click', start);
+  var menuBtn = document.getElementById('menu');
+  if (menuBtn) menuBtn.addEventListener('click', back);
+  var closeBtn = document.getElementById('close');
+  if (closeBtn) closeBtn.addEventListener('click', back);
+  nextBtn.addEventListener('click', next);
+  prevBtn.addEventListener('click', prev);
+
+  function getTouchDist(t1, t2) {
+    var dx = t1.clientX - t2.clientX;
+    var dy = t1.clientY - t2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  // Edge swipe navigation (clientX <= 44px, swiping right dx > 60px) to close book and return to app home
+  var edgeSwipeStartX = 0, edgeSwipeStartY = 0, isEdgeSwipe = false;
+  document.addEventListener('touchstart', function (e) {
+    if (e.touches && e.touches.length === 1) {
+      edgeSwipeStartX = e.touches[0].clientX;
+      edgeSwipeStartY = e.touches[0].clientY;
+      isEdgeSwipe = edgeSwipeStartX <= 44;
+    } else {
+      isEdgeSwipe = false;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', function (e) {
+    if (isEdgeSwipe && e.changedTouches && e.changedTouches.length > 0) {
+      var edgeDx = e.changedTouches[0].clientX - edgeSwipeStartX;
+      var edgeDy = e.changedTouches[0].clientY - edgeSwipeStartY;
+      if (edgeDx > 60 && Math.abs(edgeDx) > Math.abs(edgeDy) * 1.2) {
+        isEdgeSwipe = false;
+        try {
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type: 'CLOSE_BOOK' }, '*');
+            if (typeof window.parent.closePdfBook === 'function') {
+              window.parent.closePdfBook();
+            }
+          } else {
+            window.history.back();
+          }
+        } catch (_) {}
+        return;
+      }
+    }
+    isEdgeSwipe = false;
+  }, { passive: true });
+
+  document.addEventListener('touchcancel', function () {
+    isEdgeSwipe = false;
+  }, { passive: true });
+
+  // Swipe & pinch-zoom gestures
+  var sx = 0, sy = 0, tracking = false;
+  document.addEventListener('touchstart', function (e) {
+    if (!document.body.classList.contains('in-deck')) return;
+    if (e.touches.length === 2) {
+      tracking = false; // cancel swipe during pinch
+      pinchStartDist = getTouchDist(e.touches[0], e.touches[1]);
+      pinchStartZoom = userZoom;
+      touchStartMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      touchStartMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      panStartX = panX;
+      panStartY = panY;
+    } else if (e.touches.length === 1) {
+      var now = Date.now();
+      if (now - lastTapTime < 320) {
+        // Double-tap: toggle zoom
+        clearTimeout(singleTapTimer);
+        singleTapTimer = null;
+        lastTouchEndTime = Date.now();
+        if (userZoom > 1.05) {
+          userZoom = 1;
+          panX = 0;
+          panY = 0;
+        } else {
+          userZoom = 1.35;
+        }
+        applyTransform();
+        tracking = false;
+        lastTapTime = 0;
+        return;
+      }
+      lastTapTime = now;
+      sx = e.touches[0].clientX;
+      sy = e.touches[0].clientY;
+      tracking = true;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', function (e) {
+    if (!document.body.classList.contains('in-deck')) return;
+    if (e.touches.length === 2 && pinchStartDist > 0) {
+      var dist = getTouchDist(e.touches[0], e.touches[1]);
+      var factor = dist / pinchStartDist;
+      userZoom = Math.min(Math.max(pinchStartZoom * factor, 0.6), 4.0);
+
+      var midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      var midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      panX = panStartX + (midX - touchStartMidX);
+      panY = panStartY + (midY - touchStartMidY);
+
+      applyTransform();
+    } else if (e.touches.length === 1 && userZoom > 1.05) {
+      var dx = e.touches[0].clientX - sx;
+      var dy = e.touches[0].clientY - sy;
+      panX += dx * 0.45;
+      panY += dy * 0.45;
+      sx = e.touches[0].clientX;
+      sy = e.touches[0].clientY;
+      applyTransform();
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', function (e) {
+    if (e.touches.length < 2) {
+      pinchStartDist = 0;
+    }
+    if (!document.body.classList.contains('in-deck')) return;
+    if (!tracking) return;
+    tracking = false;
+
+    var dx = e.changedTouches[0].clientX - sx;
+    var dy = e.changedTouches[0].clientY - sy;
+
+    // Horizontal swipe for page navigation
+    if (userZoom <= 1.05 && Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      if (sx <= 44 && dx > 60) return; // Handled by edge swipe controller
+      if (dx < 0) next(); else prev();
+      return;
+    }
+
+    // Single tap in reading area toggles floating controls
+    if (Math.abs(dx) < 15 && Math.abs(dy) < 15) {
+      var target = e.target;
+      if (!target.closest('button, a, input, select, textarea, #deckbar, #decknav, #pinpointRoot')) {
+        lastTouchEndTime = Date.now();
+        clearTimeout(singleTapTimer);
+        singleTapTimer = setTimeout(function () {
+          toggleControls();
+        }, 220);
+      }
+    }
+  }, { passive: true });
+
+  // Mouse click toggle for desktop (ignores synthetic touch-clicks)
+  document.addEventListener('click', function (e) {
+    if (!document.body.classList.contains('in-deck')) return;
+    if (Date.now() - lastTouchEndTime < 450) return;
+    var target = e.target;
+    if (!target.closest('button, a, input, select, textarea, #deckbar, #decknav, #pinpointRoot')) {
+      toggleControls();
+    }
+  });
+
+  // AMOLED Invert Switch & Persistence
+  var THEME_KEY = 'church_companion_book_theme';
+
+  function notifySystemBars(theme) {
+    var isLight = (theme !== 'amoled' && theme !== 'dark');
+    try {
+      if (window.bridge && typeof window.bridge.updateSystemBars === 'function') {
+        window.bridge.updateSystemBars(isLight);
+      } else if (window.parent && window.parent.bridge && typeof window.parent.bridge.updateSystemBars === 'function') {
+        window.parent.bridge.updateSystemBars(isLight);
+      } else if (window.AndroidBridge && typeof window.AndroidBridge.updateSystemBars === 'function') {
+        window.AndroidBridge.updateSystemBars(isLight);
+      } else if (window.parent && window.parent.AndroidBridge && typeof window.parent.AndroidBridge.updateSystemBars === 'function') {
+        window.parent.AndroidBridge.updateSystemBars(isLight);
+      }
+    } catch (_) {}
+  }
+
+  function syncSafeArea() {
+    try {
+      if (window.parent && window.parent.document && window.parent.document.documentElement) {
+        var pStyle = window.getComputedStyle(window.parent.document.documentElement);
+        var pTop = pStyle.getPropertyValue('--safe-area-top');
+        var pBottom = pStyle.getPropertyValue('--safe-area-bottom');
+        if (pTop && pTop.trim() !== '') document.documentElement.style.setProperty('--safe-area-top', pTop.trim());
+        if (pBottom && pBottom.trim() !== '') document.documentElement.style.setProperty('--safe-area-bottom', pBottom.trim());
+      }
+    } catch (_) {}
+  }
+  syncSafeArea();
+  window.addEventListener('resize', syncSafeArea);
+  window.addEventListener('message', function (ev) {
+    if (ev.data) {
+      if (ev.data.safeAreaTop) document.documentElement.style.setProperty('--safe-area-top', ev.data.safeAreaTop);
+      if (ev.data.safeAreaBottom) document.documentElement.style.setProperty('--safe-area-bottom', ev.data.safeAreaBottom);
+      if (ev.data.type === 'SET_THEME' && ev.data.theme) applyTheme(ev.data.theme);
+    }
+  });
+
+  function applyTheme(theme) {
+    if (theme === 'amoled' || theme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'amoled');
+      document.body.classList.add('amoled-mode');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      document.body.classList.remove('amoled-mode');
+    }
+    notifySystemBars(theme);
+  }
+
+  function toggleTheme() {
+    var isAmoled = document.documentElement.getAttribute('data-theme') === 'amoled' || document.body.classList.contains('amoled-mode');
+    var nextTheme = isAmoled ? 'light' : 'amoled';
+    applyTheme(nextTheme);
+    try {
+      localStorage.setItem(THEME_KEY, nextTheme);
+    } catch (_) {}
+    try {
+      if (window.parent && typeof window.parent.setTheme === 'function') {
+        window.parent.setTheme(nextTheme);
+      }
+    } catch (_) {}
+  }
+
+  function initTheme() {
+    var savedTheme = null;
+    try {
+      savedTheme = localStorage.getItem(THEME_KEY);
+    } catch (_) {}
+    if (!savedTheme) {
+      try {
+        if (window.parent && window.parent.document && window.parent.document.documentElement) {
+          var parentTheme = window.parent.document.documentElement.getAttribute('data-theme');
+          if (parentTheme === 'amoled' || parentTheme === 'dark') {
+            savedTheme = 'amoled';
+          }
+        }
+      } catch (_) {}
+    }
+    if (savedTheme === 'amoled' || savedTheme === 'dark') {
+      applyTheme('amoled');
+    } else {
+      applyTheme('light');
+    }
+  }
+  initTheme();
+
+  var themeToggleBtn = document.getElementById('themeToggle');
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      toggleTheme();
+    });
+  }
+
+  // Keyboard: arrows move between pages, Escape returns to menu / closes book
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      back();
+      return;
+    }
+    if (!document.body.classList.contains('in-deck')) return;
+    if (e.key === 'ArrowRight') next();
+    else if (e.key === 'ArrowLeft') prev();
+  });
+})();
+</script>
+</body>
+</html>

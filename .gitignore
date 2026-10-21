@@ -1,0 +1,22 @@
+*.iml
+.gradle/
+/local.properties
+local.properties
+/.idea/
+.DS_Store
+build/
+**/build/
+/captures
+.externalNativeBuild
+.cxx
+*.apk
+*.ap_
+*.dex
+.server.log
+pending_edits.json
+.server.pid
+
+# Local AI agent files
+.agents/
+.claude/
+skills-lock.json

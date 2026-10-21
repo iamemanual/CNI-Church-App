@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+<title>प्रातःकालीन एवं सायंकालीन आराधना</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --safe-area-top: 44px;
+    --safe-area-bottom: 24px;
+    --num-col-w: 2.2em;
+    --lbl-col-w: 5.4em;
+    --dialogue-indent: calc(var(--num-col-w) + var(--lbl-col-w) + 0.6em);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; background: #fff;
+    touch-action: pan-x pan-y pinch-zoom;
+  }
+  main, article.page {
+    touch-action: pan-x pan-y pinch-zoom;
+  }
+  body {
+    color: #000;
+    font-family: "Noto Sans Devanagari", "Nirmala UI", "Mangal", sans-serif;
+    line-height: 1.75;
+    font-size: 17px;
+  }
+  header.site {
+    padding: 32px 24px 22px;
+    text-align: center;
+    border-bottom: 2px solid #000;
+  }
+  header.site h1 { margin: 0 0 6px; font-size: 1.6rem; font-weight: 700; }
+  header.site p { margin: 0; font-size: 0.95rem; }
+  nav.jump {
+    display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+    padding: 12px 24px;
+    border-bottom: 1px solid #000;
+  }
+  nav.jump a {
+    color: #000; text-decoration: underline; font-weight: 600; font-size: 0.95rem;
+  }
+  main {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 12px 24px 64px;
+  }
+  h2.service {
+    text-align: center;
+    font-size: 1.45rem;
+    font-weight: 700;
+    margin: 40px 0 20px;
+    padding: 8px 0;
+    border-top: 1px solid #000;
+    border-bottom: 1px solid #000;
+  }
+  article.page {
+    border: 1px solid #000;
+    padding: 20px 24px 22px;
+    margin-bottom: 24px;
+    border-radius: 16px;
+  }
+  .pnum {
+    display: block;
+    font-size: 0.8rem;
+    text-align: right;
+    margin: 0 0 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #000;
+  }
+  h3.sec {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 22px 0 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #000;
+  }
+  h3.sec:first-of-type { margin-top: 0; }
+  .num {
+    font-weight: 700;
+  }
+  .block {
+    position: relative;
+    margin: 10px 0 12px;
+    padding-left: var(--num-col-w);
+  }
+  .block > .num {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: var(--num-col-w);
+  }
+  .instr {
+    font-style: italic;
+    margin: 8px 0 12px;
+    padding-left: var(--num-col-w);
+  }
+  .silence {
+    font-style: italic;
+    margin: 10px 0;
+    padding-left: var(--num-col-w);
+  }
+  .or {
+    font-style: italic;
+    margin: 14px 0 6px;
+    padding-left: var(--num-col-w);
+  }
+  .group {
+    margin: 10px 0 14px;
+  }
+  .line {
+    position: relative;
+    margin: 0 0 8px;
+    padding-left: var(--dialogue-indent) !important;
+    min-height: 1.75em;
+    line-height: 1.75;
+    word-break: break-word;
+  }
+  .line > .num {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: var(--num-col-w);
+    font-weight: 700;
+    text-align: left;
+  }
+  .line > .lbl {
+    position: absolute;
+    left: var(--num-col-w);
+    top: 0;
+    width: var(--lbl-col-w);
+    font-weight: 700;
+    text-align: left;
+    white-space: nowrap;
+  }
+  .line > .lbl:first-child {
+    left: 0;
+    width: calc(var(--num-col-w) + var(--lbl-col-w));
+  }
+  .resp {
+    font-weight: 700;
+  }
+  p.resp {
+    margin: 0 0 8px;
+    padding-left: var(--dialogue-indent);
+    line-height: 1.75;
+    word-break: break-word;
+  }
+  .poem {
+    margin: 10px 0 14px;
+    padding-left: var(--num-col-w);
+  }
+  .poem p {
+    margin: 0 0 8px;
+  }
+  .note {
+    font-size: 0.85rem;
+    margin-top: 18px;
+    padding-top: 10px;
+    border-top: 1px solid #000;
+    line-height: 1.6;
+  }
+  footer.site {
+    text-align: center;
+    font-size: 0.85rem;
+    padding: 20px 24px;
+    border-top: 1px solid #000;
+  }
+  @media (max-width: 480px) {
+    body { font-size: 16px; }
+    :root {
+      --num-col-w: 1.8em;
+      --lbl-col-w: 3.8em;
+      --dialogue-indent: calc(var(--num-col-w) + var(--lbl-col-w));
+    }
+    main { padding: 8px 16px 56px; }
+    article.page { padding: 16px 16px 18px; }
+  }
+  /* ===== Slide mode ===== */
+  body.slides header.site,
+  body.slides nav.jump,
+  body.slides h2.service,
+  body.slides footer.site { display: none; }
+
+  body.slides:not(.in-deck) {
+    overflow: hidden !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    overscroll-behavior: none !important;
+  }
+
+  #cover {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    background: #fff;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    text-align: center;
+    box-sizing: border-box;
+  }
+  body.slides:not(.in-deck) #cover { display: flex; }
+  #cover h1 { font-size: 1.7rem; font-weight: 700; margin: 0 0 32px; }
+  #cover p { margin: 0 0 32px; font-size: 0.95rem; }
+  #cover .choices { display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 360px; }
+  #cover button {
+    font: inherit; font-size: 1.1rem; font-weight: 700;
+    color: #000; background: #fff;
+    border: 2px solid #000; padding: 18px 20px; cursor: pointer;
+  }
+  #cover button:hover, #cover button:focus { background: #000; color: #fff; outline: none; }
+
+  #deckbar, #decknav { display: none; }
+  body.in-deck #deckbar {
+    display: flex; justify-content: space-between; align-items: center;
+    position: fixed; top: calc(max(env(safe-area-inset-top, 0px), var(--safe-area-top, 44px)) + 12px); left: 16px; right: 16px; z-index: 20;
+    background: transparent; border: none;
+    padding: 0; font-size: 0.9rem;
+    pointer-events: none;
+  }
+  body.in-deck #deckbar > * {
+    pointer-events: auto;
+  }
+  body.in-deck #decknav {
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    position: fixed; bottom: calc(max(env(safe-area-inset-bottom, 0px), var(--safe-area-bottom, 24px)) + 16px); left: 16px; right: 16px; z-index: 20;
+    background: transparent; border: none;
+    padding: 0;
+    pointer-events: none;
+  }
+  body.in-deck #decknav > * {
+    pointer-events: auto;
+  }
+  #deckbar button, #decknav button {
+    font: inherit; font-weight: 600; color: #000;
+    background: rgba(255, 255, 255, 0.92);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    border: 1.5px solid #000; padding: 9px 18px; cursor: pointer; min-width: 0;
+    border-radius: 999px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  }
+  #deckbar button:hover, #decknav button:hover:not(:disabled) { background: #000; color: #fff; }
+  #decknav button:disabled { opacity: 0.35; cursor: default; box-shadow: none; }
+  #deckbar, #decknav {
+    transition: opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1), transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  body.hide-controls #deckbar {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-22px);
+  }
+  body.hide-controls #decknav {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(22px);
+  }
+  #deckbar button, #decknav button {
+    font: inherit; font-weight: 600; color: #000;
+    background: rgba(255, 255, 255, 0.94);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    border: 1.5px solid #000; padding: 9px 18px; cursor: pointer; min-width: 0;
+    border-radius: 999px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  }
+  #deckbar button:hover, #decknav button:hover:not(:disabled) { background: #000; color: #fff; }
+  #decknav button:disabled { opacity: 0.35; cursor: default; box-shadow: none; }
+  #close, #menu {
+    width: 38px;
+    height: 38px;
+    padding: 0 !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1;
+    border-radius: 50% !important;
+  }
+  #count {
+    font-weight: 600; letter-spacing: 0.05em;
+    background: rgba(255, 255, 255, 0.94);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    border: 1.5px solid #000;
+    border-radius: 999px;
+    padding: 7px 15px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  }
+
+  /* Full screen slide deck mode with natural scrolling to prevent text cutoff */
+  body.slides.in-deck {
+    height: 100vh;
+    height: 100dvh;
+    position: fixed;
+    width: 100%;
+    inset: 0;
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+    line-height: 1.6;
+  }
+  body.slides.in-deck main {
+    position: fixed;
+    top: calc(max(env(safe-area-inset-top, 0px), var(--safe-area-top, 44px)) + 64px);
+    bottom: calc(max(env(safe-area-inset-bottom, 0px), var(--safe-area-bottom, 24px)) + 68px);
+    left: 0;
+    right: 0;
+    max-width: 680px;
+    margin: 0 auto;
+    overflow: hidden !important;
+    overflow-y: hidden !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: none !important;
+    padding: 8px 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    box-sizing: border-box;
+    z-index: 10;
+  }
+  body.slides.in-deck main::-webkit-scrollbar {
+    display: none;
+  }
+  body.slides.in-deck article.page {
+    display: none;
+    margin: 0 auto;
+    border: none;
+    padding: 0;
+    width: 100%;
+    max-width: 680px;
+    box-sizing: border-box;
+    min-height: min-content;
+  }
+  body.slides.in-deck article.page.active {
+    display: block;
+    animation: slideIn 0.3s ease;
+  }
+  body.slides.in-deck article.page.active .pnum { display: none; }
+
+  /* Compact deck mode typography to fit screen */
+  body.slides.in-deck .group { margin: 6px 0 8px; }
+  body.slides.in-deck .line { margin: 0 0 6px; line-height: 1.65; }
+  body.slides.in-deck .block { margin: 6px 0 8px; line-height: 1.65; }
+  body.slides.in-deck h3.sec { margin: 10px 0 6px; padding-bottom: 2px; font-size: 1.05rem; }
+  body.slides.in-deck .poem { margin: 6px 0 8px; line-height: 1.65; }
+  body.slides.in-deck .instr { margin: 4px 0 6px; line-height: 1.5; font-size: 0.9em; }
+  body.slides.in-deck .note { margin-top: 8px; padding-top: 6px; line-height: 1.5; }
+  body.slides.in-deck .pnum { margin: 0 0 6px; padding-bottom: 4px; }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(28px); }
+    to   { opacity: 1; transform: none; }
+  }
+  @media (max-width: 480px) {
+    :root {
+      --num-col-w: 2.0em;
+      --lbl-col-w: 5.0em;
+      --dialogue-indent: calc(var(--num-col-w) + var(--lbl-col-w) + 0.5em);
+    }
+    body.slides.in-deck main {
+      top: calc(max(env(safe-area-inset-top, 0px), var(--safe-area-top, 44px)) + 58px);
+      bottom: calc(max(env(safe-area-inset-bottom, 0px), var(--safe-area-bottom, 24px)) + 62px);
+      padding: 6px 14px;
+      overflow: hidden !important;
+      overflow-y: hidden !important;
+      overflow-x: hidden !important;
+    }
+    #deckbar button, #decknav button {
+      padding: 7px 14px;
+      font-size: 0.85rem;
+    }
+    #close, #menu {
+      width: 34px;
+      height: 34px;
+      font-size: 1rem;
+    }
+    #count {
+      padding: 6px 12px;
+      font-size: 0.8rem;
+    }
+    #cover .cover-close-btn,
+    #cover button.cover-close-btn,
+    .cover-close-btn {
+      top: calc(max(env(safe-area-inset-top, 0px), var(--safe-area-top, 44px)) + 12px) !important;
+      right: 14px !important;
+      width: 34px !important;
+      height: 34px !important;
+      min-width: 34px !important;
+      min-height: 34px !important;
+      max-width: 34px !important;
+      max-height: 34px !important;
+      font-size: 1rem !important;
+      padding: 0 !important;
+    }
+  }
+  @media print {
+    #cover, #deckbar, #decknav { display: none !important; }
+    body.slides article.page { display: block !important; animation: none; }
+    body.slides header.site, body.slides nav.jump, body.slides footer.site, body.slides h2.service { display: block; }
+  }
+  /* ===== iOS-style polish ===== */
+  button {
+    -webkit-appearance: none;
+    appearance: none;
+    -webkit-tap-highlight-color: transparent;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Noto Sans Devanagari", sans-serif;
+    transition: transform 0.15s ease, background-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+  }
+  button:active:not(:disabled) { transform: scale(0.96); }
+  #cover button {
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  }
+  #cover .cover-close-btn,
+  #cover button.cover-close-btn,
+  .cover-close-btn {
+    position: fixed !important;
+    top: calc(max(env(safe-area-inset-top, 0px), var(--safe-area-top, 44px)) + 16px) !important;
+    right: 16px !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    max-width: 38px !important;
+    max-height: 38px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 50% !important;
+    border: 1.5px solid #000 !important;
+    background: rgba(255, 255, 255, 0.94) !important;
+    color: #000 !important;
+    font-size: 1.15rem !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    z-index: 30 !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15) !important;
+    box-sizing: border-box !important;
+    aspect-ratio: 1 / 1 !important;
+  }
+  #cover .cover-close-btn:hover,
+  #cover button.cover-close-btn:hover {
+    background: #000 !important;
+    color: #fff !important;
+  }
+  body.in-deck .cover-close-btn { display: none !important; }
+  #deckbar button, #decknav button {
+    border-radius: 999px;
+    padding: 9px 18px;
+    min-width: 0;
+  }
+  article.page { border-radius: 16px; }
+
+  /* Show the service choice first: hide the printed content until a service is picked */
+  body.slides:not(.in-deck) main { display: none; }
+
+  .decknav-right {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    pointer-events: auto;
+  }
+  #themeToggle {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    max-width: 38px !important;
+    max-height: 38px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+    aspect-ratio: 1 / 1 !important;
+    box-sizing: border-box !important;
+  }
+  #themeToggle .icon-sun { display: none; }
+  #themeToggle .icon-moon { display: block; }
+  @media (max-width: 480px) {
+    #themeToggle {
+      width: 34px !important;
+      height: 34px !important;
+      min-width: 34px !important;
+      min-height: 34px !important;
+      max-width: 34px !important;
+      max-height: 34px !important;
+    }
+    #themeToggle svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  /* ===== AMOLED Invert Theme ===== */
+  html[data-theme="amoled"],
+  body.amoled-mode {
+    background: #000000 !important;
+    color: #ffffff !important;
+  }
+  html[data-theme="amoled"] body,
+  body.amoled-mode {
+    background: #000000 !important;
+  }
+  html[data-theme="amoled"] #cover,
+  body.amoled-mode #cover {
+    background: #000000 !important;
+    color: #ffffff !important;
+  }
+  html[data-theme="amoled"] #cover h1,
+  html[data-theme="amoled"] #cover p,
+  body.amoled-mode #cover h1,
+  body.amoled-mode #cover p {
+    color: #ffffff !important;
+  }
+  html[data-theme="amoled"] #cover button:not(.cover-close-btn),
+  body.amoled-mode #cover button:not(.cover-close-btn) {
+    background: #111111 !important;
+    color: #ffffff !important;
+    border-color: #ffffff !important;
+  }
+  html[data-theme="amoled"] #cover button:not(.cover-close-btn):hover,
+  body.amoled-mode #cover button:not(.cover-close-btn):hover {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  html[data-theme="amoled"] #deckbar button,
+  html[data-theme="amoled"] #decknav button,
+  html[data-theme="amoled"] #count,
+  html[data-theme="amoled"] .cover-close-btn,
+  body.amoled-mode #deckbar button,
+  body.amoled-mode #decknav button,
+  body.amoled-mode #count,
+  body.amoled-mode .cover-close-btn {
+    background: rgba(22, 22, 24, 0.95) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.75) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.8) !important;
+  }
+  html[data-theme="amoled"] #deckbar button:hover:not(:disabled),
+  html[data-theme="amoled"] #decknav button:hover:not(:disabled),
+  html[data-theme="amoled"] .cover-close-btn:hover,
+  body.amoled-mode #deckbar button:hover:not(:disabled),
+  body.amoled-mode #decknav button:hover:not(:disabled),
+  body.amoled-mode .cover-close-btn:hover {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  html[data-theme="amoled"] #decknav button:disabled,
+  body.amoled-mode #decknav button:disabled {
+    opacity: 0.3 !important;
+    background: rgba(22, 22, 24, 0.5) !important;
+    color: rgba(255, 255, 255, 0.3) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+  }
+  html[data-theme="amoled"] #themeToggle .icon-sun,
+  body.amoled-mode #themeToggle .icon-sun {
+    display: block !important;
+  }
+  html[data-theme="amoled"] #themeToggle .icon-moon,
+  body.amoled-mode #themeToggle .icon-moon {
+    display: none !important;
+  }
+  html[data-theme="amoled"] header.site,
+  html[data-theme="amoled"] nav.jump,
+  html[data-theme="amoled"] footer.site,
+  body.amoled-mode header.site,
+  body.amoled-mode nav.jump,
+  body.amoled-mode footer.site {
+    border-color: rgba(255, 255, 255, 0.3) !important;
+  }
+  html[data-theme="amoled"] nav.jump a,
+  body.amoled-mode nav.jump a {
+    color: #60a5fa !important;
+  }
+  html[data-theme="amoled"] article.page,
+  html[data-theme="amoled"] h2.service,
+  html[data-theme="amoled"] h3.sec,
+  html[data-theme="amoled"] .line,
+  html[data-theme="amoled"] .block,
+  html[data-theme="amoled"] .poem,
+  html[data-theme="amoled"] .resp,
+  html[data-theme="amoled"] .num,
+  html[data-theme="amoled"] .lbl,
+  body.amoled-mode article.page,
+  body.amoled-mode h2.service,
+  body.amoled-mode h3.sec,
+  body.amoled-mode .line,
+  body.amoled-mode .block,
+  body.amoled-mode .poem,
+  body.amoled-mode .resp,
+  body.amoled-mode .num,
+  body.amoled-mode .lbl {
+    color: #ffffff !important;
+  }
+  html[data-theme="amoled"] .instr,
+  html[data-theme="amoled"] .note,
+  html[data-theme="amoled"] .pnum,
+  html[data-theme="amoled"] .silence,
+  html[data-theme="amoled"] .or,
+  body.amoled-mode .instr,
+  body.amoled-mode .note,
+  body.amoled-mode .pnum,
+  body.amoled-mode .silence,
+  body.amoled-mode .or {
+    color: #9ca3af !important;
+  }
+  html[data-theme="amoled"] h3.sec,
+  html[data-theme="amoled"] h2.service,
+  html[data-theme="amoled"] .pnum,
+  html[data-theme="amoled"] .note,
+  html[data-theme="amoled"] .rule,
+  html[data-theme="amoled"] article.page,
+  body.amoled-mode h3.sec,
+  body.amoled-mode h2.service,
+  body.amoled-mode .pnum,
+  body.amoled-mode .note,
+  body.amoled-mode .rule,
+  body.amoled-mode article.page {
+    border-color: rgba(255, 255, 255, 0.25) !important;
+  }
+</style>
+</head>
+<body class="slides">
+
+<header class="site">
+  <h1>प्रातःकालीन एवं सायंकालीन आराधना</h1>
+  <p>पृष्ठ 5 से 18 तक का डिजिटल रूप</p>
+</header>
+
+<nav class="jump">
+  <a href="#morning">प्रातःकालीन</a>
+  <a href="#evening">सायंकालीन</a>
+</nav>
+
+<main>
+
+<h2 class="service" id="morning">प्रातःकालीन आराधना</h2>
+
+<!-- Page 5 -->
+<article class="page" id="m5">
+  <span class="pnum">पृष्ठ 5</span>
+  <h3 class="sec">भूमिका</h3>
+  <p class="block"><span class="num">1</span> आराधना के आवाहन के रूप में अगुआ पवित्र बाइबिल में से कोई वाक्यांश या पद पढ़ सकता है। अगुआ अपने शब्दों में अथवा अन्य कोई संक्षिप्त प्रार्थना आराधना के आरंभ में कर सकता है।</p>
+
+  <h3 class="sec">सराहना</h3>
+  <div class="group">
+    <p class="line"><span class="num">2</span><span class="lbl">अगुआ</span> हे प्रभु, हमारे होठों को खोल दीजिए;</p>
+    <p class="line"><span class="lbl">उत्तर</span> <span class="resp">तो हम आपकी स्तुति करेंगे।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> हे प्रभु, हम प्रातःकाल आपसे ही प्रार्थना करते हैं;</p>
+    <p class="line"><span class="lbl">उत्तर</span> <span class="resp">आप हमारी पुकार अवश्य सुनेंगे।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> परमेश्वर पिता, हमारे सृष्टिकर्ता की महिमा हो;<br>उसके पुत्र, हमारे मुक्तिदाता की महिमा हो;<br>उसके आत्मा, हमें पवित्र करनेवाले की महिमा हो।</p>
+    <p class="line"><span class="lbl">उत्तर</span> <span class="resp">जैसे आदि में थी, अब है,<br>और सदा, युग-युगांत होती रहेगी। आमीन।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> हे सर्वसामर्थी प्रभु परमेश्वर,<br>आप पवित्र, पवित्र, पवित्र हैं।</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">स्वर्ग और पृथ्वी आपके ऐश्वर्य से परिपूर्ण हैं;<br>परमधाम में आपकी स्तुति हो।</span></p>
+  </div>
+  <p class="note">* परमेश्वर को सम्बोधित करते समय आदरसूचक क्रियापदों का प्रयोग किया गया है। यदि धर्मसेवक चाहे तो वह एकवचन क्रियापद 'खोल' आदि का प्रयोग कर सकता है।</p>
+</article>
+
+<!-- Page 6 -->
+<article class="page" id="m6">
+  <span class="pnum">पृष्ठ 6</span>
+  <p class="instr">परमेश्वर की स्तुति में एक गीत अथवा भजन या गान गाया जा सकता है।</p>
+
+  <h3 class="sec">पश्चाताप तथा पाप-स्वीकरण</h3>
+  <p class="block"><span class="num">3</span> निम्नलिखित अथवा अन्य पाप-स्वीकरण का उपयोग किया जा सकता है।</p>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> हम सर्वशक्तिमान परमेश्वर के सामने दीनता से अपने पापों को स्वीकार करें।</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">हे परम पवित्र और परम दयावान परमेश्वर,<br>हम मानते हैं कि हमने मन, वचन और कर्म से<br>तथा भलाई न करने के कारण,<br>आपके विरुद्ध और एक-दूसरे के विरुद्ध पाप किया है।<br>इसलिये हम आपसे प्रार्थना करते हैं,<br>कि आप हम पर दया करें,<br>और हमारे पापों को क्षमा करें। आमीन।</span></p>
+  </div>
+
+  <p class="block"><span class="num">4</span> अगुआ यह कह सकता है:</p>
+  <div class="poem"><p>सर्वशक्तिमान और दयावान परमेश्वर हमारे सब पापों को क्षमा करे और उनसे हमें छुटकारा दे, हमें अपने जीवन को सुधारने के लिये अनुग्रह दे और पवित्र आत्मा के सामर्थ्य से हमें परिपूर्ण करे। आमीन।</p></div>
+  <p class="instr">(यदि कोई प्रेसबिटर (धर्मगुरु)* उपस्थित हो तो वह 'हमारे' और 'हमें' के स्थान पर 'तुम्हारे' और 'तुम्हें' कह सकता/सकती है।)</p>
+  <p class="instr">(अथवा क्रम संख्या 3 और 4 के बदले यह दया-याचना की जा सकती है बशर्ते कि इसका उपयोग क्रम संख्या 14 में नहीं हो।)</p>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> हे प्रभु, हम पर दया कीजिए।</p>
+    <p class="line"><span class="lbl">उत्तर</span> <span class="resp">हे खिस्त (मसीह), हम पर दया कीजिए।</span></p>
+    <p class="line"><span class="lbl">अगुआ</span> हे प्रभु, हम पर दया कीजिए।</p>
+  </div>
+
+  <p class="block"><span class="num">5</span> प्रभु की प्रार्थना यहां अथवा क्रम संख्या 14 में की जा सकती है।</p>
+  <div class="group">
+    <p class="line"><span class="lbl">सब</span> <span class="resp">हे हमारे स्वर्गिक पिता,<br>आपका नाम पवित्र माना जाए,</span></p>
+  </div>
+  <p class="note">* पास्टर, प्रेसबिटर, पुरोहित, धर्मगुरु, प्रीस्त, ये समानार्थी शब्द हैं। इनमें से किसी भी शब्द का प्रयोग किया जा सकता है।</p>
+</article>
+
+<!-- Page 7 -->
+<article class="page" id="m7">
+  <span class="pnum">पृष्ठ 7</span>
+  <div class="group">
+    <p class="line"><span class="resp">आपका राज्य आए,<br>आपकी इच्छा जैसे स्वर्ग में पूरी होती है,<br>वैसे पृथ्वी पर भी पूरी हो।<br>हमारी दिन भर की रोटी आज हमें दीजिए।<br>आप हमारे अपराधों को क्षमा कीजिए,<br>जैसे हमने अपने अपराधियों को क्षमा किया है।<br>आप हमें परीक्षा में मत डालिए,<br>परन्तु बुराई से हमें बचा लीजिए।<br>क्योंकि राज्य, पराक्रम और महिमा<br>अब और सदा-सर्वदा आपके ही हैं। आमीन।*</span></p>
+  </div>
+
+  <h3 class="sec">पवित्र बाइबिल का पाठ</h3>
+  <p class="instr">(क्रम संख्या 6-11 की टिप्पणियों के लिए, कृपाकर पृष्ठ 3-4 देखिए।)</p>
+  <p class="block"><span class="num">6</span> स्तुति का भजन या गीत, अथवा प्रातःकालीन स्तुतिगान (केन्टिकल) में से (नं० 3 अथवा 4, या 14) गाया या पढ़ा जा सकता है।</p>
+  <p class="block"><span class="num">7</span> भजन-संहिता का पाठ। भजन-संहिता में से एक या एक से अधिक भजन निर्धारित पाठावली के अनुसार पढ़े जाएंगे।</p>
+  <p class="block"><span class="num">8</span> पुराना नियम से पाठ। पाठ पढ़ने के पश्चात् मनन के लिए मौन रहा जा सकता है।</p>
+  <p class="block"><span class="num">9</span> पुराना नियम के पाठ के पश्चात् अनुक्रिया (रिस्पोन्स) के रूप में एक स्तुतिगान (केन्टिकल) अथवा भजन गाया अथवा पढ़ा जा सकता है।</p>
+  <p class="block"><span class="num">10</span> नया नियम से पाठ। पाठ पढ़ने के पश्चात् मनन के लिए मौन रहा जा सकता है।</p>
+  <p class="block"><span class="num">11</span> नया नियम के पाठ के पश्चात् अनुक्रिया (रिस्पोन्स) के रूप में एक स्तुतिगान (केन्टिकल) अथवा भजन गाया अथवा पढ़ा जा सकता है। यदि प्रवचन दिया जाएगा तो वह यहां अथवा क्रम संख्या 17 के पश्चात् दिया जाएगा।</p>
+  <p class="note">* 'आप' आदरसूचक सर्वनाम के स्थान पर 'तू' का प्रयोग किया जा सकता है।</p>
+</article>
+
+<!-- Page 8 -->
+<article class="page" id="m8">
+  <span class="pnum">पृष्ठ 8</span>
+  <p class="block"><span class="num">12</span> प्रेरितों का विश्वास वचन बोला जा सकता है।</p>
+  <div class="group" data-tpl="creed"></div>
+
+  <h3 class="sec">प्रार्थना</h3>
+  <div class="group">
+    <p class="line"><span class="num">13</span><span class="lbl">अगुआ</span> प्रभु आपके साथ हो;</p>
+    <p class="line"><span class="lbl">उत्तर</span> <span class="resp">और आपके साथ भी हो।</span></p>
+    <p class="line"><span class="lbl">अगुआ</span> हम प्रार्थना करें।</p>
+  </div>
+  <p class="block"><span class="num">14</span> (यदि क्रम संख्या 4 और 5 में दया-याचना और प्रभु की प्रार्थना नहीं की गई हैं तो यहां की जाएं:)</p>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> प्रभु, हम पर दया कीजिए,</p>
+    <p class="line"><span class="lbl">उत्तर</span> <span class="resp">मसीह (खिस्त)*, हम पर दया कीजिए।</span></p>
+    <p class="line"><span class="lbl">अगुआ</span> प्रभु, हम पर दया कीजिए।</p>
+  </div>
+  <p class="note">* मसीह, अथवा खिस्त दोनों में से कोई एक का प्रयोग किया जा सकता है।</p>
+</article>
+
+<!-- Page 9 -->
+<article class="page" id="m9">
+  <span class="pnum">पृष्ठ 9</span>
+  <div data-tpl="lords"></div>
+  <p class="note">* पृष्ठ 7 की टिप्पणी देखिए।</p>
+
+  <p class="block"><span class="num">15</span> परहित निवेदन। अथवा निम्नलिखित उत्तरवादी विनतियाँ अथवा विनतियों का कोई अन्य रूप प्रयुक्त किया जा सकता है।</p>
+  <p class="instr">यदि अगुआ चाहे, तो किसी विनती के पहले किसी विशेष आवश्यकता का उल्लेख कर सकता है, और उसके बाद कुछ क्षण मौन रहा जा सकता है।</p>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> हे प्रभु, अपने आत्मा की शक्ति से हममें प्राण फूंक दीजिए।**</p>
+    <p class="line"><span class="lbl">उत्तर</span> <span class="resp">और आपकी सेवा आनन्द से करने के लिए हमें जाग्रत कर दीजिए।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> न्याय और स्वतन्त्रता को फैलाने के लिए हमारी सहायता कीजिए;</p>
+    <p class="line"><span class="lbl">उत्तर</span> <span class="resp">और सब को जीवन की भरपूरी प्रदान कीजिए।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> दरिद्रों और दलितों के प्रति अपना प्रेम हम में उत्पन्न कीजिए;</p>
+    <p class="line"><span class="lbl">उत्तर</span> <span class="resp">जो बीमार हैं और मृत्यु के निकट हैं, उन सबको आशा और दिलासा दीजिए।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> वर दीजिए कि हमारे देश में एकता और मेल-मिलाप बना रहे;</p>
+    <p class="line"><span class="lbl">उत्तर</span> <span class="resp">और देशवासियों को शान्ति की आशिष मिले।</span></p>
+  </div>
+  <p class="note">** अथवा 'पुनर्जाग्रत' कीजिए।</p>
+</article>
+
+<!-- Page 10 -->
+<article class="page" id="m10">
+  <span class="pnum">पृष्ठ 10</span>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> जिनको अधिकार प्राप्त है, उनका अपने पवित्र आत्मा के द्वारा मार्ग-दर्शन कीजिए;</p>
+    <p class="line"><span class="lbl">उत्तर</span> <span class="resp">और आपका शासन समस्त संसार में हो।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> हे प्रभु, अपने लोगों को आशिष दीजिए;</p>
+    <p class="line"><span class="lbl">उत्तर</span> <span class="resp">और हमें विश्वास तथा प्रेम में स्थिर रखिए।</span></p>
+  </div>
+
+  <p class="block"><span class="num">16</span> उस दिन की विशेष प्रार्थना (कॉलेक्ट) अथवा अन्य कोई उपयुक्त प्रार्थना की जाएगी।</p>
+  <p class="block"><span class="num">17</span> निम्नलिखित प्रार्थनाओं में से एक या दोनों, अथवा कोई अन्य प्रार्थना की जा सकती है।</p>
+  <div class="poem"><p>हे प्रातःकाल के सृष्टिकर्ता परमेश्वर, आपने अन्धकार को दूर किया और आप संसार में प्रकाश लाए। आप हमारे मध्य से पाप के अन्धकार को मिटा दीजिए, हमारे हृदय में अपने सत्य का प्रकाश उत्पन्न कीजिए और हमारे हाथों को भले कार्य करने के लिए सबल बनाइए। आपके पुत्र प्रभु येशु मसीह (खिस्त) सत्य ज्योति हैं; उन्हीं के द्वारा आप हमें प्रकाश और आनन्द प्रदान कीजिए। आमीन।</p></div>
+  <div class="poem"><p>हे शाश्वत् परमेश्वर पिता, आपके सामर्थ्य से हमारी सृष्टि हुई और आपके प्रेम द्वारा हमारा उद्धार हुआ। आप अपने पवित्र आत्मा के द्वारा हमारा मार्गदर्शन कीजिए और हमें सबल बनाइए कि आज हम अपने-आपको प्रेम से आपकी और एक-दूसरे की सेवा में अर्पण करें। आमीन।</p></div>
+
+  <h3 class="sec">समापन</h3>
+  <p class="block"><span class="num">18</span> निम्नलिखित वचनों में से एक अथवा कोई अन्य उपयुक्त आशीष-वचन आराधना के अन्त में बोला जाएगा :</p>
+  <div class="poem"><p>प्रभु येशु मसीह (खिस्त) का अनुग्रह, परमेश्वर का प्रेम और पवित्र आत्मा की सहभागिता हम-सब के साथ हो। <strong>आमीन।</strong></p></div>
+</article>
+
+<!-- Page 11 -->
+<article class="page" id="m11">
+  <span class="pnum">पृष्ठ 11</span>
+  <p class="or">अथवा</p>
+  <div class="poem"><p>अब युगों के अधिपति, अविनाशी, अदृश्य और एकमात्र परमेश्वर का सम्मान एवं महिमा युग्-युगांत होती रहे। <strong>आमीन।</strong></p></div>
+  <p class="or">अथवा</p>
+  <div class="poem"><p>प्रभु हमें आशिष दे, हमें सब बुराई से बचाए, और हमें शाश्वत् जीवन में पहुंचाए। <strong>आमीन।</strong></p></div>
+  <p class="or">अथवा</p>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> प्रभु आप-सब के साथ हो;</p>
+    <p class="line"><span class="lbl">उत्तर</span> <span class="resp">और आपके साथ भी हो।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> हम प्रभु को धन्य कहें;</p>
+    <p class="line"><span class="lbl">उत्तर</span> <span class="resp">परमेश्वर का धन्यवाद हो।</span></p>
+  </div>
+</article>
+
+<h2 class="service" id="evening">सायंकालीन आराधना</h2>
+
+<!-- Page 12 -->
+<article class="page" id="e12">
+  <span class="pnum">पृष्ठ 12</span>
+  <h3 class="sec">भूमिका</h3>
+  <p class="block"><span class="num">1</span> आराधना के आवाहन के रूप में अगुआ पवित्र बाइबिल में से कोई वाक्यांश अथवा संक्षिप्त पद पढ़ सकता है। अगुआ अपने शब्दों में अथवा अन्य कोई संक्षिप्त प्रार्थना आराधना के आरंभ में कर सकता है।</p>
+
+  <h3 class="sec">सराहना</h3>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> पवित्रता से सजकर प्रभु की आराधना करो।</p>
+    <p class="line"><span class="lbl">उत्तर</span> <span class="resp">समस्त पृथ्वी प्रभु से डरे।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> मेरी प्रार्थना प्रभु के सम्मुख सुगन्धित धूप ठहरे;</p>
+    <p class="line"><span class="lbl">उत्तर</span> <span class="resp">और मेरा हाथ जोड़ना सान्ध्य-बलि माना जाए।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> परमेश्वर पिता, हमारे सृष्टिकर्ता की महिमा हो;<br>उसके पुत्र, हमारे मुक्तिदाता की महिमा हो;<br>उसके आत्मा, हमें पवित्र करनेवाले की महिमा हो।</p>
+    <p class="line"><span class="lbl">उत्तर</span> <span class="resp">जैसे आदि में थी, अब है,<br>और सदा, युग-युगांत होती रहेगी। आमीन।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> हे सर्वसामर्थी प्रभु परमेश्वर,<br>आप पवित्र, पवित्र, पवित्र हैं।</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">स्वर्ग और पृथ्वी आपके ऐश्वर्य से परिपूर्ण हैं;<br>परमधाम में आपकी स्तुति हो।</span></p>
+  </div>
+  <p class="instr">परमेश्वर की स्तुति में एक गीत अथवा भजन या गान गाया जा सकता है।</p>
+</article>
+
+<!-- Page 13 -->
+<article class="page" id="e13">
+  <span class="pnum">पृष्ठ 13</span>
+  <h3 class="sec">पश्चाताप तथा पाप-स्वीकरण</h3>
+  <p class="block"><span class="num">3</span> निम्नलिखित अथवा अन्य पाप-स्वीकरण का उपयोग किया जा सकता है।</p>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> हम सर्वशक्तिमान परमेश्वर के सामने दीनता से अपने पापों को स्वीकार करें।</p>
+  </div>
+  <p class="silence">चित्त एकाग्र करने के लिए कुछ क्षण मौन।</p>
+  <div class="group">
+    <p class="line"><span class="lbl">सब</span> <span class="resp">हे अत्यन्त दयालु परमेश्वर,<br>हम मानते हैं कि हम ने मन, वचन और कर्म से<br>आपके विरुद्ध पाप किया है।<br>हमने अपने सम्पूर्ण हृदय से आपसे प्रेम नहीं किया।<br>हमने अपने पड़ोसी से अपने समान प्रेम नहीं किया।<br>हे दयावान परमेश्वर, हम प्रार्थना करते हैं<br>कि आप अतीत में किये गये हमारे पापों को क्षमा करें,<br>और वर्तमान में हमारे आचरण में सुधार करें,<br>भविष्य में जैसे हमें होना चाहिये वैसे हमें बनाएं,<br>ताकि हम आपकी इच्छा को मानें,<br>और आपके मार्ग पर आनन्द से चलें;<br>हमारे प्रभु येशु मसीह (खिस्त) के द्वारा। आमीन।</span></p>
+  </div>
+
+  <p class="block"><span class="num">4</span> अगुआ यह कह सकता है:</p>
+  <div class="poem"><p>सर्वशक्तिमान और दयावान परमेश्वर हमारे सब पापों को क्षमा करे और उनसे हमें छुटकारा दे, हमें अपने जीवन को सुधारने के लिये अनुग्रह दे और पवित्र आत्मा के सामर्थ्य से परिपूर्ण करे। आमीन।</p></div>
+  <p class="instr">(यदि कोई प्रेसबिटर (धर्मगुरु),** उपस्थित हो तो वह 'हमारे' और 'हमें' के स्थान पर 'तुम्हारे' और 'तुम्हें' कह सकता/सकती है।)</p>
+  <p class="instr">(अथवा उपरोक्त क्रम संख्या 3 और 4 के बदले यह दया-याचना की जा सकती है बशर्ते कि इसका उपयोग क्रम संख्या 14 में नहीं हो।)</p>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> हे प्रभु, हम पर दया कीजिए।</p>
+    <p class="line"><span class="lbl">उत्तर</span> <span class="resp">हे मसीह (खिस्त)*, हम पर दया कीजिए।</span></p>
+    <p class="line"><span class="lbl">अगुआ</span> हे प्रभु, हम पर दया कीजिए।</p>
+  </div>
+  <p class="note">* दोनों शब्द समानार्थी हैं। अतः किसी एक को प्रयुक्त किया जा सकता है।<br>** पृष्ठ 6 की टिप्पणी देखिए।</p>
+</article>
+
+<!-- Page 14 -->
+<article class="page" id="e14">
+  <span class="pnum">पृष्ठ 14</span>
+  <p class="block"><span class="num">5</span> प्रभु की प्रार्थना यहां अथवा क्रम संख्या 14 में की जा सकती है।</p>
+  <div data-tpl="lords"></div>
+
+  <h3 class="sec">पवित्र बाइबिल का पाठ</h3>
+  <p class="instr">(क्रम संख्या 6-11 की टिप्पणियों के लिए, कृपाकर पृष्ठ 3-4 देखिए।)</p>
+  <p class="block"><span class="num">6</span> स्तुति का भजन या गीत, अथवा प्रातःकालीन स्तुतिगान (केन्टिकल) में से (नं० 5 अथवा 25, या 14) गाया जा सकता है।</p>
+  <p class="block"><span class="num">7</span> भजन-संहिता का पाठ। भजन-संहिता में से एक या एक से अधिक भजन निर्धारित पाठावली के अनुसार पढ़े जाएंगे।</p>
+  <p class="block"><span class="num">8</span> पुराना नियम से पाठ। पाठ पढ़ने के पश्चात् मनन के लिए मौन रहा जा सकता है।</p>
+  <p class="block"><span class="num">9</span> पुराना नियम के पाठ के पश्चात् अनुक्रिया (रिस्पोन्स) के रूप में एक स्तुतिगान (केन्टिकल) अथवा भजन गाया अथवा पढ़ा जा सकता है।</p>
+  <p class="block"><span class="num">10</span> नया नियम से पाठ। पाठ पढ़ने के पश्चात् मनन के लिए मौन रहा जा सकता है।</p>
+  <p class="note">*** 'आप' आदरसूचक सर्वनाम के स्थान पर 'तू', 'तेरा' अथवा 'तेरी' का प्रयोग किया जा सकता है।</p>
+</article>
+
+<!-- Page 15 -->
+<article class="page" id="e15">
+  <span class="pnum">पृष्ठ 15</span>
+  <p class="block"><span class="num">11</span> नया नियम के पाठ के पश्चात् अनुक्रिया (रिस्पोन्स) के रूप में एक स्तुतिगान (केन्टिकल) अथवा भजन गाया अथवा पढ़ा जा सकता है। यदि प्रवचन दिया जाएगा तो वह यहां अथवा क्रम संख्या 17 के पश्चात् दिया जाएगा।</p>
+  <p class="block"><span class="num">12</span> प्रेरितों का विश्वास वचन बोला जा सकता है।</p>
+  <div class="group" data-tpl="creed"></div>
+
+  <h3 class="sec">प्रार्थना</h3>
+  <div class="group">
+    <p class="line"><span class="num">13</span><span class="lbl">अगुआ</span> प्रभु आपके साथ हो;</p>
+    <p class="line"><span class="lbl">उत्तर</span> <span class="resp">और आपके साथ भी हो।</span></p>
+    <p class="line"><span class="lbl">अगुआ</span> हम प्रार्थना करें।</p>
+  </div>
+</article>
+
+<!-- Page 16 -->
+<article class="page" id="e16">
+  <span class="pnum">पृष्ठ 16</span>
+  <p class="block"><span class="num">14</span> (यदि क्रम संख्या 4 और 5 में दया-याचना और प्रभु की प्रार्थना नहीं की गई हैं तो वे यहां की जाएं :)</p>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> प्रभु, हम पर दया कीजिए,</p>
+    <p class="line"><span class="lbl">उत्तर</span> <span class="resp">हे मसीह (खिस्त), हम पर दया कीजिए।</span></p>
+    <p class="line"><span class="lbl">अगुआ</span> प्रभु, हम पर दया कीजिए।</p>
+  </div>
+  <div data-tpl="lords"></div>
+  <p class="note">* पृष्ठ 14 पर 'प्रभु की प्रार्थना' से सम्बन्धित टिप्पणी देखिए।</p>
+
+  <p class="block"><span class="num">15</span> परहित निवेदन। अथवा निम्नलिखित उत्तरवादी विनतियाँ अथवा विनतियों का कोई अन्य रूप प्रयुक्त किया जा सकता है।</p>
+  <p class="instr">यदि अगुआ चाहे, तो किसी विनती के पहले किसी विशेष आवश्यकता का उल्लेख कर सकता है, और उसके बाद कुछ क्षण मौन रहा जा सकता है।</p>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> हे प्रभु, हम पर अपनी करुणा प्रकट कीजिए;</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">और अपना उद्धार हमें प्रदान कीजिए।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> हे प्रभु, आपके धर्मसेवक धार्मिकता से विभूषित हों;</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">और आपके भक्त जयजयकार करें।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> हे प्रभु, अपने लोगों को बचा लीजिए।</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">और अपनी कलीसिया को आशिष दीजिए।</span></p>
+  </div>
+</article>
+
+<!-- Page 17 -->
+<article class="page" id="e17">
+  <span class="pnum">पृष्ठ 17</span>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> हे प्रभु, हमारे देश पर कृपा-दृष्टि कीजिए;</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">और जब हम आपको पुकारें, तो कृपा कर हमारी प्रार्थना को सुनिए।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> हे प्रभु, हमारे शासकों का मार्गदर्शन कीजिए;</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">और उनको अपनी ईश्वरीय बुद्धि प्रदान कीजिए।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> हे प्रभु, संसार में शांति स्थापित कीजिए;</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">और समस्त राष्ट्रों में आपका राज्य आए।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> हे प्रभु, जो लोग दुःख या संकट में हैं, वर दीजिए कि हम उनकी सुधि लें;</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">और जो अन्याय से पीड़ित हैं, उनको मुक्त कीजिए।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> हे परमेश्वर, अपना पवित्र आत्मा हमें प्रदान कीजिए;</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">और हमारे हृदय को शुद्ध कीजिए।</span></p>
+  </div>
+
+  <p class="block"><span class="num">16</span> उस दिवस की विशेष प्रार्थना (कॉलेक्ट) अथवा अन्य कोई उपयुक्त प्रार्थना की जाएगी।</p>
+  <p class="block"><span class="num">17</span> निम्नलिखित प्रार्थनाओं में से एक या दोनों, अथवा कोई अन्य प्रार्थना की जा सकती है।</p>
+  <div class="poem"><p>हे परमेश्वर, आप सबके पिता हैं। स्वर्ग का समस्त समुदाय आपका गुणगान करता है। वर दीजिए कि समस्त मानव जाति भी आपकी आराधना करे, सब राष्ट्र आपकी आज्ञाओं का पालन करें, सब जातियां आपको स्वीकार करें, और सब लोग आप से प्रेम करें, आपकी सेवा करें और आप में पूर्ण शान्ति प्राप्त करें; हमारे प्रभु येशु मसीह (खिस्त) के द्वारा। <strong>आमीन।</strong></p></div>
+  <div class="poem"><p>हे प्रभु येशु, हमारे साथ रहिए, क्योंकि दिन ढलने लगा है और शाम हुआ चाहती है। आप मार्ग में हमारे साथी हों। हमारे मन में प्रेम की ज्योति जगाइए, हमारे हृदय को प्रेम और आनन्द से उत्तेजित कीजिए और अपने पुनरुत्थान की सामर्थ्य का अनुभव हमें कराइए, क्योंकि आप ही हमारे प्रभु और हमारे परमेश्वर हैं। <strong>आमीन।</strong></p></div>
+</article>
+
+<!-- Page 18 -->
+<article class="page" id="e18">
+  <span class="pnum">पृष्ठ 18</span>
+  <div class="poem"><p>हे प्रभु परमेश्वर, हमारे अंधकार को प्रकाशित कीजिए। अपनी महान् कृपा से इस रात में सब जोखिमों और संकटों से हमारी रक्षा कीजिए; अपने पुत्र, हमारे उद्धारकर्ता प्रभु येशु मसीह (खिस्त) के प्रेम के निमित्त। <strong>आमीन।</strong></p></div>
+
+  <h3 class="sec">समापन</h3>
+  <p class="block"><span class="num">18</span> निम्नलिखित आशिष-वचनों में से एक अथवा कोई अन्य उपयुक्त आशिष-वचन आराधना के अन्त में बोला जाएगा :</p>
+  <div class="poem"><p>प्रभु येशु मसीह (खिस्त) का अनुग्रह, परमेश्वर का प्रेम और पवित्र आत्मा की सहभागिता हम-सब के साथ हो। <strong>आमीन।</strong></p></div>
+  <p class="or">अथवा</p>
+  <div class="poem"><p>अब युगों के अधिपति, अविनाशी, अदृश्य और एकमात्र परमेश्वर का सम्मान एवं महिमा युगानुयुग होती रहे। <strong>आमीन।</strong></p></div>
+  <p class="or">अथवा</p>
+  <div class="poem"><p>प्रभु हमें आशिष दे, हमें सब बुराई से बचाए, और हमें शाश्वत् जीवन में पहुंचाए। <strong>आमीन।</strong></p></div>
+  <p class="or">अथवा</p>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> प्रभु आप-सब के साथ हो;</p>
+    <p class="line"><span class="lbl">उत्तर</span> <span class="resp">और आपके साथ भी हो।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">अगुआ</span> हम प्रभु को धन्य कहें;</p>
+    <p class="line"><span class="lbl">उत्तर</span> <span class="resp">परमेश्वर का धन्यवाद हो।</span></p>
+  </div>
+</article>
+
+</main>
+
+<footer class="site">प्रातःकालीन एवं सायंकालीन आराधना · डिजिटल रूप</footer>
+
+<template id="lords">
+  <div class="group">
+    <p class="line"><span class="lbl">सब</span> <span class="resp">हे हमारे स्वर्गिक पिता,<br>आपका नाम पवित्र माना जाए,<br>आपका राज्य आए,<br>आपकी इच्छा जैसे स्वर्ग में पूरी होती है,<br>वैसे पृथ्वी पर भी पूरी हो।<br>हमारी दिन भर की रोटी आज हमें दीजिए।<br>आप हमारे अपराधों को क्षमा कीजिए,<br>जैसे हमने अपने अपराधियों को क्षमा किया है।<br>आप हमें परीक्षा में मत डालिए,<br>परन्तु बुराई से हमें बचा लीजिए।<br>क्योंकि राज्य, पराक्रम और महिमा<br>अब और सदा-सर्वदा आपके ही हैं। आमीन।*</span></p>
+  </div>
+</template>
+
+<template id="creed">
+  <p class="line"><span class="lbl">सब</span> <span class="resp">मैं सर्वशक्तिमान पिता,<br>स्वर्ग और पृथ्वी के सृष्टिकर्ता<br>परमेश्वर पर विश्वास करता/करती हूँ।<br>मैं उसके एकलौते पुत्र, हमारे प्रभु<br>येशु मसीह (खिस्त)* पर विश्वास करता/करती हूँ।<br>वह पवित्र आत्मा की सामर्थ्य से गर्भ में आए<br>और कुंआरी मरियम से जन्मे।<br>उन्होंने पुंतियुस पिलातुस के शासन में दुःख भोगा।<br>वह क्रूस पर चढ़ाये गये, मरे और गाड़े गये,<br>और मृतकों के लोक में उतरे।<br>तीसरे दिन वह जी उठे,<br>वह स्वर्ग पर चढ़ गये,<br>और पिता की दाहिनी ओर विराजमान हुए।<br>वह जीवितों और मृतकों का न्याय करने को फिर आयेंगे।<br><br>मैं पवित्र आत्मा पर,<br>पवित्र सार्वलौकिक कलीसिया पर,<br>संतों की संगति,<br>पापों की क्षमा,<br>देह के पुनरुत्थान,<br>और शाश्वत् जीवन पर विश्वास करता/करती हूँ। आमीन।</span></p>
+</template>
+
+<script>
+  document.querySelectorAll('[data-tpl]').forEach(function (el) {
+    var tpl = document.getElementById(el.getAttribute('data-tpl'));
+    if (tpl) el.replaceWith(tpl.content.cloneNode(true));
+  });
+</script>
+<div id="cover">
+  <button type="button" class="cover-close-btn" aria-label="बंद करें" title="बंद करें" onclick="if(window.parent&&window.parent!==window){window.parent.postMessage({type:'CLOSE_BOOK'},'*');if(typeof window.parent.closePdfBook==='function')window.parent.closePdfBook();}else{window.history.back();}">✕</button>
+  <h1>प्रातःकालीन एवं सायंकालीन आराधना</h1>
+  <div class="choices">
+    <button type="button" data-service="m">प्रातःकालीन आराधना</button>
+    <button type="button" data-service="e">सायंकालीन आराधना</button>
+  </div>
+</div>
+
+<div id="deckbar">
+  <span id="count"></span>
+  <button type="button" id="close" aria-label="बंद करें" title="बंद करें">✕</button>
+</div>
+
+<div id="decknav">
+  <button type="button" id="prev">‹ पिछला</button>
+  <div class="decknav-right">
+    <button type="button" id="themeToggle" aria-label="AMOLED Invert Switch" title="AMOLED डार्क/लाइट मोड">
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+    </button>
+    <button type="button" id="next">अगला ›</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  document.body.classList.add('slides');
+
+  var all = Array.prototype.slice.call(document.querySelectorAll('article.page'));
+  var list = [];
+  var idx = 0;
+
+  var count = document.getElementById('count');
+  var prevBtn = document.getElementById('prev');
+  var nextBtn = document.getElementById('next');
+
+  // Zoom & Pan state
+  var baseScale = 1;
+  var userZoom = 1;
+  var panX = 0, panY = 0;
+  var pinchStartDist = 0;
+  var pinchStartZoom = 1;
+  var touchStartMidX = 0, touchStartMidY = 0;
+  var panStartX = 0, panStartY = 0;
+  var lastTapTime = 0;
+
+  function applyTransform(targetPage) {
+    var page = targetPage || (list.length > 0 ? list[idx] : null);
+    if (!page) return;
+    if (userZoom <= 1.02) {
+      panX = 0;
+      panY = 0;
+    }
+    var totalScale = baseScale * userZoom;
+    page.style.transform = 'translate(' + panX.toFixed(1) + 'px, ' + panY.toFixed(1) + 'px) scale(' + totalScale.toFixed(3) + ')';
+    page.style.transformOrigin = 'top center';
+  }
+
+  function autoFit() {
+    if (!document.body.classList.contains('in-deck')) return;
+    var page = list[idx];
+    if (!page) return;
+    page.style.transform = '';
+    page.style.transformOrigin = 'top center';
+
+    var main = document.querySelector('main');
+    if (!main) return;
+    main.scrollTop = 0;
+    var availH = main.clientHeight;
+    var availW = main.clientWidth;
+    var contentH = page.scrollHeight;
+    var contentW = page.scrollWidth;
+    baseScale = 1;
+    if (availH > 50 && contentH > 0) {
+      var scaleH = (availH - 6) / contentH;
+      var scaleW = availW > 0 && contentW > availW ? (availW - 6) / contentW : 1;
+      var fitScale = Math.min(scaleH, scaleW);
+      if (fitScale < 1) {
+        baseScale = fitScale;
+      }
+    }
+    applyTransform(page);
+  }
+
+  var singleTapTimer = null;
+  var lastTouchEndTime = 0;
+  function toggleControls() {
+    document.body.classList.toggle('hide-controls');
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          type: 'SET_CONTROLS_VISIBILITY',
+          hidden: document.body.classList.contains('hide-controls')
+        }, '*');
+      }
+    } catch (_) {}
+  }
+
+  function show() {
+    userZoom = 1;
+    panX = 0;
+    panY = 0;
+    var main = document.querySelector('main');
+    if (main) main.scrollTop = 0;
+    document.body.classList.remove('hide-controls');
+    all.forEach(function (p) { p.classList.remove('active'); p.style.transform = ''; });
+    var page = list[idx];
+    // restart the entrance animation
+    void page.offsetWidth;
+    page.classList.add('active');
+    count.textContent = (idx + 1) + ' / ' + list.length;
+    prevBtn.disabled = idx === 0;
+    nextBtn.disabled = idx === list.length - 1;
+    autoFit();
+  }
+
+  function start(prefix) {
+    list = all.filter(function (p) { return p.id.charAt(0) === prefix; });
+    idx = 0;
+    document.body.classList.add('in-deck');
+    show();
+  }
+
+  function back() {
+    userZoom = 1;
+    panX = 0;
+    panY = 0;
+    document.body.classList.remove('hide-controls');
+    all.forEach(function (p) { p.classList.remove('active'); p.style.transform = ''; });
+    document.body.classList.remove('in-deck');
+    window.scrollTo(0, 0);
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'CLOSE_BOOK' }, '*');
+        if (typeof window.parent.closePdfBook === 'function') {
+          window.parent.closePdfBook();
+        }
+      }
+    } catch (_) {}
+  }
+
+  window.addEventListener('resize', autoFit);
+  window.addEventListener('orientationchange', function () { setTimeout(autoFit, 150); });
+
+  function next() { if (idx < list.length - 1) { idx++; show(); } }
+  function prev() { if (idx > 0) { idx--; show(); } }
+
+  document.querySelectorAll('[data-service]').forEach(function (b) {
+    b.addEventListener('click', function () { start(b.getAttribute('data-service')); });
+  });
+  var menuBtn = document.getElementById('menu');
+  if (menuBtn) menuBtn.addEventListener('click', back);
+  var closeBtn = document.getElementById('close');
+  if (closeBtn) closeBtn.addEventListener('click', back);
+  nextBtn.addEventListener('click', next);
+  prevBtn.addEventListener('click', prev);
+
+  function getTouchDist(t1, t2) {
+    var dx = t1.clientX - t2.clientX;
+    var dy = t1.clientY - t2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  // Edge swipe navigation (clientX <= 44px, swiping right dx > 60px) to close book and return to app home
+  var edgeSwipeStartX = 0, edgeSwipeStartY = 0, isEdgeSwipe = false;
+  document.addEventListener('touchstart', function (e) {
+    if (e.touches && e.touches.length === 1) {
+      edgeSwipeStartX = e.touches[0].clientX;
+      edgeSwipeStartY = e.touches[0].clientY;
+      isEdgeSwipe = edgeSwipeStartX <= 44;
+    } else {
+      isEdgeSwipe = false;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', function (e) {
+    if (isEdgeSwipe && e.changedTouches && e.changedTouches.length > 0) {
+      var edgeDx = e.changedTouches[0].clientX - edgeSwipeStartX;
+      var edgeDy = e.changedTouches[0].clientY - edgeSwipeStartY;
+      if (edgeDx > 60 && Math.abs(edgeDx) > Math.abs(edgeDy) * 1.2) {
+        isEdgeSwipe = false;
+        try {
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type: 'CLOSE_BOOK' }, '*');
+            if (typeof window.parent.closePdfBook === 'function') {
+              window.parent.closePdfBook();
+            }
+          } else {
+            window.history.back();
+          }
+        } catch (_) {}
+        return;
+      }
+    }
+    isEdgeSwipe = false;
+  }, { passive: true });
+
+  document.addEventListener('touchcancel', function () {
+    isEdgeSwipe = false;
+  }, { passive: true });
+
+  // Swipe & pinch-zoom gestures
+  var sx = 0, sy = 0, tracking = false;
+  document.addEventListener('touchstart', function (e) {
+    if (!document.body.classList.contains('in-deck')) return;
+    if (e.touches.length === 2) {
+      tracking = false; // cancel swipe during pinch
+      pinchStartDist = getTouchDist(e.touches[0], e.touches[1]);
+      pinchStartZoom = userZoom;
+      touchStartMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      touchStartMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      panStartX = panX;
+      panStartY = panY;
+    } else if (e.touches.length === 1) {
+      var now = Date.now();
+      if (now - lastTapTime < 320) {
+        // Double-tap: toggle zoom
+        clearTimeout(singleTapTimer);
+        singleTapTimer = null;
+        lastTouchEndTime = Date.now();
+        if (userZoom > 1.05) {
+          userZoom = 1;
+          panX = 0;
+          panY = 0;
+        } else {
+          userZoom = 1.35;
+        }
+        applyTransform();
+        tracking = false;
+        lastTapTime = 0;
+        return;
+      }
+      lastTapTime = now;
+      sx = e.touches[0].clientX;
+      sy = e.touches[0].clientY;
+      tracking = true;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', function (e) {
+    if (!document.body.classList.contains('in-deck')) return;
+    if (e.touches.length === 2 && pinchStartDist > 0) {
+      var dist = getTouchDist(e.touches[0], e.touches[1]);
+      var factor = dist / pinchStartDist;
+      userZoom = Math.min(Math.max(pinchStartZoom * factor, 0.6), 4.0);
+
+      var midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      var midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      panX = panStartX + (midX - touchStartMidX);
+      panY = panStartY + (midY - touchStartMidY);
+
+      applyTransform();
+    } else if (e.touches.length === 1 && userZoom > 1.05) {
+      // Pan zoomed content
+      var dx = e.touches[0].clientX - sx;
+      var dy = e.touches[0].clientY - sy;
+      panX += dx * 0.45;
+      panY += dy * 0.45;
+      sx = e.touches[0].clientX;
+      sy = e.touches[0].clientY;
+      applyTransform();
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', function (e) {
+    if (e.touches.length < 2) {
+      pinchStartDist = 0;
+    }
+    if (!document.body.classList.contains('in-deck')) return;
+    if (!tracking) return;
+    tracking = false;
+
+    var dx = e.changedTouches[0].clientX - sx;
+    var dy = e.changedTouches[0].clientY - sy;
+
+    // Horizontal swipe for page navigation
+    if (userZoom <= 1.05 && Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      if (sx <= 44 && dx > 60) return; // Handled by edge swipe controller
+      if (dx < 0) next(); else prev();
+      return;
+    }
+
+    // Single tap in center/reading area toggles floating controls
+    if (Math.abs(dx) < 15 && Math.abs(dy) < 15) {
+      var target = e.target;
+      if (!target.closest('button, a, input, select, textarea, #deckbar, #decknav, #pinpointRoot')) {
+        lastTouchEndTime = Date.now();
+        clearTimeout(singleTapTimer);
+        singleTapTimer = setTimeout(function () {
+          toggleControls();
+        }, 220);
+      }
+    }
+  }, { passive: true });
+
+  // Mouse click toggle for desktop (ignores synthetic touch-clicks)
+  document.addEventListener('click', function (e) {
+    if (!document.body.classList.contains('in-deck')) return;
+    if (Date.now() - lastTouchEndTime < 450) return;
+    var target = e.target;
+    if (!target.closest('button, a, input, select, textarea, #deckbar, #decknav, #pinpointRoot')) {
+      toggleControls();
+    }
+  });
+
+  // AMOLED Invert Switch & Persistence
+  var THEME_KEY = 'church_companion_book_theme';
+
+  function notifySystemBars(theme) {
+    var isLight = (theme !== 'amoled' && theme !== 'dark');
+    try {
+      if (window.bridge && typeof window.bridge.updateSystemBars === 'function') {
+        window.bridge.updateSystemBars(isLight);
+      } else if (window.parent && window.parent.bridge && typeof window.parent.bridge.updateSystemBars === 'function') {
+        window.parent.bridge.updateSystemBars(isLight);
+      } else if (window.AndroidBridge && typeof window.AndroidBridge.updateSystemBars === 'function') {
+        window.AndroidBridge.updateSystemBars(isLight);
+      } else if (window.parent && window.parent.AndroidBridge && typeof window.parent.AndroidBridge.updateSystemBars === 'function') {
+        window.parent.AndroidBridge.updateSystemBars(isLight);
+      }
+    } catch (_) {}
+  }
+
+  function syncSafeArea() {
+    try {
+      if (window.parent && window.parent.document && window.parent.document.documentElement) {
+        var pStyle = window.getComputedStyle(window.parent.document.documentElement);
+        var pTop = pStyle.getPropertyValue('--safe-area-top');
+        var pBottom = pStyle.getPropertyValue('--safe-area-bottom');
+        if (pTop && pTop.trim() !== '') document.documentElement.style.setProperty('--safe-area-top', pTop.trim());
+        if (pBottom && pBottom.trim() !== '') document.documentElement.style.setProperty('--safe-area-bottom', pBottom.trim());
+      }
+    } catch (_) {}
+  }
+  syncSafeArea();
+  window.addEventListener('resize', syncSafeArea);
+  window.addEventListener('message', function (ev) {
+    if (ev.data) {
+      if (ev.data.safeAreaTop) document.documentElement.style.setProperty('--safe-area-top', ev.data.safeAreaTop);
+      if (ev.data.safeAreaBottom) document.documentElement.style.setProperty('--safe-area-bottom', ev.data.safeAreaBottom);
+      if (ev.data.type === 'SET_THEME' && ev.data.theme) applyTheme(ev.data.theme);
+    }
+  });
+
+  function applyTheme(theme) {
+    if (theme === 'amoled' || theme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'amoled');
+      document.body.classList.add('amoled-mode');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      document.body.classList.remove('amoled-mode');
+    }
+    notifySystemBars(theme);
+  }
+
+  function toggleTheme() {
+    var isAmoled = document.documentElement.getAttribute('data-theme') === 'amoled' || document.body.classList.contains('amoled-mode');
+    var nextTheme = isAmoled ? 'light' : 'amoled';
+    applyTheme(nextTheme);
+    try {
+      localStorage.setItem(THEME_KEY, nextTheme);
+    } catch (_) {}
+    try {
+      if (window.parent && typeof window.parent.setTheme === 'function') {
+        window.parent.setTheme(nextTheme);
+      }
+    } catch (_) {}
+  }
+
+  function initTheme() {
+    var savedTheme = null;
+    try {
+      savedTheme = localStorage.getItem(THEME_KEY);
+    } catch (_) {}
+    if (!savedTheme) {
+      try {
+        if (window.parent && window.parent.document && window.parent.document.documentElement) {
+          var parentTheme = window.parent.document.documentElement.getAttribute('data-theme');
+          if (parentTheme === 'amoled' || parentTheme === 'dark') {
+            savedTheme = 'amoled';
+          }
+        }
+      } catch (_) {}
+    }
+    if (savedTheme === 'amoled' || savedTheme === 'dark') {
+      applyTheme('amoled');
+    } else {
+      applyTheme('light');
+    }
+  }
+  initTheme();
+
+  var themeToggleBtn = document.getElementById('themeToggle');
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      toggleTheme();
+    });
+  }
+
+  // Keyboard: arrows move between pages, Escape returns to menu / closes book
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      back();
+      return;
+    }
+    if (!document.body.classList.contains('in-deck')) return;
+    if (e.key === 'ArrowRight') next();
+    else if (e.key === 'ArrowLeft') prev();
+  });
+})();
+</script>
+</body>
+</html>

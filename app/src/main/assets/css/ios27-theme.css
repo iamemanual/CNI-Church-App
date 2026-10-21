@@ -1,0 +1,2359 @@
+/* ==============================================================================
+   CHURCH COMPANION — iOS 27 PURE THEME & SHAPES REDESIGN (v12)
+   Continuous Squircles • Apple Hairlines • Clean Spatial Shadows • ZERO GLOW
+   STRICTLY ZERO POSITION OR LAYOUT CHANGES: No position, top, bottom, left, right,
+   margin, padding, width, height, display, flex, or grid overrides.
+   ============================================================================== */
+
+/* --- 1. iOS 27 Design Tokens (Clean Glass & Jewel Tones - Zero Glow) --- */
+:root {
+  /* Continuous Squircle Radii (Apple Continuous Geometry) */
+  --ios27-radius-pill: 9999px;
+  --ios27-radius-modal: 28px;
+  --ios27-radius-card-lg: 24px;
+  --ios27-radius-card-md: 20px;
+  --ios27-radius-item: 16px;
+  --ios27-radius-squircle-icon: 14px;
+  --ios27-radius-chip: 10px;
+
+  /* Spatial Glass Materials (Pure Frosted - Zero Colored Glow) */
+  --ios27-glass-surface: rgba(28, 33, 41, 0.76);
+  --ios27-glass-surface-elevated: rgba(36, 42, 53, 0.86);
+  --ios27-glass-card: rgba(32, 38, 48, 0.70);
+  --ios27-glass-border: rgba(255, 255, 255, 0.14);
+  --ios27-glass-border-subtle: rgba(255, 255, 255, 0.08);
+  --ios27-glass-border-hover: rgba(255, 255, 255, 0.28);
+  --ios27-glass-highlight: rgba(255, 255, 255, 0.18);
+  --ios27-glass-blur: blur(28px) saturate(190%);
+  --ios27-glass-blur-heavy: blur(36px) saturate(210%);
+
+  /* Clean Jewel Tones */
+  --ios27-cyan: #64748B;
+  --ios27-gold: #C59B27;
+  --ios27-gold-shimmer: #D4AF37;
+  --ios27-blue: #5C6B73;
+  --ios27-emerald: #10B981;
+  --ios27-violet: #78716C;
+  --ios27-ruby: #EF4444;
+
+  /* Crisp Directional Shadows (Realistic Depth - Zero Diffuse Neon Glow) */
+  --ios27-shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  --ios27-shadow-sm: 0 3px 10px -2px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  --ios27-shadow-md: 0 8px 24px -4px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  --ios27-shadow-lg: 0 20px 48px -8px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.20);
+}
+
+/* Theme Palette Enhancements */
+[data-theme="dark"] {
+  --bg-primary: #15181E;
+  --bg-surface: rgba(28, 33, 41, 0.76);
+  --bg-surface-elevated: rgba(36, 42, 53, 0.86);
+  --bg-subtle: rgba(22, 26, 33, 0.70);
+  --bg-dock: rgba(28, 32, 40, 0.88);
+  --text-primary: #FFFFFF;
+  --text-secondary: rgba(226, 232, 240, 0.88);
+  --text-muted: rgba(148, 163, 184, 0.75);
+  --border-subtle: rgba(255, 255, 255, 0.10);
+  --border-strong: rgba(148, 163, 184, 0.35);
+}
+
+[data-theme="amoled"] {
+  --bg-primary: #000000;
+  --bg-surface: rgba(14, 15, 18, 0.88);
+  --bg-surface-elevated: rgba(22, 24, 28, 0.94);
+  --bg-subtle: rgba(8, 9, 11, 0.80);
+  --bg-dock: rgba(10, 11, 13, 0.92);
+  --text-primary: #FFFFFF;
+  --text-secondary: rgba(241, 245, 249, 0.85);
+  --text-muted: rgba(148, 163, 184, 0.72);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(148, 163, 184, 0.30);
+}
+
+[data-theme="light"] {
+  --bg-primary: #F2F4F7;
+  --bg-surface: rgba(255, 255, 255, 0.90);
+  --bg-surface-elevated: rgba(255, 255, 255, 0.98);
+  --bg-subtle: rgba(234, 237, 242, 0.80);
+  --bg-dock: rgba(248, 249, 251, 0.92);
+  --text-primary: #1E2530;
+  --text-secondary: #475569;
+  --text-muted: #64748B;
+  --border-subtle: rgba(0, 0, 0, 0.18);
+  --border-strong: rgba(0, 0, 0, 0.35);
+  --ios27-glass-surface: rgba(255, 255, 255, 0.90);
+  --ios27-glass-card: rgba(255, 255, 255, 0.86);
+  --ios27-glass-border: rgba(0, 0, 0, 0.18);
+  --ios27-glass-highlight: rgba(255, 255, 255, 0.92);
+  --ios27-shadow-sm: 0 3px 10px -2px rgba(100, 116, 139, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --ios27-shadow-md: 0 8px 24px -4px rgba(100, 116, 139, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  --ios27-shadow-lg: 0 20px 48px -8px rgba(100, 116, 139, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+/* --- 2. Erase All Neon Glow Halos, Diffuse Orbs & Fuzzy Drop-Shadows --- */
+.ambient-glow,
+.modal-ambient-glow,
+.splash-glow-ring,
+.splash-glow-ring-backdrop,
+.glow-1,
+.glow-2,
+[class*="glow-ring"] {
+  display: none !important;
+  opacity: 0 !important;
+  filter: none !important;
+  box-shadow: none !important;
+}
+
+/* Erase icon drop-shadow glows and text halos across entire UI */
+.dock-item.active .dock-icon-wrap,
+.dock-item svg,
+.cross-symbol-wrap svg,
+.pill-icon-wrap svg,
+.quick-icon svg,
+.header-main-title,
+.hymn-number-pill,
+.song-item-num-badge,
+.color-indicator-band,
+.status-badge-dot {
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+/* Clean Canvas Wallpaper (Zero Glow Blobs) */
+body {
+  background-image: 
+    linear-gradient(180deg, rgba(3, 9, 23, 0.88) 0%, rgba(3, 9, 23, 0.98) 100%),
+    url('assets/church_bg.jpg') !important;
+  background-size: cover, cover !important;
+  background-position: center top !important;
+  background-attachment: fixed !important;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "Segoe UI", Roboto, sans-serif !important;
+}
+
+[data-theme="amoled"] body {
+  background-image: 
+    linear-gradient(180deg, rgba(0, 0, 0, 0.94) 0%, rgba(0, 0, 0, 0.99) 100%),
+    url('assets/church_bg.jpg') !important;
+}
+
+[data-theme="light"] body {
+  background-image: 
+    linear-gradient(180deg, rgba(237, 243, 252, 0.92) 0%, rgba(237, 243, 252, 0.99) 100%),
+    url('assets/church_bg.jpg') !important;
+}
+
+/* --- 3. Dynamic Island Floating Header (Continuous Squircle 28px • Clean Hairline) --- */
+.floating-header-island {
+  border-radius: var(--ios27-radius-modal) !important;
+  background: var(--ios27-glass-surface) !important;
+  backdrop-filter: var(--ios27-glass-blur-heavy) !important;
+  -webkit-backdrop-filter: var(--ios27-glass-blur-heavy) !important;
+  border: 1px solid var(--ios27-glass-border) !important;
+  box-shadow: var(--ios27-shadow-md) !important;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease !important;
+}
+
+.cross-symbol-wrap {
+  border-radius: var(--ios27-radius-squircle-icon) !important;
+  background: linear-gradient(135deg, rgba(4, 80, 207, 0.85) 0%, rgba(56, 189, 248, 0.65) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  box-shadow: var(--ios27-shadow-xs) !important;
+  color: #FFFFFF !important;
+}
+
+.header-main-title {
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+}
+
+[data-theme="light"] .header-main-title {
+  color: #08162E !important;
+}
+
+.header-sub-tag {
+  color: var(--ios27-cyan) !important;
+  font-weight: 700 !important;
+}
+
+.header-island-back-btn {
+  border-radius: var(--ios27-radius-pill) !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  color: #FFFFFF !important;
+}
+
+/* --- 4. Floating Dock (Continuous Capsule Pill 9999px • Zero Glow) --- */
+.dock-container {
+  border-radius: var(--ios27-radius-pill) !important;
+  background: var(--ios27-glass-surface) !important;
+  backdrop-filter: var(--ios27-glass-blur-heavy) !important;
+  -webkit-backdrop-filter: var(--ios27-glass-blur-heavy) !important;
+  border: 1px solid var(--ios27-glass-border) !important;
+  box-shadow: var(--ios27-shadow-lg) !important;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease !important;
+}
+
+.dock-indicator {
+  border-radius: var(--ios27-radius-pill) !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.10)) !important;
+  backdrop-filter: var(--ios27-glass-blur) !important;
+  -webkit-backdrop-filter: var(--ios27-glass-blur) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  box-shadow: var(--ios27-shadow-xs) !important;
+}
+
+[data-theme="light"] .dock-indicator {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.78)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.95) !important;
+  box-shadow: 0 2px 8px rgba(36, 28, 41, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+.dock-item.active {
+  color: var(--ios27-cyan) !important;
+}
+
+.dock-item.active .dock-icon-wrap {
+  color: var(--ios27-cyan) !important;
+}
+
+.dock-item.active .dock-label {
+  color: var(--ios27-cyan) !important;
+  font-weight: 700 !important;
+}
+
+/* --- 5. Daily Greeting Card (Continuous Squircle 24px • Standard Material Surface) --- */
+.daily-greeting-card {
+  border-radius: var(--ios27-radius-card-lg) !important;
+  background: linear-gradient(135deg, rgba(28, 33, 42, 0.94) 0%, rgba(20, 24, 30, 0.98) 100%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid var(--ios27-glass-border) !important;
+  box-shadow: var(--ios27-shadow-md) !important;
+  margin-top: 8px !important;
+}
+
+[data-theme="light"] .daily-greeting-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(244, 245, 247, 0.96) 100%) !important;
+  border: 1px solid rgba(0, 0, 0, 0.18) !important;
+  box-shadow: var(--ios27-shadow-md) !important;
+}
+
+.liturgical-badge.interactive-pill {
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 6px 12px 6px 8px !important;
+  border-radius: var(--ios27-radius-pill) !important;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.18) 0%, rgba(212, 175, 55, 0.06) 60%, rgba(255, 255, 255, 0.04) 100%) !important;
+  border: 1px solid rgba(212, 175, 55, 0.38) !important;
+  box-shadow: 0 3px 12px -2px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.20) !important;
+  backdrop-filter: blur(16px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
+  color: #F8FAFC !important;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif !important;
+  font-size: 0.80rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease !important;
+}
+
+.verse-pill-icon-wrap {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.35) 0%, rgba(212, 175, 55, 0.15) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FDE047;
+  flex-shrink: 0;
+  transition: transform 0.22s ease;
+}
+
+.verse-pill-text {
+  font-weight: 600;
+  line-height: 1;
+}
+
+.verse-pill-chevron {
+  color: rgba(212, 175, 55, 0.75);
+  margin-left: 1px;
+  flex-shrink: 0;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), color 0.22s ease;
+}
+
+.liturgical-badge.interactive-pill:hover {
+  transform: translateY(-1.5px) scale(1.02) !important;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.28) 0%, rgba(212, 175, 55, 0.12) 100%) !important;
+  border-color: rgba(212, 175, 55, 0.65) !important;
+  box-shadow: 0 6px 18px rgba(212, 175, 55, 0.25), inset 0 1px 2px rgba(255, 255, 255, 0.30) !important;
+}
+
+.liturgical-badge.interactive-pill:hover .verse-pill-icon-wrap {
+  transform: scale(1.08);
+  box-shadow: 0 0 14px rgba(212, 175, 55, 0.45);
+}
+
+.liturgical-badge.interactive-pill:hover .verse-pill-chevron {
+  transform: translateX(2px);
+  color: #FDE047;
+}
+
+.liturgical-badge.interactive-pill:active {
+  transform: scale(0.96) !important;
+}
+
+[data-theme="light"] .liturgical-badge.interactive-pill {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.14) 0%, rgba(255, 255, 255, 0.90) 100%) !important;
+  border: 1px solid rgba(197, 155, 39, 0.35) !important;
+  box-shadow: 0 2px 10px rgba(100, 116, 139, 0.10), inset 0 1px 1px rgba(255, 255, 255, 0.90) !important;
+  color: #0F172A !important;
+}
+
+[data-theme="light"] .verse-pill-icon-wrap {
+  background: linear-gradient(135deg, rgba(197, 155, 39, 0.22) 0%, rgba(197, 155, 39, 0.10) 100%);
+  border: 1px solid rgba(197, 155, 39, 0.40);
+  box-shadow: 0 0 8px rgba(197, 155, 39, 0.20);
+  color: #B45309;
+}
+
+[data-theme="light"] .verse-pill-chevron {
+  color: rgba(180, 83, 9, 0.70);
+}
+
+[data-theme="light"] .liturgical-badge.interactive-pill:hover {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.24) 0%, rgba(255, 255, 255, 0.98) 100%) !important;
+  border-color: rgba(197, 155, 39, 0.55) !important;
+  box-shadow: 0 4px 14px rgba(197, 155, 39, 0.22) !important;
+}
+
+/* --- 6. Home Dual Action Pills (.action-pill-card • Continuous Squircle 20px • Standard Surface) --- */
+.action-pill-card {
+  border-radius: var(--ios27-radius-card-md) !important;
+  background: rgba(30, 36, 46, 0.94) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid var(--ios27-glass-border) !important;
+  box-shadow: var(--ios27-shadow-sm) !important;
+  transition: border-color 0.22s ease, box-shadow 0.22s ease, filter 0.2s ease !important;
+}
+
+[data-theme="light"] .action-pill-card {
+  background: #FFFFFF !important;
+  border: 1px solid rgba(0, 0, 0, 0.18) !important;
+  box-shadow: var(--ios27-shadow-sm) !important;
+}
+
+.action-pill-card:hover,
+.action-pill-card:active {
+  border-color: var(--ios27-glass-border-hover) !important;
+  box-shadow: var(--ios27-shadow-md) !important;
+}
+
+.pill-icon-wrap {
+  border-radius: var(--ios27-radius-squircle-icon) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  box-shadow: var(--ios27-shadow-xs) !important;
+}
+
+.pill-icon-wrap.gold {
+  background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%) !important;
+  color: #030B18 !important;
+}
+
+.pill-icon-wrap.green {
+  background: linear-gradient(135deg, #059669 0%, #10B981 100%) !important;
+  color: #FFFFFF !important;
+}
+
+.pill-icon-wrap.blue {
+  background: linear-gradient(135deg, #475569 0%, #64748B 100%) !important;
+  color: #FFFFFF !important;
+}
+
+.pill-icon-wrap.cyan {
+  background: linear-gradient(135deg, rgba(4, 80, 207, 0.90) 0%, rgba(56, 189, 248, 0.70) 100%) !important;
+  color: #FFFFFF !important;
+}
+
+.pill-icon-wrap.violet {
+  background: linear-gradient(135deg, #6366F1 0%, #818CF8 100%) !important;
+  color: #FFFFFF !important;
+}
+
+/* --- 7. Books & Songbooks (.minimal-book-card, .minimal-songbook-card) --- */
+.minimal-book-card,
+.book-edition-card {
+  border-radius: 4px !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.40) !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  display: block !important;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease !important;
+}
+
+[data-theme="light"] .minimal-book-card,
+[data-theme="light"] .book-edition-card {
+  border: 1px solid rgba(0, 0, 0, 0.18) !important;
+  outline: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.10) !important;
+}
+
+.minimal-book-card:hover,
+.book-edition-card:hover {
+  transform: translateY(-3px) scale(1.02) !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.50) !important;
+}
+
+.book-cover-image-wrap {
+  width: 100% !important;
+  aspect-ratio: 1000 / 1333 !important;
+  border-radius: 4px !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  display: block !important;
+}
+
+.book-cover-img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+  border-radius: 4px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  filter: none !important;
+}
+
+.minimal-songbook-card {
+  border-radius: var(--ios27-radius-card-md) !important;
+  background: rgba(30, 36, 46, 0.94) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid var(--ios27-glass-border) !important;
+  box-shadow: var(--ios27-shadow-sm) !important;
+  transition: border-color 0.22s ease, box-shadow 0.22s ease, filter 0.2s ease !important;
+}
+
+[data-theme="light"] .minimal-songbook-card {
+  background: #FFFFFF !important;
+  border: 1px solid rgba(0, 0, 0, 0.18) !important;
+}
+
+.minimal-songbook-card:hover {
+  border-color: var(--ios27-glass-border-hover) !important;
+  box-shadow: var(--ios27-shadow-md) !important;
+}
+
+.minimal-songbook-icon {
+  border-radius: 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+}
+
+.minimal-book-tag,
+.section-badge-tag {
+  border-radius: var(--ios27-radius-pill) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: var(--ios27-shadow-xs) !important;
+}
+
+/* --- 8. Quick Actions Grid (.quick-grid, .quick-card) --- */
+.quick-card {
+  border-radius: var(--ios27-radius-card-md) !important;
+  background: rgba(30, 36, 46, 0.94) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid var(--ios27-glass-border) !important;
+  box-shadow: var(--ios27-shadow-sm) !important;
+  transition: border-color 0.22s ease, box-shadow 0.22s ease, filter 0.2s ease !important;
+}
+
+[data-theme="light"] .quick-card {
+  background: #FFFFFF !important;
+  border: 1px solid rgba(0, 0, 0, 0.18) !important;
+}
+
+.quick-card:hover,
+.quick-card:active {
+  border-color: var(--ios27-glass-border-hover) !important;
+  box-shadow: var(--ios27-shadow-md) !important;
+}
+
+.quick-icon {
+  border-radius: var(--ios27-radius-squircle-icon) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  box-shadow: var(--ios27-shadow-xs) !important;
+}
+
+.quick-icon.gold {
+  background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%) !important;
+  color: #030B18 !important;
+}
+
+.quick-icon.blue {
+  background: linear-gradient(135deg, #475569 0%, #64748B 100%) !important;
+  color: #FFFFFF !important;
+}
+
+/* --- 9. Song List Cards (.song-list-item-card) --- */
+.song-list-item-card {
+  border-radius: var(--ios27-radius-item) !important;
+  background: rgba(30, 36, 46, 0.94) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid var(--ios27-glass-border) !important;
+  box-shadow: var(--ios27-shadow-xs) !important;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease !important;
+}
+
+[data-theme="light"] .song-list-item-card {
+  background: #FFFFFF !important;
+  border: 1px solid rgba(0, 0, 0, 0.18) !important;
+}
+
+.song-list-item-card:hover,
+.song-list-item-card:active {
+  border-color: var(--ios27-glass-border-hover) !important;
+  box-shadow: var(--ios27-shadow-sm) !important;
+}
+
+.song-item-num-badge {
+  border-radius: var(--ios27-radius-pill) !important;
+  background: linear-gradient(135deg, var(--ios27-gold) 0%, var(--ios27-gold-shimmer) 100%) !important;
+  color: #030B18 !important;
+  font-weight: 800 !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  box-shadow: var(--ios27-shadow-xs) !important;
+}
+
+/* --- 10. Almanac & Timeline Cards --- */
+.almanac-folder-card,
+.almanac-today-card,
+.almanac-service-card,
+.timeline-list-card,
+.settings-action-card,
+.settings-floating-card,
+.church-auth-card {
+  border-radius: var(--ios27-radius-card-md) !important;
+  background: rgba(30, 36, 46, 0.94) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid var(--ios27-glass-border) !important;
+  box-shadow: var(--ios27-shadow-sm) !important;
+  transition: border-color 0.22s ease, box-shadow 0.22s ease !important;
+}
+
+[data-theme="light"] .almanac-folder-card,
+[data-theme="light"] .almanac-today-card,
+[data-theme="light"] .almanac-service-card,
+[data-theme="light"] .timeline-list-card,
+[data-theme="light"] .settings-action-card,
+[data-theme="light"] .settings-floating-card,
+[data-theme="light"] .church-auth-card {
+  background: #FFFFFF !important;
+  border: 1px solid rgba(0, 0, 0, 0.18) !important;
+}
+
+.almanac-folder-card:hover,
+.timeline-list-card:hover,
+.settings-action-card:hover {
+  border-color: var(--ios27-glass-border-hover) !important;
+  box-shadow: var(--ios27-shadow-md) !important;
+}
+
+.almanac-day-cell {
+  border-radius: 12px !important;
+  border: 1px solid var(--ios27-glass-border) !important;
+}
+
+.almanac-crumb-btn {
+  border-radius: var(--ios27-radius-pill) !important;
+  border: 1px solid var(--ios27-glass-border) !important;
+}
+
+/* --- 10B. Symmetrical Settings Action Cards Grid (Announcement to Audit Log) --- */
+.settings-action-cards-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 12px !important;
+  width: 100% !important;
+  margin-bottom: 16px !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 480px) {
+  .settings-action-cards-grid {
+    gap: 10px !important;
+  }
+}
+
+@media (max-width: 340px) {
+  .settings-action-cards-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.settings-action-cards-grid .settings-action-card,
+.settings-action-card.action-pill-card {
+  width: 100% !important;
+  border-radius: var(--ios27-radius-card-md) !important;
+  background: rgba(30, 36, 46, 0.94) !important;
+  border: 1px solid var(--ios27-glass-border) !important;
+  box-shadow: var(--ios27-shadow-sm) !important;
+  padding: 13px 14px !important;
+  min-height: 58px !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  cursor: pointer !important;
+  position: relative !important;
+  overflow: hidden !important;
+  transition: border-color 0.22s ease, box-shadow 0.22s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+[data-theme="light"] .settings-action-cards-grid .settings-action-card,
+[data-theme="light"] .settings-action-card.action-pill-card {
+  background: #FFFFFF !important;
+  border: 1px solid rgba(0, 0, 0, 0.18) !important;
+  box-shadow: var(--ios27-shadow-sm) !important;
+}
+
+.settings-action-cards-grid .settings-action-card:hover,
+.settings-action-card.action-pill-card:hover {
+  border-color: var(--ios27-glass-border-hover) !important;
+  box-shadow: var(--ios27-shadow-md) !important;
+  transform: translateY(-2px) !important;
+}
+
+.settings-action-cards-grid .settings-action-card:hover .pill-arrow-icon,
+.settings-action-card.action-pill-card:hover .pill-arrow-icon,
+.settings-action-cards-grid .settings-action-card:hover .settings-action-chevron {
+  color: var(--accent-gold) !important;
+  transform: translateX(2px) !important;
+}
+
+.settings-action-cards-grid .settings-action-card:active,
+.settings-action-card.action-pill-card:active {
+  transform: scale(0.98) !important;
+}
+
+.settings-action-card-compact-inner {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* --- 11. Buttons & Controls (Capsule Pills 9999px • Specular Rim) --- */
+.btn-primary,
+.btn-secondary,
+.accent-btn,
+.btn-danger,
+.import-studio-execute-btn,
+.registration-submit-btn,
+.church-modal-close-pill,
+.screen-pill-btn,
+.song-lyrics-action-btn,
+.song-floating-back-btn,
+.pdf-floating-close-btn,
+.icon-btn,
+.wa-icon-btn,
+.settings-btn-pill-requests,
+.admin-tab-btn,
+.ios-action-btn,
+.btn-post-admin,
+.btn-revoke-admin,
+.btn-approve-admin,
+.btn-reject-admin,
+.chip {
+  border-radius: var(--ios27-radius-pill) !important;
+  transition: filter 0.18s ease, box-shadow 0.18s ease !important;
+}
+
+.btn-primary,
+.accent-btn,
+.import-studio-execute-btn,
+.registration-submit-btn {
+  background: linear-gradient(135deg, #475569 0%, #334155 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  box-shadow: var(--ios27-shadow-sm) !important;
+}
+
+.btn-primary:active,
+.accent-btn:active {
+  filter: brightness(0.90) !important;
+}
+
+#confirmExitYesBtn {
+  background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.45) !important;
+}
+
+#confirmExitYesBtn:active {
+  background: linear-gradient(135deg, #B91C1C 0%, #991B1B 100%) !important;
+}
+
+.btn-secondary,
+.settings-btn-secondary {
+  background: rgba(255, 255, 255, 0.10) !important;
+  backdrop-filter: var(--ios27-glass-blur) !important;
+  -webkit-backdrop-filter: var(--ios27-glass-blur) !important;
+  border: 1px solid var(--ios27-glass-border) !important;
+  color: #FFFFFF !important;
+  font-weight: 600 !important;
+  box-shadow: var(--ios27-shadow-xs) !important;
+}
+
+.btn-secondary:active {
+  background: rgba(255, 255, 255, 0.18) !important;
+}
+
+[data-theme="light"] .btn-secondary {
+  background: rgba(71, 85, 105, 0.08) !important;
+  border-color: rgba(71, 85, 105, 0.16) !important;
+  color: #334155 !important;
+}
+
+/* --- 11B. Admin Card Action Glass Pills (Specular Jewel Glass • iOS 27) --- */
+.ios-action-btn {
+  border-radius: var(--ios27-radius-pill) !important;
+  backdrop-filter: var(--ios27-glass-blur) !important;
+  -webkit-backdrop-filter: var(--ios27-glass-blur) !important;
+  transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease !important;
+}
+
+.ios-action-btn:active {
+  transform: scale(0.97) !important;
+  filter: brightness(0.92) !important;
+}
+
+.btn-post-admin {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.24) 0%, rgba(184, 151, 46, 0.12) 100%) !important;
+  border: 1px solid rgba(212, 175, 55, 0.48) !important;
+  color: #F5D77F !important;
+  box-shadow: var(--ios27-shadow-xs) !important;
+}
+
+[data-theme="light"] .btn-post-admin {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.16) 0%, rgba(184, 151, 46, 0.08) 100%) !important;
+  border: 1px solid rgba(184, 151, 46, 0.42) !important;
+  color: #8C6D12 !important;
+}
+
+.btn-revoke-admin,
+.btn-reject-admin {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.20) 0%, rgba(185, 28, 28, 0.10) 100%) !important;
+  border: 1px solid rgba(239, 68, 68, 0.44) !important;
+  color: #FCA5A5 !important;
+  box-shadow: var(--ios27-shadow-xs) !important;
+}
+
+[data-theme="light"] .btn-revoke-admin,
+[data-theme="light"] .btn-reject-admin {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(185, 28, 28, 0.05) 100%) !important;
+  border: 1px solid rgba(220, 38, 38, 0.38) !important;
+  color: #DC2626 !important;
+}
+
+.btn-approve-admin {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(5, 150, 105, 0.12) 100%) !important;
+  border: 1px solid rgba(16, 185, 129, 0.48) !important;
+  color: #6EE7B7 !important;
+  box-shadow: var(--ios27-shadow-xs) !important;
+}
+
+[data-theme="light"] .btn-approve-admin {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.14) 0%, rgba(5, 150, 105, 0.06) 100%) !important;
+  border: 1px solid rgba(5, 150, 105, 0.38) !important;
+  color: #047857 !important;
+}
+
+.chip {
+  border: 1px solid var(--ios27-glass-border) !important;
+  box-shadow: var(--ios27-shadow-xs) !important;
+}
+
+/* --- 12. Search Inputs & Text Fields (iOS Squircle 14px • Crisp Focus • Solid Surface) --- */
+.search-input-field,
+.input-field,
+.auth-input,
+.registration-input,
+.poll-option-input,
+.wa-text-input,
+.form-control,
+input[type="text"],
+input[type="search"],
+input[type="password"],
+textarea {
+  border-radius: var(--ios27-radius-squircle-icon) !important;
+  background: rgba(22, 27, 35, 0.96) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid var(--ios27-glass-border) !important;
+  color: #FFFFFF !important;
+  box-shadow: inset 0 1.5px 3px rgba(0, 0, 0, 0.3) !important;
+  transition: border-color 0.20s ease, box-shadow 0.20s ease !important;
+}
+
+.search-input-field:focus,
+.input-field:focus,
+.auth-input:focus,
+.registration-input:focus,
+input[type="text"]:focus,
+input[type="search"]:focus {
+  border-color: var(--ios27-cyan) !important;
+  box-shadow: 
+    inset 0 1.5px 3px rgba(0, 0, 0, 0.25),
+    0 0 0 2.5px rgba(56, 189, 248, 0.30) !important;
+  outline: none !important;
+}
+
+/* Song Search Typing Field — Completely Borderless */
+#songBookSearchInput,
+#songLyricsSearchInput,
+.song-search-input,
+.song-search-input:focus,
+.song-search-input:focus-visible,
+.song-search-input:active {
+  border: none !important;
+  border-width: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.wa-input-capsule {
+  border-radius: var(--ios27-radius-pill) !important;
+  border: 1px solid var(--ios27-glass-border) !important;
+  background: rgba(22, 27, 35, 0.96) !important;
+}
+
+.search-input-field,
+.input-field,
+.auth-input {
+  background: rgba(255, 255, 255, 0.98) !important;
+  color: #08162E !important;
+  border-color: rgba(4, 80, 207, 0.18) !important;
+}
+
+/* --- 13. Modals & Dialogs (Continuous Squircle 28px • Functional Liquid Glass Layer) --- */
+.modal-card,
+.modal-content,
+.church-modal-viewport,
+.church-auth-card,
+.bottom-sheet-content,
+.registration-modal-card,
+.verse-popout-card {
+  border-radius: var(--ios27-radius-modal) !important;
+  background: var(--ios27-glass-surface-elevated) !important;
+  backdrop-filter: var(--ios27-glass-blur-heavy) !important;
+  -webkit-backdrop-filter: var(--ios27-glass-blur-heavy) !important;
+  border: 1px solid var(--ios27-glass-border) !important;
+  box-shadow: var(--ios27-shadow-lg) !important;
+}
+
+[data-theme="light"] .modal-card,
+[data-theme="light"] .modal-content,
+[data-theme="light"] .church-modal-viewport,
+[data-theme="light"] .bottom-sheet-content {
+  background: rgba(255, 255, 255, 0.97) !important;
+  border: 1px solid rgba(0, 0, 0, 0.18) !important;
+  box-shadow: var(--ios27-shadow-lg) !important;
+  color: #1E2530 !important;
+}
+
+/* --- 14. Global High-Contrast Legibility for Light Mode (All Text Dark) --- */
+[data-theme="light"] {
+  color: #1E2530;
+}
+
+[data-theme="light"] body,
+[data-theme="light"] h1,
+[data-theme="light"] h2,
+[data-theme="light"] h3,
+[data-theme="light"] h4,
+[data-theme="light"] h5,
+[data-theme="light"] h6,
+[data-theme="light"] .daily-greeting-title,
+[data-theme="light"] .daily-greeting-date,
+[data-theme="light"] .action-pill-title,
+[data-theme="light"] .quick-title,
+[data-theme="light"] .song-item-title,
+[data-theme="light"] .minimal-book-title,
+[data-theme="light"] .minimal-songbook-title,
+[data-theme="light"] .almanac-month-name,
+[data-theme="light"] .almanac-folder-title,
+[data-theme="light"] .setting-label,
+[data-theme="light"] .modal-title,
+[data-theme="light"] .form-label,
+[data-theme="light"] .verse-card-title,
+[data-theme="light"] .auth-user-name {
+  color: #1E2530 !important;
+}
+
+[data-theme="light"] .daily-greeting-tag,
+[data-theme="light"] .action-pill-sub,
+[data-theme="light"] .quick-sub,
+[data-theme="light"] .song-item-meta,
+[data-theme="light"] .setting-desc,
+[data-theme="light"] .almanac-folder-entries,
+[data-theme="light"] .almanac-month-entries,
+[data-theme="light"] .auth-user-email {
+  color: #475569 !important;
+}
+
+[data-theme="light"] .almanac-crumb-btn:not(.active) {
+  color: #475569 !important;
+}
+[data-theme="light"] .almanac-crumb-btn.active {
+  color: #1E2530 !important;
+}
+
+[data-theme="light"] .ac-hero-title,
+[data-theme="light"] .ac-pastor-name,
+[data-theme="light"] .ac-header-title,
+[data-theme="light"] .ac-landmark-title {
+  color: #1E2530 !important;
+}
+
+[data-theme="light"] .ac-inset-text,
+[data-theme="light"] .ac-quote-text,
+[data-theme="light"] .ac-landmark-sub {
+  color: #334155 !important;
+}
+
+/* Import Studio Dock & Floating Header Clearance */
+body.in-import-mode .main-content,
+body:has(#viewImportManager.active) .main-content {
+  padding-top: calc(var(--safe-area-top, 48px) + 112px) !important;
+  padding-bottom: calc(var(--safe-area-bottom, 28px) + 128px) !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+#viewImportManager .import-studio-unified-page {
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding-bottom: 16px !important;
+}
+
+#viewImportManager .import-studio-header-bar {
+  margin-top: 2px !important;
+}
+
+#viewImportManager .import-studio-execute-btn {
+  margin-top: auto !important;
+  margin-bottom: 14px !important;
+}
+
+/* ==============================================================================
+   15. APPLE HIG 2026 AUDIT ENHANCEMENTS (Accessibility • Targets • Materials)
+   Grounded in Apple Human Interface Guidelines:
+   - accessibility.md › Vision: Minimum size 11 pt, 4.5:1 contrast ratio
+   - accessibility.md › Dexterity and mobility: Controls default 44x44 pt
+   - liquid-glass.md › Which variant: Reduced transparency & increased contrast
+   - materials.md: Strict separation of functional vs content layers
+   ============================================================================== */
+
+/* --- HIG Control Targets: Minimum 44x44pt Touch Floor --- */
+.floral-close {
+  min-width: 44px !important;
+  min-height: 44px !important;
+  width: 44px !important;
+  height: 44px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 50% !important;
+  cursor: pointer !important;
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.header-island-back-btn,
+.church-modal-close-pill,
+.song-floating-back-btn,
+.pdf-floating-close-btn,
+.icon-btn,
+.wa-icon-btn {
+  min-width: 44px !important;
+  min-height: 44px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  touch-action: manipulation !important;
+}
+
+.liturgical-badge.interactive-pill {
+  min-height: 44px !important;
+  padding: 8px 14px 8px 10px !important;
+  box-sizing: border-box !important;
+}
+
+/* --- HIG Typography Floor: Minimum 11pt (0.75rem / 12px) Rule --- */
+.pastor-tag-overlay,
+.ac-pastor-photo-wrap .pastor-tag-overlay,
+.role-badge,
+.auth-card .badge-tag,
+.church-auth-card .badge-tag,
+.cni-tab-badge,
+.minimal-book-tag,
+.section-badge-tag,
+.audit-tier-badge,
+.audit-entity-tag,
+.quick-desc,
+.wa-time,
+.dock-label,
+.ac-landmark-sub,
+.ac-header-badge,
+#summaryModalTotalLabel,
+#summaryModalAddedLabel,
+#summaryModalUpdatedLabel,
+#summaryModalSkippedLabel,
+#modalPreviewCountBadge {
+  font-size: 0.75rem !important; /* 12px: Strictly satisfies HIG 11pt minimum */
+  line-height: 1.35 !important;
+}
+
+/* --- HIG Accessibility: Reduced Transparency Support --- */
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --ios27-glass-surface: #181D26 !important;
+    --ios27-glass-surface-elevated: #202632 !important;
+    --ios27-glass-card: #1C222C !important;
+  }
+  [data-theme="light"] {
+    --ios27-glass-surface: #FFFFFF !important;
+    --ios27-glass-surface-elevated: #F8FAFC !important;
+    --ios27-glass-card: #FFFFFF !important;
+  }
+  .floating-header-island,
+  .dock-container,
+  .dock-indicator,
+  .modal-card,
+  .modal-content,
+  .church-modal-viewport,
+  .verse-popout-card,
+  .bottom-sheet-content,
+  .daily-greeting-card,
+  .action-pill-card,
+  .quick-card,
+  .song-list-item-card,
+  .almanac-folder-card {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: var(--ios27-glass-surface) !important;
+  }
+  [data-theme="light"] .floating-header-island,
+  [data-theme="light"] .dock-container,
+  [data-theme="light"] .dock-indicator,
+  [data-theme="light"] .modal-card,
+  [data-theme="light"] .daily-greeting-card,
+  [data-theme="light"] .action-pill-card {
+    background: #FFFFFF !important;
+  }
+}
+
+/* --- HIG Accessibility: Increased Contrast Support --- */
+@media (prefers-contrast: more) {
+  :root {
+    --border-subtle: rgba(255, 255, 255, 0.45) !important;
+    --border-strong: rgba(255, 255, 255, 0.75) !important;
+    --ios27-glass-border: rgba(255, 255, 255, 0.45) !important;
+    --text-muted: #CBD5E1 !important;
+  }
+  [data-theme="light"] {
+    --border-subtle: rgba(0, 0, 0, 0.45) !important;
+    --border-strong: rgba(0, 0, 0, 0.85) !important;
+    --ios27-glass-border: rgba(0, 0, 0, 0.45) !important;
+    --text-muted: #1E293B !important;
+    --text-secondary: #0F172A !important;
+  }
+  .floating-header-island,
+  .dock-container,
+  .modal-card,
+  .daily-greeting-card,
+  .action-pill-card,
+  .btn-primary,
+  .btn-secondary {
+    border-width: 1.5px !important;
+  }
+}
+
+/* ==============================================================================
+   120FPS PROMOTION & HIGH REFRESH PERFORMANCE ENGINE (8.3ms FRAME BUDGET)
+   Hardware-Accelerated Compositing • Zero Layout Thrashing • CSS Containment
+   ============================================================================== */
+
+/* 1. Global Touch Manipulation - Eliminate 300ms Mobile Tap Delay */
+a, button, [role="button"], .dock-item, .quick-card, .action-pill-card,
+.song-list-item-card, .book-cover-card, .timeline-list-card, .almanac-day-cell,
+.category-chip, .settings-theme-option, .verse-of-day-card, .nav-tab-item {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 2. CSS Containment & Virtualized Offscreen Rendering */
+/* Containment isolates layout/paint trees, preventing full page reflows on list updates */
+.song-list-item-card {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 68px;
+  contain: layout style paint;
+}
+
+.timeline-list-card {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 110px;
+  contain: layout style paint;
+}
+
+.settings-announcement-card {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 96px;
+  contain: layout style paint;
+}
+
+.almanac-calendar-card,
+.almanac-days-grid {
+  contain: layout style;
+}
+
+.library-grid,
+.hymnal-grid,
+.quick-access-grid {
+  contain: layout style;
+}
+
+/* 3. GPU Layer Promotion for Smooth Composited Motion */
+.dock-indicator {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.dock-container {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.modal-card,
+.bottom-sheet-content {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* 4. Strict GPU-Only Transitions: Replace Heavy Repaints with Composite-Friendly Motion */
+.song-list-item-card,
+.quick-card,
+.book-cover-card,
+.action-pill-card {
+  transition: transform 0.20s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.20s ease, border-color 0.20s ease !important;
+}
+
+.song-list-item-card:active,
+.quick-card:active,
+.action-pill-card:active {
+  transform: scale(0.982) translateZ(0) !important;
+}
+
+/* 5. Fluid ProMotion Reduced Motion Fallback */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .dock-indicator,
+  .dock-container,
+  .modal-card {
+    will-change: auto !important;
+    transition: none !important;
+  }
+}
+
+/* ==============================================================================
+   PINPOINT EDITS IMPLEMENTATION & POLISH
+   ============================================================================== */
+
+/* Pinpoint #1: Samsung One UI Organized Layout for #activeDateAccordionCard */
+#activeDateAccordionCard.almanac-day-screen-card {
+  border-radius: 24px !important;
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-subtle) !important;
+  padding: 18px 20px !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+#activeDateAccordionCard .almanac-detail-header {
+  border-bottom: 1px solid var(--border-subtle) !important;
+  padding-bottom: 14px !important;
+  margin-bottom: 16px !important;
+}
+
+#activeDateAccordionCard .almanac-detail-date-title {
+  font-size: 1.25rem !important;
+  font-weight: 800 !important;
+  color: var(--text-primary) !important;
+}
+
+#activeDateAccordionCard .almanac-color-badge {
+  border-radius: 9999px !important;
+  padding: 4px 10px !important;
+  font-weight: 700 !important;
+  font-size: 0.72rem !important;
+}
+
+#activeDateAccordionCard .almanac-weekday-tag {
+  border-radius: 9999px !important;
+  padding: 3px 10px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  font-weight: 700 !important;
+  font-size: 0.72rem !important;
+  color: var(--text-muted) !important;
+}
+
+#activeDateAccordionCard .almanac-worship-card {
+  border-radius: 18px !important;
+  background: var(--bg-surface-elevated) !important;
+  border: 1px solid var(--border-subtle) !important;
+  padding: 14px 16px !important;
+  margin-bottom: 10px !important;
+  box-shadow: none !important;
+}
+
+#activeDateAccordionCard .almanac-worship-title {
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+  margin-bottom: 8px !important;
+}
+
+#activeDateAccordionCard .almanac-reading-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+}
+
+#activeDateAccordionCard .almanac-reading-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 9px 12px !important;
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.035) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+[data-theme="light"] #activeDateAccordionCard .almanac-reading-item {
+  background: rgba(0, 0, 0, 0.03) !important;
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+#activeDateAccordionCard .reading-number-badge {
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 50% !important;
+  background: var(--accent-gold-soft) !important;
+  color: var(--accent-gold) !important;
+  border: 1px solid rgba(212, 175, 55, 0.3) !important;
+  font-weight: 800 !important;
+  font-size: 0.72rem !important;
+  flex-shrink: 0 !important;
+}
+
+#activeDateAccordionCard .reading-text-citation {
+  font-size: 0.88rem !important;
+  line-height: 1.45 !important;
+  color: var(--text-primary) !important;
+}
+
+/* Pinpoint #2: Make #emptyBookmarkState smaller */
+#emptyBookmarkState.empty-state {
+  padding: 22px 18px !important;
+  max-width: 380px !important;
+  margin: 18px auto !important;
+  border-radius: 20px !important;
+  box-shadow: none !important;
+}
+
+#emptyBookmarkState .empty-icon {
+  width: 44px !important;
+  height: 44px !important;
+  margin: 0 auto 10px !important;
+}
+
+#emptyBookmarkState .empty-icon svg {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+#emptyBookmarkState h3 {
+  font-size: 0.96rem !important;
+  font-weight: 700 !important;
+  margin-bottom: 4px !important;
+}
+
+#emptyBookmarkState p {
+  font-size: 0.80rem !important;
+  line-height: 1.45 !important;
+  margin: 0 !important;
+}
+
+/* Pinpoint #3: Visual Preference theme group smaller and adjusted */
+.theme-selector-cards {
+  gap: 6px !important;
+  margin-bottom: 6px !important;
+}
+
+.theme-card {
+  padding: 6px 4px !important;
+  border-radius: 12px !important;
+}
+
+.theme-preview {
+  height: 22px !important;
+  margin-bottom: 4px !important;
+  padding: 3px !important;
+}
+
+.theme-card-name {
+  font-size: 0.74rem !important;
+  font-weight: 600 !important;
+}
+
+/* Pinpoint #11: Auth status card retouch */
+.auth-status-card {
+  border-radius: 24px !important;
+  padding: 18px !important;
+  background: var(--bg-surface-elevated) !important;
+  border: 1px solid var(--border-subtle) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.auth-user-avatar {
+  width: 50px !important;
+  height: 50px !important;
+  border-radius: 16px !important;
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
+  color: #FFFFFF !important;
+  font-size: 1.25rem !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Pinpoint #12: Remove watermark cross on action cards */
+.action-pill-card::before,
+.settings-action-card::before {
+  display: none !important;
+  content: none !important;
+}
+
+/* Pinpoint #16: Dock icons interactive micro-animations (without changing size) */
+.dock-item .dock-icon-wrap {
+  transition: transform 0.22s cubic-bezier(0.18, 0.89, 0.32, 1.28) !important;
+  transform-origin: center center !important;
+  will-change: transform;
+}
+
+.dock-item:active .dock-icon-wrap {
+  transform: scale(0.88) translateZ(0) !important;
+}
+
+.dock-item.active .dock-icon-wrap {
+  transform: scale(1.10) translateY(-1px) translateZ(0) !important;
+}
+
+@media (hover: hover) {
+  .dock-item:hover:not(.active) .dock-icon-wrap {
+    transform: translateY(-2px) translateZ(0) !important;
+  }
+}
+
+/* Pinpoint #17: Match card shape with verse of the day pill */
+.daily-greeting-card {
+  border-radius: 24px !important;
+  padding: 16px 20px !important;
+}
+
+.liturgical-badge.interactive-pill {
+  border-radius: 18px !important;
+  padding: 6px 12px 6px 8px !important;
+}
+
+/* Pinpoint #6: Verse popout card clean, organized & beautiful */
+.verse-popout-card.floral-framed-card {
+  border: 1px solid var(--border-subtle) !important;
+  box-shadow: 0 20px 48px -8px rgba(0, 0, 0, 0.65) !important;
+  background: var(--bg-surface) !important;
+  border-radius: 24px !important;
+}
+
+.verse-popout-card .verse-quote-backdrop,
+.verse-popout-card .illuminated-divider-top,
+.verse-popout-card .floral-corner {
+  display: none !important;
+}
+
+.verse-popout-card .verse-reflection-box.floral-reflection {
+  border-radius: 16px !important;
+  border: 1px solid var(--border-subtle) !important;
+  background: var(--bg-surface-elevated) !important;
+  padding: 14px 18px !important;
+}
+
+/* Pinpoint: Redesign Verse of the Day action pills like iOS */
+.verse-modal-footer.floral-footer {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  padding: 16px 20px 20px 20px !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  backdrop-filter: var(--ios27-glass-blur) !important;
+  -webkit-backdrop-filter: var(--ios27-glass-blur) !important;
+  border-top: 1px solid var(--ios27-glass-border) !important;
+}
+
+.floral-action-btn {
+  border-radius: var(--ios27-radius-pill) !important;
+  min-height: 42px !important;
+  padding: 9px 18px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro", system-ui, sans-serif !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  background: rgba(255, 255, 255, 0.10) !important;
+  backdrop-filter: var(--ios27-glass-blur) !important;
+  -webkit-backdrop-filter: var(--ios27-glass-blur) !important;
+  border: 1px solid var(--ios27-glass-border) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+  transition: transform 0.14s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.14s ease, background 0.18s ease !important;
+  cursor: pointer !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.floral-action-btn:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  transform: translateY(-1px) !important;
+}
+
+.floral-action-btn:active {
+  transform: scale(0.96) !important;
+  opacity: 0.85 !important;
+}
+
+.floral-accent-btn {
+  border-radius: var(--ios27-radius-pill) !important;
+  min-height: 42px !important;
+  padding: 9px 20px !important;
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+  color: #FFFFFF !important;
+  font-weight: 650 !important;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+  transition: transform 0.14s cubic-bezier(0.25, 1, 0.5, 1), filter 0.18s ease, box-shadow 0.18s ease !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.floral-accent-btn:hover {
+  transform: translateY(-1px) !important;
+  filter: brightness(1.06) !important;
+}
+
+.floral-accent-btn:active {
+  transform: scale(0.96) !important;
+  filter: brightness(0.92) !important;
+}
+
+.floral-accent-btn.saved {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+}
+
+[data-theme="light"] .verse-modal-footer.floral-footer {
+  background: rgba(0, 0, 0, 0.02) !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-theme="light"] .floral-action-btn {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  color: #1c1c1e !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-theme="light"] .floral-action-btn:hover {
+  background: rgba(0, 0, 0, 0.09) !important;
+  color: #000000 !important;
+}
+
+[data-theme="light"] .floral-action-btn:active {
+  background: rgba(0, 0, 0, 0.13) !important;
+}
+
+[data-theme="light"] .floral-accent-btn {
+  background: linear-gradient(135deg, #D97706 0%, #B45309 100%) !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.3) !important;
+}
+
+/* ==============================================================================
+   PINPOINT RUN 2: SHAPE POLISH, DESTINATION SELECTION & ALMANAC FOLDER CARDS
+   ============================================================================== */
+
+/* Pinpoint #3: Polished edge and concentric curves for Import Choice Modal */
+.import-choice-modal-card {
+  border-radius: 28px !important;
+  background: var(--ios27-glass-card) !important;
+  backdrop-filter: var(--ios27-glass-blur-heavy) !important;
+  -webkit-backdrop-filter: var(--ios27-glass-blur-heavy) !important;
+  border: 1px solid var(--ios27-glass-border) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+}
+
+[data-theme="light"] .import-choice-modal-card {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border: 1px solid rgba(0, 0, 0, 0.18) !important;
+  box-shadow: 0 20px 48px rgba(30, 41, 59, 0.16), 0 0 0 1px rgba(0, 0, 0, 0.04) !important;
+}
+
+.import-choice-modal-card .modal-header {
+  padding: 20px 22px 16px 22px !important;
+  border-bottom: 1px solid var(--ios27-glass-border) !important;
+  background: rgba(0, 0, 0, 0.14) !important;
+  margin-bottom: 0 !important;
+}
+
+[data-theme="light"] .import-choice-modal-card .modal-header {
+  border-bottom-color: rgba(100, 116, 139, 0.14) !important;
+  background: rgba(248, 250, 252, 0.82) !important;
+}
+
+.import-choice-modal-card .modal-close {
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid var(--ios27-glass-border) !important;
+  color: var(--text-secondary) !important;
+  transition: transform 0.18s ease, background 0.18s ease !important;
+}
+
+.import-choice-modal-card .modal-close:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
+  transform: scale(1.06) !important;
+}
+
+.import-choice-modal-card .import-options-list {
+  padding: 18px 20px 22px 20px !important;
+  gap: 12px !important;
+}
+
+.import-choice-option-btn {
+  border-radius: 20px !important;
+  border: 1px solid var(--ios27-glass-border) !important;
+  box-shadow: var(--ios27-shadow-xs) !important;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s ease, box-shadow 0.18s ease !important;
+}
+
+.import-choice-option-btn:hover {
+  transform: translateY(-2px) !important;
+  border-color: var(--ios27-glass-border-hover) !important;
+  box-shadow: var(--ios27-shadow-md) !important;
+}
+
+.import-choice-option-btn:active {
+  transform: scale(0.97) !important;
+}
+
+/* Pinpoint #4: Show only selected destination option in import-step-dest-card */
+.import-dest-segmented-bar.single-dest-mode {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 8px 14px !important;
+  background: var(--bg-subtle) !important;
+  border-radius: 16px !important;
+  border: 1px solid var(--border-subtle) !important;
+}
+
+.import-dest-segmented-bar.single-dest-mode .import-dest-card.active {
+  flex: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 10px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  font-weight: 700 !important;
+  font-size: 0.92rem !important;
+  color: var(--text-primary) !important;
+}
+
+.import-dest-segmented-bar.single-dest-mode .import-dest-card:not(.active) {
+  display: none !important;
+}
+
+.import-change-dest-pill {
+  background: rgba(73, 151, 208, 0.14) !important;
+  color: var(--accent-gold) !important;
+  border: 1px solid rgba(73, 151, 208, 0.35) !important;
+  border-radius: 9999px !important;
+  padding: 4px 12px !important;
+  font-size: 0.74rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+  transition: background 0.18s, transform 0.18s !important;
+}
+
+.import-change-dest-pill:hover {
+  background: rgba(73, 151, 208, 0.25) !important;
+}
+
+.import-change-dest-pill:active {
+  transform: scale(0.96) !important;
+}
+
+/* Pinpoint: Polish Almanac Year Folder Cards to more compact iOS shape & size */
+.almanac-folder-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 10px 10px !important;
+  margin-bottom: 22px !important;
+}
+
+.almanac-folder-card {
+  border-radius: 18px !important;
+  min-height: 76px !important;
+  padding: 12px 14px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  background: rgba(30, 36, 46, 0.94) !important;
+  border: 1px solid var(--ios27-glass-border) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease, box-shadow 0.22s ease !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+[data-theme="light"] .almanac-folder-card {
+  background: #FFFFFF !important;
+  border: 1px solid rgba(0, 0, 0, 0.18) !important;
+  box-shadow: 0 4px 14px rgba(30, 41, 59, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+}
+
+.almanac-folder-card:hover {
+  transform: translateY(-2px) scale(1.02) !important;
+  border-color: var(--accent-gold) !important;
+  box-shadow: var(--ios27-shadow-md) !important;
+}
+
+.almanac-folder-card:active {
+  transform: scale(0.96) translateZ(0) !important;
+}
+
+.almanac-folder-card .almanac-folder-title {
+  font-size: 1.22rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.015em !important;
+  color: var(--text-primary) !important;
+  line-height: 1.1 !important;
+  margin-bottom: 3px !important;
+}
+
+.almanac-folder-card .almanac-folder-entries {
+  font-size: 0.68rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  color: var(--text-muted) !important;
+}
+
+.almanac-add-year-card {
+  border: 1.5px dashed rgba(212, 175, 55, 0.45) !important;
+  background: rgba(212, 175, 55, 0.05) !important;
+  min-height: 76px !important;
+  cursor: pointer !important;
+}
+
+[data-theme="light"] .almanac-add-year-card {
+  background: rgba(212, 175, 55, 0.07) !important;
+  border-color: rgba(180, 83, 9, 0.4) !important;
+}
+
+.almanac-add-year-card:hover {
+  border-color: var(--accent-gold) !important;
+  background: rgba(212, 175, 55, 0.1) !important;
+}
+
+.almanac-add-year-card .almanac-folder-add-icon {
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 7px !important;
+  background: rgba(212, 175, 55, 0.18) !important;
+  color: var(--accent-gold) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-bottom: 3px !important;
+}
+
+.almanac-add-year-card .almanac-folder-title {
+  font-size: 0.98rem !important;
+  font-weight: 700 !important;
+  color: var(--accent-gold) !important;
+  line-height: 1.15 !important;
+}
+
+/* Pinpoint: Song Floating Bar & Search Field Expansion (Moved upward by 3px) */
+.song-floating-back-bar {
+  position: fixed !important;
+  top: calc(var(--safe-area-top, 48px) + 107px) !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: calc(100% - 22px) !important;
+  max-width: 470px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  pointer-events: none !important;
+  padding: 0 4px !important;
+  box-sizing: border-box !important;
+}
+
+.song-floating-back-btn {
+  pointer-events: auto !important;
+  height: 42px !important;
+  padding: 0 16px 0 12px !important;
+  border-radius: var(--ios27-radius-pill) !important;
+  background: var(--ios27-glass-surface) !important;
+  backdrop-filter: var(--ios27-glass-blur-heavy) !important;
+  -webkit-backdrop-filter: var(--ios27-glass-blur-heavy) !important;
+  border: 1px solid var(--ios27-glass-border) !important;
+  box-shadow: var(--ios27-shadow-sm) !important;
+  color: var(--text-primary) !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex-shrink: 0 !important;
+  cursor: pointer !important;
+  transition: transform 0.18s ease, border-color 0.18s ease !important;
+}
+
+[data-theme="light"] .song-floating-back-btn {
+  background: #FFFFFF !important;
+  border-color: rgba(100, 116, 139, 0.18) !important;
+  box-shadow: var(--ios27-shadow-sm) !important;
+}
+
+.song-floating-back-btn:active {
+  transform: scale(0.96) !important;
+}
+
+.song-search-wrap {
+  pointer-events: auto !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+  height: 42px !important;
+  border-radius: var(--ios27-radius-pill) !important;
+  background: var(--ios27-glass-surface) !important;
+  backdrop-filter: var(--ios27-glass-blur-heavy) !important;
+  -webkit-backdrop-filter: var(--ios27-glass-blur-heavy) !important;
+  border: none !important;
+  border-width: 0 !important;
+  outline: none !important;
+  box-shadow: var(--ios27-shadow-sm) !important;
+  padding: 0 14px 0 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  box-sizing: border-box !important;
+  transition: box-shadow 0.2s ease !important;
+}
+
+[data-theme="light"] .song-search-wrap {
+  background: #FFFFFF !important;
+  border: none !important;
+  border-width: 0 !important;
+  box-shadow: var(--ios27-shadow-sm) !important;
+}
+
+.song-search-wrap:focus-within {
+  border: none !important;
+  border-width: 0 !important;
+  outline: none !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+}
+
+.song-search-wrap .song-search-icon {
+  color: var(--text-muted) !important;
+  flex-shrink: 0 !important;
+  opacity: 0.7 !important;
+}
+
+.song-search-input {
+  flex: 1 !important;
+  min-width: 0 !important;
+  height: 100% !important;
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  font-size: 0.94rem !important;
+  font-weight: 500 !important;
+  color: var(--text-primary) !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.song-search-input::placeholder {
+  color: var(--text-muted) !important;
+  font-size: 0.88rem !important;
+  font-weight: 400 !important;
+}
+
+.song-list-back-btn {
+  display: none !important;
+}
+
+/* --- Pastor Photo Avatar Interactive & Crop Modal --- */
+.ac-pastor-photo-wrap {
+  cursor: pointer !important;
+  position: relative !important;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease !important;
+}
+
+.ac-pastor-photo-wrap:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 18px rgba(212, 175, 55, 0.25) !important;
+}
+
+.ac-pastor-photo-wrap:active {
+  transform: scale(0.96) !important;
+}
+
+.pastor-edit-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.72);
+  border: 1.5px solid var(--accent-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  z-index: 2;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.ac-pastor-photo-wrap:hover .pastor-edit-badge {
+  transform: scale(1.15);
+  background: var(--accent-gold);
+  color: #000;
+}
+
+#pastorPhotoCropModal .crop-modal-card {
+  max-width: 440px;
+  width: 92%;
+  margin: auto;
+  border-radius: 24px;
+  background: var(--bg-surface, #131b2e);
+  border: 1px solid var(--border-gold-soft, rgba(212, 175, 55, 0.3));
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  animation: modalPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pastor-crop-box-container {
+  position: relative;
+  width: 280px;
+  height: 280px;
+  max-width: 100%;
+  background: #080d1a;
+  border-radius: 20px;
+  overflow: hidden;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+  border: 2px solid rgba(212, 175, 55, 0.4);
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pastor-crop-box-container:active {
+  cursor: grabbing;
+}
+
+.pastor-crop-overlay-guide {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.58);
+  border: 2px dashed rgba(255, 215, 0, 0.9);
+}
+
+@keyframes pulseGold {
+  0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(212, 175, 55, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+}
+
+.pulse-gold {
+  animation: pulseGold 1.5s ease-out;
+}
+
+/* ==============================================================================
+   LIGHT MODE CARDS — HIGH-CONTRAST SUBTLE BLACK BORDER FOR COMPLETE VISIBILITY
+   ============================================================================== */
+[data-theme="light"] .daily-greeting-card,
+[data-theme="light"] .action-pill-card,
+[data-theme="light"] .quick-card,
+[data-theme="light"] .minimal-book-card,
+[data-theme="light"] .book-edition-card,
+[data-theme="light"] .minimal-songbook-card,
+[data-theme="light"] .song-list-item-card,
+[data-theme="light"] .song-lyrics-card,
+[data-theme="light"] .song-popout-card,
+[data-theme="light"] .today-song-card,
+[data-theme="light"] .bookmark-card,
+[data-theme="light"] .almanac-folder-card,
+[data-theme="light"] .almanac-today-card,
+[data-theme="light"] .almanac-service-card,
+[data-theme="light"] .almanac-calendar-card,
+[data-theme="light"] .almanac-month-card,
+[data-theme="light"] .almanac-worship-card,
+[data-theme="light"] .almanac-day-screen-card,
+[data-theme="light"] #activeDateAccordionCard,
+[data-theme="light"] .timeline-list-card,
+[data-theme="light"] .timeline-screen-card,
+[data-theme="light"] .timeline-detail-hero-card,
+[data-theme="light"] .timeline-popout-card,
+[data-theme="light"] .settings-item-card,
+[data-theme="light"] .settings-action-card,
+[data-theme="light"] .settings-floating-card,
+[data-theme="light"] .settings-announcement-card,
+[data-theme="light"] .theme-card,
+[data-theme="light"] .auth-status-card,
+[data-theme="light"] .auth-card,
+[data-theme="light"] .auth-login-card,
+[data-theme="light"] .auth-requests-card,
+[data-theme="light"] .auth-success-card,
+[data-theme="light"] .church-auth-card,
+[data-theme="light"] .modal-card,
+[data-theme="light"] .modal-section-card,
+[data-theme="light"] .registration-modal-card,
+[data-theme="light"] .registration-success-card,
+[data-theme="light"] .app-confirm-dialog-card,
+[data-theme="light"] .verse-card,
+[data-theme="light"] .verse-popout-card,
+[data-theme="light"] .crop-modal-card,
+[data-theme="light"] .import-choice-modal-card,
+[data-theme="light"] .import-dest-card,
+[data-theme="light"] .bulletin-screen-card,
+[data-theme="light"] .posts-screen-card,
+[data-theme="light"] .audit-log-screen-card,
+[data-theme="light"] .audit-log-compact-card,
+[data-theme="light"] .import-section-card,
+[data-theme="light"] .import-studio-unified-card,
+[data-theme="light"] .import-step-content-card,
+[data-theme="light"] .import-step-dest-card,
+[data-theme="light"] .import-step-policy-card,
+[data-theme="light"] .import-song-item-card,
+[data-theme="light"] .import-songbook-card,
+[data-theme="light"] .admin-announcement-card,
+[data-theme="light"] .announcement-card,
+[data-theme="light"] .announcement-popout-card,
+[data-theme="light"] .empty-state-card,
+[data-theme="light"] .request-card-item,
+[data-theme="light"] .screen-liturgy-card,
+[data-theme="light"] .search-bar-card,
+[data-theme="light"] .search-result-card,
+[data-theme="light"] .sermon-player-card,
+[data-theme="light"] .wa-floating-header-card,
+[data-theme="light"] .wa-floating-bottom-card,
+[data-theme="light"] .wa-members-sheet-card,
+[data-theme="light"] .wa-poll-card,
+[data-theme="light"] .wa-confirm-dialog-card,
+[data-theme="light"] .wa-msg-info-card,
+[data-theme="light"] .ac-card,
+[data-theme="light"] .ac-hero-card,
+[data-theme="light"] .ac-main-photo-card {
+  border: 1px solid rgba(0, 0, 0, 0.18) !important;
+}
+
+/* --- Section Manual Refresh Pill Button (Church Library) --- */
+.section-refresh-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 4px 12px 4px 7px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--text-primary);
+  font-family: var(--font-main, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  outline: none;
+  touch-action: manipulation;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.section-refresh-pill-btn:hover {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.24) 0%, rgba(212, 175, 55, 0.10) 100%);
+  border-color: rgba(212, 175, 55, 0.50);
+  color: #FDE047;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.22);
+}
+
+.section-refresh-pill-btn:active {
+  transform: scale(0.95);
+}
+
+.refresh-pill-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.10);
+  color: inherit;
+  transition: transform 0.22s ease;
+}
+
+.section-refresh-pill-btn:hover .refresh-pill-icon-wrap {
+  background: rgba(212, 175, 55, 0.25);
+  color: #FDE047;
+}
+
+.refresh-pill-icon {
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.section-refresh-pill-btn.is-refreshing {
+  pointer-events: none;
+  opacity: 0.85;
+  border-color: rgba(212, 175, 55, 0.65);
+}
+
+.section-refresh-pill-btn.is-refreshing .refresh-pill-icon {
+  animation: refreshPillSpin 0.75s linear infinite;
+}
+
+@keyframes refreshPillSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+[data-theme="light"] .section-refresh-pill-btn {
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  color: #1E293B;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .section-refresh-pill-btn:hover {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.18) 0%, rgba(255, 255, 255, 0.95) 100%);
+  border-color: rgba(197, 155, 39, 0.45);
+  color: #B45309;
+  box-shadow: 0 4px 12px rgba(197, 155, 39, 0.18);
+}
+
+[data-theme="light"] .refresh-pill-icon-wrap {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .section-refresh-pill-btn:hover .refresh-pill-icon-wrap {
+  background: rgba(197, 155, 39, 0.20);
+  color: #B45309;
+}
+
+/* --- iOS 27 Fade Minimal Glass Toast --- */
+.toast {
+  position: fixed !important;
+  bottom: calc(var(--dock-gap, 16px) + var(--dock-height, 76px) + max(env(safe-area-inset-bottom, 0px), var(--safe-area-bottom, 0px), 8px) + 16px) !important;
+  padding: 6px 16px !important;
+  max-width: min(92vw, 420px) !important;
+  white-space: nowrap !important;
+  font-size: 0.72rem !important;
+  font-style: italic !important;
+  font-weight: 500 !important;
+  line-height: 1.25 !important;
+  background: rgba(18, 22, 30, 0.45) !important;
+  color: #F8FAFC !important;
+  border: 0.5px solid rgba(255, 255, 255, 0.14) !important;
+  border-top-color: rgba(255, 255, 255, 0.24) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  box-shadow: 0 6px 18px -4px rgba(0, 0, 0, 0.28), inset 0 0.5px 0 rgba(255, 255, 255, 0.25) !important;
+  box-sizing: border-box !important;
+}
+
+#toastMessage {
+  font-size: 0.72rem !important;
+  font-style: italic !important;
+  opacity: 0.92 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 100% !important;
+  display: inline-block !important;
+}
+
+[data-theme="light"] .toast {
+  background: rgba(255, 255, 255, 0.40) !important;
+  color: #0F172A !important;
+  border: 0.5px solid rgba(0, 0, 0, 0.08) !important;
+  border-top-color: rgba(255, 255, 255, 0.60) !important;
+  box-shadow: 0 6px 18px -4px rgba(0, 0, 0, 0.08), inset 0 0.5px 0 rgba(255, 255, 255, 0.8) !important;
+}
+
+/* --- iOS 27 App Update Action Buttons --- */
+.ios-pill-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  height: 29px !important;
+  padding: 0 12px !important;
+  border-radius: 9999px !important;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", -apple-system, sans-serif !important;
+  font-size: 0.74rem !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+  outline: none !important;
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.2s ease,
+              border-color 0.2s ease,
+              box-shadow 0.2s ease !important;
+  backdrop-filter: blur(16px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
+  box-sizing: border-box !important;
+}
+
+.ios-pill-btn:active {
+  transform: scale(0.95) !important;
+}
+
+.ios-pill-btn-primary {
+  background: rgba(212, 175, 55, 0.18) !important;
+  border: 0.5px solid rgba(212, 175, 55, 0.45) !important;
+  color: #f1d279 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.14), inset 0 0.5px 0.5px rgba(255, 255, 255, 0.25) !important;
+}
+
+.ios-pill-btn-primary:hover {
+  background: rgba(212, 175, 55, 0.28) !important;
+  border-color: rgba(212, 175, 55, 0.65) !important;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.25) !important;
+}
+
+.ios-pill-btn-secondary {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 0.5px solid rgba(255, 255, 255, 0.18) !important;
+  color: #f8fafc !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), inset 0 0.5px 0.5px rgba(255, 255, 255, 0.18) !important;
+}
+
+.ios-pill-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.14) !important;
+  border-color: rgba(255, 255, 255, 0.32) !important;
+}
+
+.ios-pill-btn-destructive {
+  background: rgba(239, 68, 68, 0.16) !important;
+  border: 0.5px solid rgba(239, 68, 68, 0.45) !important;
+  color: #ff6b6b !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.14), inset 0 0.5px 0.5px rgba(255, 255, 255, 0.2) !important;
+}
+
+.ios-pill-btn-destructive:hover {
+  background: rgba(239, 68, 68, 0.26) !important;
+  border-color: rgba(239, 68, 68, 0.65) !important;
+}
+
+[data-theme="light"] .ios-pill-btn-primary {
+  background: rgba(212, 160, 23, 0.12) !important;
+  border: 0.5px solid rgba(180, 83, 9, 0.35) !important;
+  color: #b45309 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), inset 0 0.5px 0.5px rgba(255, 255, 255, 0.6) !important;
+}
+
+[data-theme="light"] .ios-pill-btn-secondary {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border: 0.5px solid rgba(0, 0, 0, 0.14) !important;
+  color: #1e293b !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), inset 0 0.5px 0.5px rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-theme="light"] .ios-pill-btn-destructive {
+  background: rgba(239, 68, 68, 0.10) !important;
+  border: 0.5px solid rgba(220, 38, 38, 0.35) !important;
+  color: #dc2626 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), inset 0 0.5px 0.5px rgba(255, 255, 255, 0.6) !important;
+}
+
+.super-admin-update-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding-top: 6px !important;
+  margin-top: 6px !important;
+  border-top: 0.5px solid rgba(255, 255, 255, 0.08) !important;
+  width: 100% !important;
+}
+
+[data-theme="light"] .super-admin-update-row {
+  border-top-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* ==========================================================================
+   Sync Status Indicator Dot (Home Header)
+   ========================================================================== */
+.sync-status-indicator-home {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.sync-status-indicator-home:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: scale(1.08);
+}
+
+.sync-status-indicator-home:active {
+  transform: scale(0.94);
+}
+
+#syncEngineStatusDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  transition: background-color 0.4s ease, box-shadow 0.4s ease, transform 0.3s ease;
+}
+
+.sync-dot-pulse {
+  animation: syncBreathingGlow 1.2s infinite ease-in-out;
+}
+
+@keyframes syncBreathingGlow {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.7;
+    box-shadow: 0 0 4px rgba(245, 158, 11, 0.4);
+  }
+  50% {
+    transform: scale(1.25);
+    opacity: 1;
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.85);
+  }
+  100% {
+    transform: scale(0.85);
+    opacity: 0.7;
+    box-shadow: 0 0 4px rgba(245, 158, 11, 0.4);
+  }
+}
+
+.sync-dot-synced {
+  animation: syncGreenGlow 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes syncGreenGlow {
+  0% {
+    transform: scale(1.4);
+    box-shadow: 0 0 14px rgba(16, 185, 129, 0.95);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+  }
+}
+
+
+

@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+<title>प्रभु-भोज</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --safe-area-top: 44px;
+    --safe-area-bottom: 24px;
+    --num-col-w: 2.2em;
+    --lbl-col-w: 5.4em;
+    --dialogue-indent: calc(var(--num-col-w) + var(--lbl-col-w) + 0.6em);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; background: #fff;
+    touch-action: pan-x pan-y pinch-zoom;
+  }
+  main, article.page {
+    touch-action: pan-x pan-y pinch-zoom;
+  }
+  body {
+    color: #000;
+    font-family: "Noto Sans Devanagari", "Nirmala UI", "Mangal", sans-serif;
+    line-height: 1.75;
+    font-size: 17px;
+  }
+
+  body:not(.in-deck) {
+    overflow: hidden !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    overscroll-behavior: none !important;
+  }
+  body:not(.in-deck) main {
+    display: none !important;
+  }
+
+  /* cover */
+  #cover {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    text-align: center;
+    box-sizing: border-box;
+  }
+  #cover h1 { font-size: 1.9rem; font-weight: 700; margin: 0 0 6px; }
+  #cover h2 { font-size: 1.1rem; font-weight: 600; margin: 0 0 14px; }
+  #cover p { margin: 0 0 32px; font-size: 0.95rem; }
+  #cover button {
+    font: inherit; font-size: 1.1rem; font-weight: 700;
+    color: #000; background: #fff;
+    border: 2px solid #000; padding: 18px 28px; cursor: pointer;
+  }
+  #cover button:hover, #cover button:focus { background: #000; color: #fff; outline: none; }
+  body.in-deck #cover { display: none !important; }
+
+  /* floating slide chrome */
+  #deckbar, #decknav { display: none; }
+  body.in-deck #deckbar {
+    display: flex; justify-content: space-between; align-items: center;
+    position: fixed; top: calc(max(env(safe-area-inset-top, 0px), var(--safe-area-top, 44px)) + 12px); left: 16px; right: 16px; z-index: 20;
+    background: transparent; border: none; padding: 0; font-size: 0.9rem;
+    pointer-events: none;
+  }
+  body.in-deck #deckbar > * { pointer-events: auto; }
+  body.in-deck #decknav {
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    position: fixed; bottom: calc(max(env(safe-area-inset-bottom, 0px), var(--safe-area-bottom, 24px)) + 16px); left: 16px; right: 16px; z-index: 20;
+    background: transparent; border: none; padding: 0;
+    pointer-events: none;
+  }
+  body.in-deck #decknav > * { pointer-events: auto; }
+
+  #deckbar, #decknav {
+    transition: opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1), transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  body.hide-controls #deckbar {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-22px);
+  }
+  body.hide-controls #decknav {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(22px);
+  }
+
+  #deckbar button, #decknav button {
+    font: inherit; font-weight: 600; color: #000;
+    background: rgba(255, 255, 255, 0.94);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    border: 1.5px solid #000; padding: 9px 18px; cursor: pointer; min-width: 0;
+    border-radius: 999px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  }
+  #deckbar button:hover, #decknav button:hover:not(:disabled) { background: #000; color: #fff; }
+  #decknav button:disabled { opacity: 0.35; cursor: default; box-shadow: none; }
+  #close, #menu {
+    width: 38px;
+    height: 38px;
+    padding: 0 !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1;
+    border-radius: 50% !important;
+  }
+  #count {
+    font-weight: 600; letter-spacing: 0.05em;
+    background: rgba(255, 255, 255, 0.94);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    border: 1.5px solid #000;
+    border-radius: 999px;
+    padding: 7px 15px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  }
+
+  /* Full screen slide deck mode with natural scrolling to prevent text cutoff */
+  body.in-deck {
+    height: 100vh;
+    height: 100dvh;
+    position: fixed;
+    width: 100%;
+    inset: 0;
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+    line-height: 1.6;
+  }
+  body.in-deck main {
+    position: fixed;
+    top: calc(max(env(safe-area-inset-top, 0px), var(--safe-area-top, 44px)) + 64px);
+    bottom: calc(max(env(safe-area-inset-bottom, 0px), var(--safe-area-bottom, 24px)) + 68px);
+    left: 0;
+    right: 0;
+    max-width: 680px;
+    margin: 0 auto;
+    overflow: hidden !important;
+    overflow-y: hidden !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: none !important;
+    padding: 8px 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    box-sizing: border-box;
+    z-index: 10;
+  }
+  body.in-deck main::-webkit-scrollbar {
+    display: none;
+  }
+  body.in-deck article.page {
+    display: none;
+    margin: 0 auto;
+    border: none;
+    padding: 0;
+    width: 100%;
+    max-width: 680px;
+    box-sizing: border-box;
+    min-height: min-content;
+  }
+  body.in-deck article.page.active {
+    display: block;
+    animation: slideIn 0.3s ease;
+  }
+  body.in-deck article.page.active .pnum { display: none; }
+
+  /* Compact deck mode typography */
+  body.in-deck .group { margin: 6px 0 8px; }
+  body.in-deck .line { margin: 0 0 4px; line-height: 1.55; }
+  body.in-deck .block { margin: 6px 0 8px; line-height: 1.55; }
+  body.in-deck h3.sec { margin: 10px 0 6px; padding-bottom: 2px; font-size: 1.05rem; }
+  body.in-deck .poem { margin: 6px 0 8px; line-height: 1.55; }
+  body.in-deck .instr { margin: 4px 0 6px; line-height: 1.4; font-size: 0.9em; }
+  body.in-deck .note { margin-top: 8px; padding-top: 6px; line-height: 1.4; }
+  body.in-deck .pnum { margin: 0 0 6px; padding-bottom: 4px; }
+
+  @keyframes slideIn { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+
+  .pnum {
+    display: block; font-size: 0.8rem; text-align: right;
+    margin: 0 0 10px; padding-bottom: 6px; border-bottom: 1px solid #000;
+  }
+  h3.sec {
+    font-size: 1.05rem; font-weight: 700; margin: 20px 0 8px;
+    padding-bottom: 4px; border-bottom: 1px solid #000; text-align: center;
+  }
+  h3.sec:first-of-type { margin-top: 0; }
+  .num { font-weight: 700; }
+  .block {
+    position: relative;
+    margin: 10px 0 12px;
+    padding-left: var(--num-col-w);
+  }
+  .block > .num {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: var(--num-col-w);
+  }
+  .instr { font-style: italic; margin: 8px 0 12px; padding-left: var(--num-col-w); }
+  .silence { font-style: italic; margin: 10px 0; padding-left: var(--num-col-w); }
+  .or { font-style: italic; margin: 14px 0 6px; padding-left: var(--num-col-w); }
+  .group { margin: 10px 0 14px; }
+  .line {
+    position: relative;
+    margin: 0 0 8px;
+    padding-left: var(--dialogue-indent) !important;
+    min-height: 1.75em;
+    line-height: 1.75;
+    word-break: break-word;
+  }
+  .line > .num {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: var(--num-col-w);
+    font-weight: 700;
+    text-align: left;
+  }
+  .line > .lbl {
+    position: absolute;
+    left: var(--num-col-w);
+    top: 0;
+    width: var(--lbl-col-w);
+    font-weight: 700;
+    text-align: left;
+    white-space: nowrap;
+  }
+  .line > .lbl:first-child {
+    left: 0;
+    width: calc(var(--num-col-w) + var(--lbl-col-w));
+  }
+  .resp { font-weight: 700; }
+  p.resp {
+    margin: 0 0 8px;
+    padding-left: var(--dialogue-indent);
+    line-height: 1.75;
+    word-break: break-word;
+  }
+  .poem { margin: 10px 0 14px; padding-left: var(--num-col-w); }
+  .poem p { margin: 0 0 8px; }
+  .note {
+    font-size: 0.85rem; margin-top: 18px; padding-top: 10px;
+    border-top: 1px solid #000; line-height: 1.6;
+  }
+  .rule { border: 0; border-top: 1px solid #000; margin: 18px 0; }
+  .indent { padding-left: var(--num-col-w); }
+  .center { text-align: center; }
+
+  @media (max-width: 480px) {
+    body { font-size: 16px; }
+    :root {
+      --num-col-w: 2.0em;
+      --lbl-col-w: 5.0em;
+      --dialogue-indent: calc(var(--num-col-w) + var(--lbl-col-w) + 0.5em);
+    }
+    body.in-deck main {
+      top: calc(max(env(safe-area-inset-top, 0px), var(--safe-area-top, 44px)) + 58px);
+      bottom: calc(max(env(safe-area-inset-bottom, 0px), var(--safe-area-bottom, 24px)) + 62px);
+      padding: 6px 14px;
+      overflow: hidden !important;
+      overflow-y: hidden !important;
+      overflow-x: hidden !important;
+    }
+    #deckbar button, #decknav button {
+      padding: 7px 14px;
+      font-size: 0.85rem;
+    }
+    #close, #menu {
+      width: 34px;
+      height: 34px;
+      font-size: 1rem;
+    }
+    #count {
+      padding: 6px 12px;
+      font-size: 0.8rem;
+    }
+    #cover .cover-close-btn,
+    #cover button.cover-close-btn,
+    .cover-close-btn {
+      top: calc(max(env(safe-area-inset-top, 0px), var(--safe-area-top, 44px)) + 12px) !important;
+      right: 14px !important;
+      width: 34px !important;
+      height: 34px !important;
+      min-width: 34px !important;
+      min-height: 34px !important;
+      max-width: 34px !important;
+      max-height: 34px !important;
+      font-size: 1rem !important;
+      padding: 0 !important;
+    }
+    article.page { padding: 16px 16px 18px; }
+  }
+
+  @media print {
+    #cover, #deckbar, #decknav { display: none !important; }
+    article.page { display: block !important; animation: none; break-inside: avoid; }
+  }
+  /* ===== iOS-style polish ===== */
+  button {
+    -webkit-appearance: none;
+    appearance: none;
+    -webkit-tap-highlight-color: transparent;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Noto Sans Devanagari", sans-serif;
+    transition: transform 0.15s ease, background-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+  }
+  button:active:not(:disabled) { transform: scale(0.96); }
+  #cover button {
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  }
+  #cover .cover-close-btn,
+  #cover button.cover-close-btn,
+  .cover-close-btn {
+    position: fixed !important;
+    top: calc(max(env(safe-area-inset-top, 0px), var(--safe-area-top, 44px)) + 16px) !important;
+    right: 16px !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    max-width: 38px !important;
+    max-height: 38px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 50% !important;
+    border: 1.5px solid #000 !important;
+    background: rgba(255, 255, 255, 0.94) !important;
+    color: #000 !important;
+    font-size: 1.15rem !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    z-index: 30 !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15) !important;
+    box-sizing: border-box !important;
+    aspect-ratio: 1 / 1 !important;
+  }
+  #cover .cover-close-btn:hover,
+  #cover button.cover-close-btn:hover {
+    background: #000 !important;
+    color: #fff !important;
+  }
+  body.in-deck .cover-close-btn { display: none !important; }
+  article.page { border-radius: 16px; }
+
+  .decknav-right {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    pointer-events: auto;
+  }
+  #themeToggle {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    max-width: 38px !important;
+    max-height: 38px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+    aspect-ratio: 1 / 1 !important;
+    box-sizing: border-box !important;
+  }
+  #themeToggle .icon-sun { display: none; }
+  #themeToggle .icon-moon { display: block; }
+  @media (max-width: 480px) {
+    #themeToggle {
+      width: 34px !important;
+      height: 34px !important;
+      min-width: 34px !important;
+      min-height: 34px !important;
+      max-width: 34px !important;
+      max-height: 34px !important;
+    }
+    #themeToggle svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  /* ===== AMOLED Invert Theme ===== */
+  html[data-theme="amoled"],
+  body.amoled-mode {
+    background: #000000 !important;
+    color: #ffffff !important;
+  }
+  html[data-theme="amoled"] body,
+  body.amoled-mode {
+    background: #000000 !important;
+  }
+  html[data-theme="amoled"] #cover,
+  body.amoled-mode #cover {
+    background: #000000 !important;
+    color: #ffffff !important;
+  }
+  html[data-theme="amoled"] #cover h1,
+  html[data-theme="amoled"] #cover h2,
+  html[data-theme="amoled"] #cover p,
+  body.amoled-mode #cover h1,
+  body.amoled-mode #cover h2,
+  body.amoled-mode #cover p {
+    color: #ffffff !important;
+  }
+  html[data-theme="amoled"] #cover button:not(.cover-close-btn),
+  body.amoled-mode #cover button:not(.cover-close-btn) {
+    background: #111111 !important;
+    color: #ffffff !important;
+    border-color: #ffffff !important;
+  }
+  html[data-theme="amoled"] #cover button:not(.cover-close-btn):hover,
+  body.amoled-mode #cover button:not(.cover-close-btn):hover {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  html[data-theme="amoled"] #deckbar button,
+  html[data-theme="amoled"] #decknav button,
+  html[data-theme="amoled"] #count,
+  html[data-theme="amoled"] .cover-close-btn,
+  body.amoled-mode #deckbar button,
+  body.amoled-mode #decknav button,
+  body.amoled-mode #count,
+  body.amoled-mode .cover-close-btn {
+    background: rgba(22, 22, 24, 0.95) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.75) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.8) !important;
+  }
+  html[data-theme="amoled"] #deckbar button:hover:not(:disabled),
+  html[data-theme="amoled"] #decknav button:hover:not(:disabled),
+  html[data-theme="amoled"] .cover-close-btn:hover,
+  body.amoled-mode #deckbar button:hover:not(:disabled),
+  body.amoled-mode #decknav button:hover:not(:disabled),
+  body.amoled-mode .cover-close-btn:hover {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  html[data-theme="amoled"] #decknav button:disabled,
+  body.amoled-mode #decknav button:disabled {
+    opacity: 0.3 !important;
+    background: rgba(22, 22, 24, 0.5) !important;
+    color: rgba(255, 255, 255, 0.3) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+  }
+  html[data-theme="amoled"] #themeToggle .icon-sun,
+  body.amoled-mode #themeToggle .icon-sun {
+    display: block !important;
+  }
+  html[data-theme="amoled"] #themeToggle .icon-moon,
+  body.amoled-mode #themeToggle .icon-moon {
+    display: none !important;
+  }
+  html[data-theme="amoled"] article.page,
+  html[data-theme="amoled"] h3.sec,
+  html[data-theme="amoled"] .line,
+  html[data-theme="amoled"] .block,
+  html[data-theme="amoled"] .poem,
+  html[data-theme="amoled"] .resp,
+  html[data-theme="amoled"] .num,
+  html[data-theme="amoled"] .lbl,
+  body.amoled-mode article.page,
+  body.amoled-mode h3.sec,
+  body.amoled-mode .line,
+  body.amoled-mode .block,
+  body.amoled-mode .poem,
+  body.amoled-mode .resp,
+  body.amoled-mode .num,
+  body.amoled-mode .lbl {
+    color: #ffffff !important;
+  }
+  html[data-theme="amoled"] .instr,
+  html[data-theme="amoled"] .note,
+  html[data-theme="amoled"] .pnum,
+  html[data-theme="amoled"] .silence,
+  html[data-theme="amoled"] .or,
+  body.amoled-mode .instr,
+  body.amoled-mode .note,
+  body.amoled-mode .pnum,
+  body.amoled-mode .silence,
+  body.amoled-mode .or {
+    color: #9ca3af !important;
+  }
+  html[data-theme="amoled"] h3.sec,
+  html[data-theme="amoled"] .pnum,
+  html[data-theme="amoled"] .note,
+  html[data-theme="amoled"] .rule,
+  html[data-theme="amoled"] article.page,
+  body.amoled-mode h3.sec,
+  body.amoled-mode .pnum,
+  body.amoled-mode .note,
+  body.amoled-mode .rule,
+  body.amoled-mode article.page {
+    border-color: rgba(255, 255, 255, 0.25) !important;
+  }
+</style>
+</head>
+<body>
+
+<div id="cover">
+  <button type="button" class="cover-close-btn" aria-label="बंद करें" title="बंद करें" onclick="if(window.parent&&window.parent!==window){window.parent.postMessage({type:'CLOSE_BOOK'},'*');if(typeof window.parent.closePdfBook==='function')window.parent.closePdfBook();}else{window.history.back();}">✕</button>
+  <h1>प्रभु-भोज</h1>
+  <h2>बाइबिल-पाठ और प्रार्थनाएं</h2>
+  <p>स्वाइप करके आगे-पीछे जाएं</p>
+  <button type="button" id="start">शुरू करें</button>
+</div>
+
+<div id="deckbar">
+  <span id="count"></span>
+  <button type="button" id="close" aria-label="बंद करें" title="बंद करें">✕</button>
+</div>
+
+<div id="decknav">
+  <button type="button" id="prev">‹ पिछला</button>
+  <div class="decknav-right">
+    <button type="button" id="themeToggle" aria-label="AMOLED Invert Switch" title="AMOLED डार्क/लाइट मोड">
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+    </button>
+    <button type="button" id="next">अगला ›</button>
+  </div>
+</div>
+
+<main>
+
+<!-- Opening page -->
+<article class="page" data-page="आरंभ">
+  <span class="pnum">प्रभु-भोज</span>
+  <h3 class="sec">तैयारी</h3>
+  <p class="block"><span class="num">१</span> आराधना के आरंभ में धर्म-सेवक आराधना का आवाहन दे सकता है (देखिए क्रम संख्या ४७)।</p>
+  <p class="block"><span class="num">२</span> क्रम-संख्या १ के पहले या बाद में गीत, स्तुतिगान (केन्टिकल) या भजन-संहिता में से एक भजन पढ़ा या गाया जा सकता है।</p>
+  <p class="block"><span class="num">३</span> धर्म-सेवक इन शब्दों में मंडली का स्वागत करेगा :</p>
+  <div class="poem"><p>प्रभु येशु मसीह (ख़्रिस्त) का अनुग्रह, परमेश्वर का प्रेम और पवित्र आत्मा की सहभागिता आप-सब के साथ हो।<br>(२ कुरिं. १३:१४)</p></div>
+  <div class="group"><p class="line"><span class="lbl">सब</span> और आपके साथ भी हो।</p></div>
+  <p class="or">अथवा</p>
+  <div class="group">
+    <p class="line"><span class="lbl">धर्मसेवक</span> प्रभु आपके साथ हो।</p>
+    <p class="line"><span class="lbl">सब</span> और आपके साथ भी हो।</p>
+  </div>
+  <p class="block"><span class="num">४</span> धर्मसेवक और आराधक साथ-साथ कहेंगे :</p>
+  <div class="poem"><p class="resp">सर्वशक्तिमान परमेश्वर,<br>आपके सम्मुख सब के हृदय खुले हैं।<br>आप सब की अभिलाषाओं को जानते हैं<br>और आप से कोई भी भेद छिपा नहीं है।<br>अपने पवित्र आत्मा की प्रेरणा से</p></div>
+</article>
+
+<!-- Page 120 -->
+<article class="page" data-page="१२०">
+  <span class="pnum">१२०</span>
+  <div class="poem"><p class="resp">हमारे हृदय के विचारों को शुद्ध कीजिए,<br>ताकि हम आपसे पूर्ण रूप से प्रेम करें<br>और योग्य रीति से आपके पवित्र नाम की स्तुति करें;<br>हमारे प्रभु येशु मसीह (ख़्रिस्त) के द्वारा। आमीन।</p></div>
+  <p class="block"><span class="num">५</span> सब गाएंगे या कहेंगे :</p>
+  <div class="poem"><p>स्वर्ग में परमेश्वर की महिमा<br>और पृथ्वी पर उसके लोगों को शान्ति।<br>हे प्रभु परमेश्वर, स्वर्गिक राजा,<br>सर्वशक्तिमान पिता परमेश्वर,<br>हम आपकी आराधना करते, आपको धन्यवाद देते,<br>और आपकी महिमा के कारण आपकी स्तुति करते हैं।<br>हे प्रभु येशु मसीह (ख़्रिस्त), परमेश्वर पिता के एकलौते पुत्र,<br>हे प्रभु परमेश्वर, हे परमेश्वर के मेमने,<br>आप जगत का पाप उठा ले जाते हैं,<br>हम पर दया कीजिए।<br>आप पिता की दाहिनी ओर विराजमान हैं,<br>हमारी प्रार्थना स्वीकार कीजिए।<br>क्योंकि केवल आप ही पवित्र हैं,<br>आप ही प्रभु हैं,<br>आप ही, हे येशु मसीह (ख़्रिस्त), पवित्र आत्मा के साथ,<br>परमेश्वर पिता की महिमा में परम उच्च हैं। आमीन।</p></div>
+  <p class="instr">अथवा दया-याचना</p>
+  <div class="group">
+    <p class="line"><span class="lbl">धर्मसेवक</span> प्रभु, हम पर दया कीजिए।</p>
+    <p class="line"><span class="lbl">सब</span> प्रभु, हम पर दया कीजिए।</p>
+    <p class="line"><span class="lbl">धर्मसेवक</span> ख़्रिस्त, हम पर दया कीजिए।</p>
+    <p class="line"><span class="lbl">सब</span> ख़्रिस्त, हम पर दया कीजिए।</p>
+    <p class="line"><span class="lbl">धर्मसेवक</span> प्रभु, हम पर दया कीजिए।</p>
+    <p class="line"><span class="lbl">सब</span> प्रभु, हम पर दया कीजिए।</p>
+  </div>
+</article>
+
+<!-- Page 121 -->
+<article class="page" data-page="१२१">
+  <span class="pnum">१२१</span>
+  <p class="instr">अथवा यह याचना तीन बार की जाएगी :</p>
+  <div class="group">
+    <p class="line"><span class="lbl">धर्मसेवक</span> हे पवित्र परमेश्वर,</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">पवित्र और सामर्थी, पवित्र और अविनाशी<br>हम पर दया कीजिए।</span></p>
+  </div>
+  <p class="block"><span class="num">६</span> धर्मसेवक अपने ही शब्दों में प्रार्थना करेगा (देखिये टिप्पणी पृष्ठ १०९)।</p>
+  <p class="block"><span class="num">७</span> धर्मसेवक उस दिवस की विशेष प्रार्थना (कॉलेक्ट) पढ़ सकता है।</p>
+  <h3 class="sec">बाइबिल-पाठ</h3>
+  <p class="block"><span class="num">८</span> पुराने नियम से पाठ पढ़ा जा सकता है। पाठ के अन्त में यह कहा जा सकता है :</p>
+  <div class="group">
+    <p class="line"><span class="lbl">वाचक</span> यह परमेश्वर का वचन है।</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">परमेश्वर का धन्यवाद हो।</span></p>
+  </div>
+  <p class="silence">मनन के लिए कुछ क्षण मौन रहा जा सकता है।</p>
+  <p class="block"><span class="num">९</span> भजन-संहिता से एक भजन गाया या पढ़ा जा सकता है।</p>
+  <p class="block"><span class="num">१०</span> पत्र-पाठ। पाठ की समाप्ति पर यह कहा जा सकता है :</p>
+  <div class="group">
+    <p class="line"><span class="lbl">वाचक</span> यह परमेश्वर का वचन है।</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">परमेश्वर का धन्यवाद हो।</span></p>
+  </div>
+  <p class="silence">मनन के लिए कुछ क्षण मौन रहा जा सकता है।</p>
+  <p class="block"><span class="num">११</span> स्तुतिगान (केन्टिकल), गीत या भजन-संहिता में से एक भजन गाया या पढ़ा जा सकता है।</p>
+  <p class="block"><span class="num">१२</span> शुभ समाचार पाठ। शुभ समाचार का अंश सूचित किये जाने के बाद सब यह कह सकते हैं :</p>
+  <div class="group"><p class="line"><span class="lbl">सब</span> <span class="resp">हे ख़्रिस्त येशु, आपकी महिमा हो।</span></p></div>
+  <p class="instr">पाठ के अन्त में वाचक यह कह सकता है :</p>
+  <div class="group">
+    <p class="line"><span class="lbl">वाचक</span> यह ख़्रिस्त का शुभ समाचार है।</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">हे प्रभु येशु, आपकी स्तुति हो।</span></p>
+  </div>
+</article>
+
+<!-- Page 122 -->
+<article class="page" data-page="१२२">
+  <span class="pnum">१२२</span>
+  <p class="silence">मनन के लिए कुछ क्षण मौन रहा जा सकता है।</p>
+  <p class="block"><span class="num">१३</span> प्रवचन : यह संक्षिप्त आह्वान या छोटी प्रार्थना से आरंभ किया जाएगा।</p>
+  <p class="block"><span class="num">१४</span> नीकया का विश्वास-वचन बोला या गाया जाएगा। कम से कम रविवार की और बड़े पर्वों की आराधना में इसका प्रयोग अवश्य किया जाए।</p>
+  <div class="poem">
+    <p class="resp">हम एक परमेश्वर, सर्वशक्तिमान पिता पर विश्वास करते हैं।<br>वह स्वर्ग और पृथ्वी का<br>और समस्त दृश्य एवं अदृश्य वस्तुओं का कर्ता है।<br>हम एक प्रभु, येशु मसीह (ख़्रिस्त) पर विश्वास करते हैं।<br>वह परमेश्वर का एकलौता पुत्र,<br>सर्वयुगों से पहले पिता से उत्पन्न,<br>परमेश्वर से परमेश्वर, ज्योति से ज्योति,<br>सत्य परमेश्वर से सत्य परमेश्वर,<br>कृत नहीं बरन् उत्पन्न हैं;<br>उनका और पिता का तत्व एक है।<br>उन्हीं के द्वारा सब वस्तुएं बनीं।<br>हम मनुष्यों के लिए और हमारे उद्धार के निमित्त<br>वह स्वर्ग से उतर आए।<br>पवित्र आत्मा के सामर्थ्य से<br>वह कुंआरी मरियम से जन्मे और मनुष्य बने।<br>पुन्तियुस पिलातुस के शासन में<br>वह हमारे लिए क्रूस पर चढ़ाये गये;<br>उन्होंने दुःख भोगा, वह मरे और गाड़े गए।<br>पवित्र शास्त्र के कथन के अनुसार वह तीसरे दिन जी उठे।<br>वह स्वर्ग पर चढ़ गये,<br>और पिता की दाहिनी ओर विराजमान हुए।<br>वह जीवितों और मृतकों का न्याय करने के लिए<br>महिमा के साथ फिर आएंगे,<br>और उनके राज्य का कभी अन्त न होगा।<br>हम पवित्र आत्मा पर विश्वास करते हैं।<br>वह प्रभु और जीवनदाता है।<br>वह पिता और पुत्र से निकलता है।</p>
+  </div>
+</article>
+
+<!-- Page 123 -->
+<article class="page" data-page="१२३">
+  <span class="pnum">१२३</span>
+  <div class="poem">
+    <p class="resp">पिता और पुत्र के साथ उसकी आराधना और स्तुति की जाती है।<br>वह नबियों के द्वारा बोला।<br>हम एक पवित्र सार्वलौकिक और प्रेरितीय कलीसिया पर विश्वास करते हैं।<br>हम पापों की क्षमा के लिए एक बपतिस्मे को मानते हैं।<br>हम मृतकों के पुनरुत्थान की<br>और आनेवाले युग के जीवन की प्रतीक्षा करते हैं। आमीन।*</p>
+  </div>
+  <p class="instr">अथवा नीकया के विश्वास-वचन के बदले प्रेरितों के विश्वास-वचन का भी उपयोग किया जा सकता है।</p>
+  <div class="poem">
+    <p class="resp">मैं सर्वशक्तिमान पिता,<br>स्वर्ग और पृथ्वी के सृष्टिकर्ता<br>परमेश्वर पर विश्वास करता/ती हूं।<br>मैं उस के एकलौते पुत्र, हमारे प्रभु,<br>येशु मसीह (ख़्रिस्त) पर विश्वास करता/ती हूं।<br>वह पवित्र आत्मा के सामर्थ्य से गर्भ में आए,*<br>और कुंआरी मरियम से जन्मे।<br>उन्होंने पुन्तियुस पिलातुस के शासन में दुःख भोगा।<br>वह क्रूस पर चढ़ाये गये, मरे और गाड़े गये,<br>और मृतकों के लोक में उतरे।<br>तीसरे दिन वह जी उठे।<br>वह स्वर्ग पर चढ़ गये,<br>और पिता की दाहिनी ओर विराजमान हुए।<br>वह जीवितों, और मृतकों, का न्याय करने को फिर आएंगे।*<br><br>मैं पवित्र आत्मा पर,<br>पवित्र सार्वलौकिक कलीसिया पर,<br>संतों की संगति,<br>पापों की क्षमा,<br>देह के पुनरुत्थान<br>और शाश्वत् जीवन पर विश्वास करता/ती हूं। आमीन।</p>
+  </div>
+  <p class="note">* प्रभु येशु के लिए आदरसूचक बहुवचन क्रिया-पदों का प्रयोग किया गया है। धर्म-सेवक तथा मंडली चाहे तो एकवचन क्रिया-पदों का प्रयोग कर सकते हैं।</p>
+</article>
+
+<!-- Page 124 -->
+<article class="page" data-page="१२४">
+  <span class="pnum">१२४</span>
+  <p class="instr">अथवा वह स्तुतिगान, गीत या भजन गाया जा सकता है जिसके द्वारा कलीसिया के विश्वास को अभिव्यक्त किया गया है।</p>
+  <p class="block"><span class="num">१५</span> यहां अथवा आराधना में किसी अन्य उपयुक्त समय पर संक्षिप्त सूचनाएं दी जा सकती हैं।</p>
+  <h3 class="sec">परहित-निवेदन</h3>
+  <p class="block"><span class="num">१६</span> इस निवेदन के लिए निम्नलिखित (क) अथवा (ख) रूप या टिप्पणी संख्या ७ में सुझाए गये अन्य रूप का भी उपयोग किया जा सकता है।</p>
+  <p class="center"><b>(क)</b></p>
+  <p class="instr">इस निवेदन की विनतियों के साथ धर्मसेवक स्थानीय आवश्यकताओं को ध्यान में रखकर अन्य विषयों को भी सम्मिलित कर सकता है।</p>
+  <div class="group">
+    <p class="line"><span class="lbl">धर्मसेवक</span> हम समस्त मानव-जाति के लिए प्रार्थना करें, और अपनी प्रार्थनाओं को प्रभु येशु मसीह (ख़्रिस्त) के निरंतर निवेदन के साथ अर्पित करें।</p>
+    <p class="line">हे पिता, हम प्रार्थना करते हैं कि समस्त संसार में न्याय और शांति स्थापित हो, और प्रत्येक व्यक्ति भरपूर जीवन प्राप्त करे। हे दयावान प्रभु,</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">हमारी प्रार्थना सुनिए।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">धर्मसेवक</span> उन सब लोगों के लिये जो इस गांव/नगर में रहते हैं; उन सब बातों को दूर करने के लिये जिन से आपसी फूट और झगड़े होते हैं; और हमारे देश में सच्ची एकता की बढ़ती के लिए। हे दयावान प्रभु,</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">हमारी प्रार्थना सुनिए।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">धर्मसेवक</span> उन सब लोगों के लिए जो कृषि, उद्योग अथवा व्यापार में लगे हुए हैं, सब मज़दूरों और कारीगरों के लिए, और उन सब के लिए जो हमारे देश की रक्षा करते हैं। हे दयावान प्रभु,</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">हमारी प्रार्थना सुनिए।</span></p>
+  </div>
+</article>
+
+<!-- Page 125 -->
+<article class="page" data-page="१२५">
+  <span class="pnum">१२५</span>
+  <div class="group">
+    <p class="line"><span class="lbl">धर्मसेवक</span> अध्यापकों और छात्रों, वैज्ञानिकों, लेखकों और कलाकारों और उन सब व्यक्तियों के लिए जो अन्य लोगों के विचारों और भावनाओं को प्रभावित करते हैं। हे दयावान प्रभु,</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">हमारी प्रार्थना सुनिए।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">धर्मसेवक</span> उन सब लोगों के लिए जो दुःखी हैं, बेरोज़गार हैं, भूखे-प्यासे हैं, दरिद्र और दलित हैं, बीमार और मरणासन्न हैं, और उन सब व्यक्तियों के लिए जो ऐसे लोगों की सेवा और सहायता करते हैं। हे दयावान प्रभु,</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">हमारी प्रार्थना सुनिए।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">धर्मसेवक</span> हमारे तथा अन्य देशों के सब शासकों के लिए, विशेषकर हमारे राष्ट्रपति, प्रधानमंत्री, इस राज्य के राज्यपाल (इस क्षेत्र के उप-राज्यपाल) और मुख्यमंत्री, और उनके लिए भी जो लोगों पर किसी प्रकार का अधिकार रखते हैं। हे दयावान प्रभु,</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">हमारी प्रार्थना सुनिए।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">धर्मसेवक</span> संपूर्ण मसीही समाज की एकता और मेल-मिलाप के लिए और समस्त संसार में उनकी गवाही और सेवा-कार्य के लिए। हे दयावान प्रभु,</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">हमारी प्रार्थना सुनिए।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">धर्मसेवक</span> भारत में आपकी समस्त कलीसिया के लिए; उसकी परिषदों तथा अगुओं, विशेषकर हमारे प्रमुख धर्माचार्य (मॉडरेटर) ..., दक्षिण भारत की कलीसिया के प्रमुख धर्माचार्य ... और मार-थोमा कलीसिया के मेट्रोपोलिटन ..., हमारे धर्माचार्य (बिशप) ..., हमारे पुरोहित और आपकी कलीसिया के सब अन्य धर्मसेवकों के लिए, कि वे सच्चाई और लगन से आपकी सेवा करें। हे दयावान प्रभु,</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">हमारी प्रार्थना सुनिए।</span></p>
+  </div>
+</article>
+
+<!-- Page 126 -->
+<article class="page" data-page="१२६">
+  <span class="pnum">१२६</span>
+  <div class="group">
+    <p class="line"><span class="lbl">धर्मसेवक</span> यह वर दे कि आपके उन सब भक्तों के साथ जिन्होंने अपने जीवन में सच्चाई से आपकी सेवा की है, हम भी आपके राज्य के शाश्वत् आनन्द में संभागी हो सकें। हे दयावान प्रभु,</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">हमारी प्रार्थना सुनिए।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">सब</span> <span class="resp">हे स्वर्गिक पिता, अपने राज्य को शीघ्र प्रकट कीजिए, और हमारी इन प्रार्थनाओं को सुनिए। हम आपके पुत्र, अपने प्रभु और उद्धारकर्ता येशु मसीह (ख़्रिस्त) के नाम से यह मांगते हैं। आमीन।</span></p>
+  </div>
+  <h3 class="sec">(ख)</h3>
+  <p class="instr">अथवा उपर्युक्त निवेदन के बदले निम्नलिखित रूप का उपयोग हो सकता है।</p>
+  <p class="line"><span class="lbl">धर्मसेवक</span> हम परमेश्वर को उसकी भलाई के लिए धन्यवाद दें, और साथ ही हम समस्त संसार तथा कलीसिया के लिए प्रार्थना करें।</p>
+  <div class="poem"><p>हे सर्वशक्तिमान परमेश्वर, स्वर्गिक पिता, आप ने अपने पुत्र प्रभु येशु मसीह (ख़्रिस्त) के द्वारा यह प्रतिज्ञा की है कि यदि हम विश्वासपूर्वक प्रार्थना करेंगे तो आप हमारी प्रार्थना सुनेंगे।</p></div>
+  <p class="block"><b>(समस्त विश्व के लिए)</b><br>हम आपको ... (विषय बताकर) धन्यवाद देते हैं;<br>हम ... के लिए प्रार्थना करते हैं :<br>सृष्टि के प्रति उचित मनोवृत्ति रखने के लिए,<br>संसार के समस्त राष्ट्रों के लिए, विशेषकर ...<br>हमारे अपने राष्ट्र के लिए ...<br>(समाज की किसी विशेष आवश्यकता के लिए ...)</p>
+  <p class="silence">कुछ क्षण मौन रहा जा सकता है।</p>
+  <p class="line"><span class="lbl">धर्मसेवक</span> हे परमेश्वर, सब राष्ट्रों के नेताओं को विशेषकर हमारे राष्ट्रपति, प्रधानमंत्री, इस राज्य के राज्यपाल (इस क्षेत्र के उपराज्यपाल) और मुख्यमंत्री और उन सबको जो इनके अधीन अधिकार रखते हैं, बुद्धि प्रदान कीजिए। हमारे राष्ट्र और संसार के सब राष्ट्रों को न्याय और शांति के पथ पर चलाइए, ताकि हम-सब</p>
+</article>
+
+<!-- Page 127 -->
+<article class="page" data-page="१२७">
+  <span class="pnum">१२७</span>
+  <p class="line">एक दूसरे का सम्मान करें तथा सब लोगों की भलाई का प्रयास करें। हे दयावान प्रभु,</p>
+  <p class="line"><span class="lbl">सब</span> <span class="resp">हमारी प्रार्थना सुनिए।</span></p>
+  <hr class="rule">
+  <p class="block"><b>(कलीसिया)</b><br>हम आपको ... (विषय बताकर) धन्यवाद देते हैं;<br>और प्रार्थना करते हैं :<br>भारत में और समस्त संसार में आपकी कलीसिया, विशेष कर उत्तर भारत की कलीसिया के लिए;<br>कलीसिया की सब परिषदों, अगुओं और धर्मसेवकों, विशेषकर हमारे प्रमुख धर्माचार्य (मॉडरेटर) ..., दक्षिण भारत की कलीसिया के प्रमुख धर्माचार्य (मॉडरेटर) ... और मार-थोमा कलीसिया के मेट्रोपोलिटन ..., हमारे धर्माचार्य (बिशप) ...; हमारे प्रेसबिटर (पुरोहित/पुरोहिता) ...; संपूर्ण मसीही समाज की एकता के लिए<br>(कलीसिया के किसी विशेष कार्य ... अथवा आवश्यकता के लिए ...)</p>
+  <p class="silence">कुछ क्षण मौन रहा जा सकता है।</p>
+  <p class="line"><span class="lbl">धर्मसेवक</span> हे परमेश्वर, मसीह (ख़्रिस्त) के कार्य को जारी रखने और उसको आगे बढ़ाने के लिए अपनी कलीसिया को शक्ति दीजिए, कि हम और मसीह (ख़्रिस्त) के सब मानने वाले आपके सत्य में एक हो जाएं, आपके प्रेम में इकट्ठे रहें और संसार में आपकी महिमा को प्रकट करें। हे दयावान प्रभु,</p>
+  <p class="line"><span class="lbl">सब</span> <span class="resp">हमारी प्रार्थना सुनिए।</span></p>
+  <hr class="rule">
+  <p class="block"><b>(पड़ोसी, परिवार और मित्र)</b><br>हम आपको ... (विषय बताकर) धन्यवाद देते हैं;<br>और प्रार्थना करते हैं :<br>अपने पड़ोसियों के लिए ...<br>अपने साथ काम करनेवालों के लिए ...<br>अपने परिवारों और मित्रों के लिए<br>(विशेषकर ... (लोगों के नाम बताकर) के लिए ...)</p>
+</article>
+
+<!-- Page 128 -->
+<article class="page" data-page="१२८">
+  <span class="pnum">१२८</span>
+  <p class="silence">कुछ क्षण मौन रहा जा सकता है।</p>
+  <p class="line"><span class="lbl">धर्मसेवक</span> हे परमेश्वर, हम पर, हमारे परिवारों और मित्रों पर, हमारे पड़ोसियों एवं हमारे साथ काम करनेवालों पर कृपा कीजिए कि हम एक-दूसरे की सेवा द्वारा आपकी सेवा करें और एक दूसरे से ऐसे प्रेम करें जैसे आप हम से प्रेम करते हैं। हे दयावान प्रभु,</p>
+  <p class="line"><span class="lbl">सब</span> <span class="resp">हमारी प्रार्थना सुनिए।</span></p>
+  <hr class="rule">
+  <p class="block"><b>(पीड़ित और बीमार)</b><br>हम आपसे प्रार्थना करते हैं :<br>भूखे-प्यासे और दरिद्रों के लिए ...<br>दलितों और उनके सतानेवालों के लिए ...<br>बीमारों और मरण-शैय्या पर पड़े लोगों के लिए ...<br>बेरोज़गार और निराशा में डूबे हुए व्यक्तियों के लिए ...<br>और उन सब के लिए जो ऐसे लोगों की सेवा करते हैं, हम आपको धन्यवाद देते और उनके लिए हम आप से प्रार्थना करते हैं।</p>
+  <p class="silence">कुछ क्षण मौन रहा जा सकता है।</p>
+  <p class="line"><span class="lbl">धर्मसेवक</span> हे परमेश्वर, उन सब लोगों को जो शरीर, मन या आत्मा में पीड़ित हैं, सबल कीजिए और उन्हें संभालिए। आवश्यकता के समय उनको आशा और साहस दीजिए और उनका मार्गदर्शन कीजिए कि वे आपकी उपस्थिति के आनन्द का अनुभव करें। हे दयावान प्रभु,</p>
+  <p class="line"><span class="lbl">सब</span> <span class="resp">हमारी प्रार्थना सुनिए।</span></p>
+  <hr class="rule">
+  <p class="block"><b>(स्वर्गवासी)</b><br>हम आपके सम्मुख आपके उन सब भक्तों को जो स्वर्गवासी हो गए हैं (विशेषकर ...), स्मरण करते हैं।</p>
+  <p class="silence">कुछ क्षण मौन रहा जा सकता है।</p>
+  <p class="line"><span class="lbl">धर्मसेवक</span> हे परमेश्वर, हम सब लोगों को आपके अचूक प्रेम के सुपुर्द करते हैं ताकि उनमें आपकी इच्छा पूरी हो। हर युग में आपके संतों के द्वारा दी गई सच्ची साक्षी के लिए हम आनन्द मनाते हैं और प्रार्थना करते हैं कि हम उनके साथ आपके शाश्वत् राज्य में सहभागी हों।</p>
+</article>
+
+<!-- Page 129 -->
+<article class="page" data-page="१२९">
+  <span class="pnum">१२९</span>
+  <div class="group">
+    <p class="line"><span class="lbl">सब</span> <span class="resp">हे स्वर्गिक पिता हमारी प्रार्थना सुनिए, और अपने पुत्र हमारे उद्धारकर्ता के नाम से हमारी इन विनतियों को स्वीकार कीजिए। आमीन।</span></p>
+  </div>
+  <h3 class="sec">पापस्वीकरण (पापांगीकार)</h3>
+  <p class="block"><span class="num">१७</span> धर्मसेवक व्यवस्था का सारांश पढ़ सकता है :</p>
+  <div class="poem"><p>प्रिय भाइयो और बहिनो, हमारे प्रभु, येशु मसीह (ख़्रिस्त) यह कहते हैं : 'हमारा प्रभु परमेश्वर ही एकमात्र प्रभु है; तू प्रभु अपने परमेश्वर को अपने संपूर्ण हृदय, संपूर्ण प्राण, संपूर्ण बुद्धि और संपूर्ण शक्ति से प्रेम कर। यह पहली आज्ञा है। दूसरी यह है : अपने पड़ोसी को अपने समान प्रेम कर। इनसे बड़ी और कोई आज्ञा नहीं है।'</p></div>
+  <p class="block"><span class="num">१८</span> धर्मसेवक कहेगा :</p>
+  <div class="poem"><p>परमेश्वर ने संसार से ऐसा प्रेम किया कि उस ने अपना एकलौता पुत्र येशु मसीह (ख़्रिस्त) दे दिया कि वह हमें पापों से बचाए, स्वर्ग में हमारे लिये निवेदन करे और हमें शाश्वत् जीवन में पहुंचाए।</p></div>
+  <div class="poem"><p>इसलिए हम पश्चाताप और विश्वास के साथ अपने पापों को स्वीकार करें। हम परमेश्वर की कृपा से उसकी आज्ञाओं का पालन करने का और सब लोगों के साथ मेल-मिलाप और प्रेम से रहने का पक्का संकल्प करें।</p></div>
+  <p class="block"><span class="num">१९</span> कुछ क्षण मौन। तब प्रेसबिटर (अथवा पुरोहित/पुरोहिता) और सब लोग साथ-साथ कहेंगे :</p>
+  <div class="poem"><p class="resp">हे सर्वशक्तिमान परमेश्वर, हमारे स्वर्गिक पिता,<br>हम ने मन, वचन और कर्म से<br>आपके विरुद्ध और एक-दूसरे के विरुद्ध पाप किया है।<br>हमने अपनी अज्ञानता और दुर्बलता के कारण<br>और जान-बूझ कर भी बुराई की है<br>और भलाई करने में असफल रहे हैं।</p></div>
+</article>
+
+<!-- Page 130 -->
+<article class="page" data-page="१३०">
+  <span class="pnum">१३०</span>
+  <div class="poem"><p class="resp">इन सब पापों के लिए हम सचमुच दुखी हैं<br>और अन्तःकरण से पश्चाताप करते हैं।<br>आपके पुत्र, येशु मसीह (ख़्रिस्त) ने हमारे लिये अपने प्राण दिये;<br>उन्हीं के कारण, हमने जो पाप किये हैं उनको क्षमा कीजिए;<br>और यह वर दीजिए<br>कि भविष्य में हम नया जीवन पा कर सदा आपकी सेवा करें<br>ताकि आपके पवित्र नाम की महिमा हो। आमीन।</p></div>
+  <p class="block"><span class="num">२०</span> प्रेसबिटर (पुरोहित/पुरोहिता) कहेगा/गी :</p>
+  <div class="poem"><p>सर्वशक्तिमान परमेश्वर उन सबको क्षमा करता है जो एक-दूसरे को क्षमा करते और सच्चा पश्चाताप करते हैं। वह आप-सब पर दया करे, आप-सब के पापों को क्षमा करे और उनसे आपको छुटकारा दे। सब भले कामों में आपको स्थिर और सबल करे और शाश्वत जीवन में बनाए रखे; हमारे प्रभु येशु मसीह (ख़्रिस्त) के द्वारा।</p></div>
+  <div class="group"><p class="line"><span class="lbl">सब</span> <span class="resp">आमीन। परमेश्वर का धन्यवाद हो।</span></p></div>
+  <p class="instr">प्रेसबिटर (पुरोहित) चाहे, तो उपर्युक्त क्षमा के आश्वासन में "आप", "आपको" और "आपके" के बदले, "हम", "हमें" और "हमारे" कह सकता/ती है।</p>
+  <h3 class="sec">प्रभु-भोज का अनुष्ठान</h3>
+  <p class="block"><span class="num">२१</span> यदि पवित्र बाइबिल में से इस अनुष्ठान का आदेश पढ़ा जाएगा तो वह यहां पर अथवा क्रम संख्या २७ के बाद पढ़ा जा सकता है।</p>
+  <div class="group">
+    <p class="line"><span class="lbl">प्रेसबिटर</span> प्रभु में प्रिय भाइयो और बहिनो, पवित्र प्रभु-भोज की स्थापना के वचन ध्यान से सुनो, जैसा संत पौलुस ने कुरिन्थ नगर की कलीसिया को अपने प्रथम पत्र में लिखा है :</p>
+  </div>
+  <div class="poem"><p>'जो परम्परा मैं ने तुम्हें सौंपी है, वह मुझे प्रभु से प्राप्त हुई थी : जिस रात को प्रभु येशु पकड़वाये गये, उन्होंने रोटी ली, धन्यवाद दे कर तोड़ी, और कहा, "यह मेरी देह है, जो तुम्हारे लिए है; मेरी स्मृति में यह किया करो।" इसी प्रकार भोजन के पश्चात् प्रभु येशु ने कटोरा लिया और कहा, "यह कटोरा मेरे रक्त द्वारा स्थापित नई वाचा है। जब कभी पियो, तो मेरी स्मृति में यह किया करो।" अतः जब कभी तुम यह रोटी खाते और इस कटोरे में से पीते हो, तब प्रभु के आने तक उनकी मृत्यु की घोषणा करते हो।'</p></div>
+  <p class="instr" style="text-align:right">१ कुरिं. ११:२३-२६</p>
+</article>
+
+<!-- Page 131 -->
+<article class="page" data-page="१३१">
+  <span class="pnum">१३१</span>
+  <h3 class="sec">शांति-अभिवादन</h3>
+  <p class="block"><span class="num">२२</span> प्रेसबिटर कहेगा/गी :</p>
+  <div class="poem"><p>हम सब मिलकर मसीह की देह हैं। हम सब ने एक आत्मा द्वारा एक देह में बपतिस्मा लिया है। हम ऐसे कार्यों में संलग्न रहें जिन से शांति मिलती और एक-दूसरे का निर्माण होता है। १ कुरिं. १२:२७, १३; रोमियों १४:१९</p></div>
+  <div class="group">
+    <p class="line"><span class="lbl">प्रेसबिटर</span> प्रभु की शांति सदा आपके साथ रहे।</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">और आपके साथ भी रहे।</span></p>
+  </div>
+  <p class="block"><span class="num">२३</span> इस समय आराधक एक-दूसरे का शांति-अभिवादन कर सकते हैं। यह स्थानीय प्रथा के अनुसार किया जाए।</p>
+  <h3 class="sec">रोटी और दाखरस की तैयारी</h3>
+  <p class="block"><span class="num">२४</span> एक भजन या गीत गाया जा सकता है। गीत के दौरान मण्डली से दान लिया और उसको अर्पित किया जा सकता है।</p>
+  <p class="block"><span class="num">२५</span> रोटी और दाखरस आगे लाये जाते हैं और मेज़ पर रखे जाते हैं। जहां मेज़ पर पहले से ही रोटी और दाखरस ढांप कर रखने की प्रथा हो, वहां अब उन पर से चादर हटाई जाएगी।</p>
+  <p class="block"><span class="num">२६</span> प्रेसबिटर कहेगा/गी :</p>
+  <div class="poem"><p>आइए, हम इस भेंट को और इसके साथ अपने आपको परमेश्वर की महिमा और उसकी सेवा के लिए अर्पित करें।</p></div>
+</article>
+
+<!-- Page 132 -->
+<article class="page" data-page="१३२">
+  <span class="pnum">१३२</span>
+  <div class="group">
+    <p class="line"><span class="num">२७</span><span class="lbl">सब</span> <span class="resp">सर्वशक्तिमान परमेश्वर, संसार के सृष्टिकर्ता, सब वस्तुएं आपसे ही प्राप्त होती हैं, और आपकी ही संपत्ति में से हम आपको भेंट चढ़ाते हैं। हम आप से विनती करते हैं कि आप "इस दान को और" रोटी एवं दाखरस की इस भेंट को अपने नाम की महिमा और अपने लोगों की भलाई के लिये स्वीकार कीजिए; हमारे प्रभु येशु मसीह (ख़्रिस्त) के द्वारा। आमीन।</span></p>
+  </div>
+  <p class="note">* "--" जब दान एकत्र नहीं किया जाता है तब ये शब्द न बोले जाएं।</p>
+  <h3 class="sec">धन्यवाद देना</h3>
+  <p class="block"><span class="num">२८</span> प्रेसबिटर कहेगा :</p>
+  <div class="group">
+    <p class="line"><span class="lbl">प्रेसबिटर</span> प्रभु यहां उपस्थित हैं।</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">उनका आत्मा हमारे साथ है।</span></p>
+    <p class="line"><span class="lbl">प्रेसबिटर</span> अपना हृदय प्रभु में लगाओ!</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">हम उसको प्रभु में लगाते हैं।</span></p>
+    <p class="line"><span class="lbl">प्रेसबिटर</span> हम अपने प्रभु परमेश्वर को धन्यवाद दें।</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">उनका धन्यवाद और स्तुति करना उचित है।</span></p>
+  </div>
+  <p class="block"><span class="num">२९</span> <span class="lbl" style="min-width:0">प्रेसबिटर</span> हे पवित्र पिता, स्वर्गिक राजा, सर्वशक्तिमान और शाश्वत् परमेश्वर, यह उचित ही नहीं, वरन् हमारा कर्तव्य और आनंद भी है, कि हम हर समय और हर जगह आपके एकलौते पुत्र, हमारे प्रभु येशु मसीह के द्वारा आपको धन्यवाद दें और आपकी स्तुति करें।</p>
+  <div class="poem"><p>वही आपका सत्य और जीवित वचन है; उसी के द्वारा आपने आदि से सब वस्तुओं की सृष्टि की और हमें अपने स्वरूप में बनाया।<br>उसी के द्वारा आप इस संसार में आनेवाले प्रत्येक व्यक्ति को ज्ञान से प्रकाशित करते हैं। आपने युग-युग में नबियों और विद्वानों को नियुक्त किया कि वे हमें आपका मार्ग दिखाएं।</p></div>
+</article>
+
+<!-- Page 133 -->
+<article class="page" data-page="१३३">
+  <span class="pnum">१३३</span>
+  <div class="poem"><p>उसी के द्वारा आपने हमें पाप के बन्धन से मुक्त किया है। आपने उसे दे दिया कि वह हमारे लिए मनुष्य बने, क्रूस पर अपने प्राण दे और मृतकों में से फिर जी उठे।<br>उसी के द्वारा आप अपना पवित्र एवं जीवनदायक आत्मा हमें प्रदान करते हैं, जिससे हम आपकी संतान बनें और आपकी नयी सृष्टि के प्रथम फल हों।</p></div>
+  <p class="block"><span class="num">३०</span> मसीही वार्षिक पर्वों के लिए अथवा अन्य अवसर के लिए यदि धन्यवाद की विशेष प्रार्थना निर्धारित हो, तो वह यहां की जाए (देखिए क्रम संख्या ४७ पृष्ठ ...)।</p>
+  <p class="block"><span class="num">३१</span></p>
+  <div class="poem"><p class="resp">इसलिये संतों और स्वर्गदूतों के साथ जो आपके सिंहासन के सामने निरंतर आपकी स्तुति करते हैं, हम भी आपके नाम की महिमा का गान करते और यह कह कर आपकी सराहना करते हैं :<br>पवित्र, पवित्र, पवित्र प्रभु,<br>प्रतापी और सर्वसामर्थी परमेश्वर,<br>स्वर्ग और पृथ्वी आपके ऐश्वर्य से परिपूर्ण हैं।<br>परमधाम में होशन्ना।</p></div>
+  <div class="group">
+    <p class="line"><span class="lbl">पुरोहित</span> हे स्वर्गिक पिता, अपने पुत्र हमारे उद्धारकर्ता प्रभु येशु मसीह (ख़्रिस्त) के द्वारा हमारे इस स्तुतिगान को स्वीकार कीजिए। हमें, जो अब उनके नमूने पर चलते और उनकी आज्ञा का पालन करते हैं, यह वर दीजिए कि आपके आत्मा की शक्ति से रोटी और दाखरस की यह भेंट हमारे लिए उनकी देह और रक्त हों, जो हमारे लिये मरे और जी उठे।</p>
+  </div>
+  <p class="block"><span class="num">३२*</span> जिस रात प्रभु येशु पकड़वाये गये, उन्होंने रोटी ली और आपको धन्यवाद दे कर तोड़ी और अपने शिष्यों को दी और कहा : "लो खाओ, यह मेरी देह है, जो तुम्हारे लिए दी जा रही है। मेरी स्मृति में ऐसा ही किया करो।" इसी प्रकार भोजन के अन्त में उन्होंने कटोरा लिया और आपको धन्यवाद देकर उनको दिया और कहा : "तुम सब इसमें से पियो; क्योंकि यह नई वाचा का मेरा रक्त है, जो तुम्हारे और बहुतों की पाप-क्षमा के लिए बहाया जा रहा है। तुम जब कभी इसे पियो तो मेरी स्मृति में ऐसा ही किया करो।"</p>
+</article>
+
+<!-- Page 134 -->
+<article class="page" data-page="१३४">
+  <span class="pnum">१३४</span>
+  <p class="block"><span class="num">३३</span> इसलिये, हे स्वर्गिक पिता, आपके पुत्र की स्मृति में हम इस रोटी और इस दाखरस को इस अनुष्ठान के लिये अलग करते हैं। हम उसके क्रूस पर एक ही बार अर्पित सिद्ध बलिदान को, उसके मृतकों में से पुनरुत्थान को और स्वर्ग में उसके आरोहण को आनन्द से मनाते और घोषित करते हैं; और हम उसके महिमा सहित आने की प्रतीक्षा करते हैं।</p>
+  <div class="group">
+    <p class="line"><span class="lbl">सब</span> <span class="resp">ख़्रिस्त हमारे लिए मरे।<br>ख़्रिस्त जी उठे हैं।<br>ख़्रिस्त फिर आएंगे।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="lbl">प्रेसबिटर</span> इसलिये, हे दयालु पिता, उसी हमारे महापुरोहित के द्वारा धन्यवाद एवं स्तुति की हमारी इस बलि को स्वीकार कीजिए। और जब आपकी ईश्वरीय महिमा की उपस्थिति में हम इन पवित्र उपहारों को खाते और पीते हैं, तब आप हमें अपने आत्मा के द्वारा नवजीवन दीजिए, अपने प्रेम से प्रोत्साहित कीजिए और अपने पुत्र हमारे प्रभु येशु मसीह की देह से हमें संयुक्त कीजिए।</p>
+  </div>
+  <div class="poem"><p>उसी के साथ और उसी में और उसी के द्वारा, पवित्र आत्मा की सामर्थ्य से, हे सर्वशक्तिमान पिता, उन-सब के साथ जो पृथ्वी पर और स्वर्ग में आपके सम्मुख उपस्थित रहते हैं, हम आपकी आराधना करते और अनन्त स्तुति का यह गीत गाते हैं।</p></div>
+  <div class="group"><p class="line"><span class="lbl">सब</span> <span class="resp">धन्यवाद, आदर, महिमा और पराक्रम युगानुयुग आपके ही हैं। आमीन।</span></p></div>
+</article>
+
+<!-- Page 135 -->
+<article class="page" data-page="१३५">
+  <span class="pnum">१३५</span>
+  <h3 class="sec">पवित्र सहभागिता : रोटी को तोड़ना तथा रोटी और दाखरस में सहभागी होना</h3>
+  <div class="group">
+    <p class="line"><span class="num">३४</span><span class="lbl">प्रेसबिटर</span> पवित्र रोटी को तोड़ते समय यह कहेगा : हम मसीह की देह में सहभागी होने के लिये इस रोटी को तोड़ते हैं।</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">हम एक देह हैं, क्योंकि हम-सब एक ही रोटी में सहभागी होते हैं।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="num">३५</span><span class="lbl">प्रेसबिटर</span> सब के सामने कटोरे को अपने हाथों (अथवा हाथ) में लेकर कह सकता है : इस कटोरे के द्वारा, जिस पर हम आशिष मांगते हैं, मसीह के रक्त में सहभागी होते हैं।</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">मसीह का जीवन हम में है और हम उसी में जीवित हैं।</span></p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="num">३६</span><span class="lbl">प्रेसबिटर</span> जिस प्रकार हमारे उद्धारकर्ता मसीह (ख़्रिस्त) ने हमें सिखाया है, हम प्रार्थना करते हैं :</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">हे हमारे स्वर्गिक पिता,<br>आपका नाम पवित्र माना जाए,<br>आपका राज्य आए,<br>आपकी इच्छा जैसे स्वर्ग में पूरी होती है,<br>वैसे पृथ्वी पर भी पूरी हो।<br>आप हमारी दिन भर की रोटी आज हमें दीजिए।<br>आप हमारे अपराधों को क्षमा कीजिए,<br>जैसे हमने अपने अपराधियों को क्षमा किया है।<br>आप हमें परीक्षा में मत डालिए,<br>परन्तु बुराई से हमें बचा लीजिए।<br>क्योंकि राज्य, पराक्रम और महिमा<br>अब और सदा-सर्वदा आपके ही हैं। आमीन।*</span></p>
+  </div>
+  <p class="silence">कुछ क्षण मौन।</p>
+  <p class="note">* अथवा 'आप' आदरसूचक सर्वनाम के स्थान पर 'तू' का प्रयोग किया जा सकता है।</p>
+</article>
+
+<!-- Page 136 -->
+<article class="page" data-page="१३६">
+  <span class="pnum">१३६</span>
+  <p class="block"><span class="num">३७</span> दीन-प्रवेश की प्रार्थना पढ़ी जा सकती है :</p>
+  <div class="poem"><p class="resp">हे दयामय प्रभु,<br>हम अपनी धार्मिकता पर नहीं,<br>परन्तु आपकी बड़ी और बहुविध दया पर भरोसा करके<br>आपकी इस मेज के पास आने का साहस करते हैं।<br>हम तो इस योग्य भी नहीं<br>कि जो टुकड़े आपकी मेज पर से गिरते हैं, उन्हें चुनें;<br>पर आप वही प्रभु हैं<br>जिनका स्वभाव सदा दया करना है।<br>इसलिए, हे कृपालु प्रभु, हम को यह वर दीजिए<br>कि आपके प्रिय पुत्र येशु मसीह (ख़्रिस्त) की देह<br>और रक्त को हम ऐसा ग्रहण करें<br>कि हमारी देह और आत्मा, जो पाप से अशुद्ध हो गई हैं,<br>उनकी अमूल्य देह और रक्त से शुद्ध हो जाएं,<br>और हम उनमें और वह हममें सदा-सर्वदा निवास करें। आमीन।</p></div>
+  <p class="instr">निम्नलिखित गीतों में से एक या दोनों पढ़े या गाये जा सकते हैं :</p>
+  <div class="poem"><p class="resp">धन्य है वह जो प्रभु के नाम में आता है;<br>परमधाम में होशन्ना।<br>हे येशु, परमेश्वर के मेमने, हम पर दया कीजिए।<br>हे येशु, हमारे पापों का बोझ उठानेवाले, हम पर दया कीजिए।<br>हे येशु, संसार के मुक्तिदाता, हमें अपनी शांति प्रदान कीजिए।</p></div>
+  <div class="group">
+    <p class="line"><span class="num">३८</span><span class="lbl">प्रेसबिटर</span> यह कहेगा : विश्वास के साथ पास आओ। हमारे प्रभु येशु मसीह (ख़्रिस्त) की देह को जो उन्होंने तुम्हारे लिए दी, और उनके रक्त को जो उन्होंने तुम्हारे लिए बहाया, लो। स्मरण करो कि येशु तुम्हारे लिए मरे और धन्यवाद करते हुए अपने हृदय में मसीह (ख़्रिस्त) को विश्वास से खाओ।</p>
+  </div>
+  <p class="block"><span class="num">३९</span> प्रेसबिटर और मण्डली के लोग पवित्र रोटी और दाखरस ग्रहण करेंगे।</p>
+</article>
+
+<!-- Page 137 -->
+<article class="page" data-page="१३७">
+  <span class="pnum">१३७</span>
+  <p class="block"><span class="num">४०</span> प्रेसबिटर रोटी और दाखरस देते समय इन शब्दों का (या नीचे टिप्पणी* में दिये गये शब्दों का) प्रयोग कर सकता है।</p>
+  <div class="poem"><p>हमारे प्रभु येशु मसीह (ख़्रिस्त) की देह, जो तुम्हारे लिए दी गई।<br>हमारे प्रभु येशु मसीह का रक्त, जो तुम्हारे लिए बहाया गया।</p></div>
+  <p class="instr">प्रभु-भोज लेनेवाला व्यक्ति हर बार इन शब्दों के उत्तर में कह सकता है : <b>आमीन।</b></p>
+  <p class="block"><span class="num">४१</span> पवित्र की गई रोटी और दाखरस में से यदि कुछ बच जाए और सहभागिता के लिये प्रयोग में न आए, तो प्रभु-भोज देने के बाद ही अथवा मण्डली को आशिष वचन से विदा करने के पश्चात् बचे हुए अंश को खा-पी लिया जाए।</p>
+  <hr class="rule">
+  <p class="instr">रोटी और दाखरस देते समय प्रेसबिटर इन वैकल्पिक वाक्यों का प्रयोग कर सकता है।</p>
+  <div class="group">
+    <p class="line"><span class="lbl">(१)</span> हमारे प्रभु येशु मसीह (ख़्रिस्त) की देह जो तुम्हारे लिए दी गई, शाश्वत् जीवन के लिए तुम्हारी देह और आत्मा को सुरक्षित रखे।</p>
+  </div>
+  <p class="instr">निम्नलिखित वाक्य भी जोड़ा जा सकता है :</p>
+  <div class="poem"><p>इसे लो और खाओ, इस बात की स्मृति में कि मसीह (ख़्रिस्त) तुम्हारे लिए मरे; और धन्यवाद करते हुए अपने हृदय में मसीह (ख़्रिस्त) को विश्वास से खाओ।</p></div>
+  <p class="or">और</p>
+  <div class="poem"><p>हमारे प्रभु येशु मसीह (ख़्रिस्त) का रक्त जो तुम्हारे लिये बहाया गया, शाश्वत् जीवन के लिए तुम्हारी देह और आत्मा को सुरक्षित रखे।</p></div>
+  <p class="instr">निम्नलिखित वाक्य भी जोड़ा जा सकता है :</p>
+  <div class="poem"><p>इसे पिओ, इस बात की स्मृति में कि मसीह (ख़्रिस्त) का रक्त तुम्हारे लिये बहाया गया, और धन्यवाद करो।</p></div>
+  <div class="group">
+    <p class="line"><span class="lbl">(२)</span> मसीह (ख़्रिस्त) की देह जो जीवन की रोटी है।<br>मसीह (ख़्रिस्त) का रक्त जो सच्ची अंगूर लता है।</p>
+    <p class="line"><span class="lbl">(३)</span> इसे लो और खाओ; यह मसीह (ख़्रिस्त) की देह है जो तुम्हारे लिए तोड़ी गई। उनकी स्मृति में ऐसा ही करो। यह कटोरा मसीह (ख़्रिस्त) के रक्त में जो बहुतों की पाप-क्षमा के लिए बहाया गया, नई वाचा है। तुम सब इसमें से पियो।</p>
+  </div>
+</article>
+
+<!-- Page 138 -->
+<article class="page" data-page="१३८">
+  <span class="pnum">१३८</span>
+  <h3 class="sec">सहभागिता के पश्चात्</h3>
+  <div class="group">
+    <p class="line"><span class="num">४२</span><span class="lbl">प्रेसबिटर</span> एक शास्त्र-वचन (देखिए क्रम संख्या ४७) पढ़ सकता है। कुछ क्षण मौन रहा जा सकता है।</p>
+    <p class="line"><span class="num">४३</span><span class="lbl">धर्मसेवक</span> हम ने इस पवित्र सक्रामेंत को विश्वास के साथ ग्रहण किया। इसलिये हम परमेश्वर को धन्यवाद दें।</p>
+  </div>
+  <div class="group">
+    <p class="line"><span class="num">४४</span><span class="lbl">प्रेसबिटर</span> अपने शब्दों में संक्षिप्त प्रार्थना कर सकता है। तत्पश्चात् सब निम्नलिखित दो प्रार्थनाओं में से एक पढ़ेंगे :</p>
+  </div>
+  <div class="poem"><p class="resp">हे सर्वशक्तिमान परमेश्वर,<br>हम आपको धन्यवाद देते हैं,<br>कि आपने अपने पुत्र येशु मसीह (ख़्रिस्त) की देह और<br>रक्त के आत्मिक भोजन से हमें तृप्त किया।<br>अब हम उन्हीं के द्वारा अपने-आपको<br>जीवित बलिदान होने के लिए<br>आपके सम्मुख अर्पित करते हैं।<br>यह वर दीजिए<br>कि हम आपके पवित्र आत्मा के सामर्थ्य से परिपूर्ण होकर<br>यहां से विदा हों<br>और अपने जीवन तथा सेवा के द्वारा<br>हर समय आपकी महिमा प्रकट करें। आमीन।</p></div>
+  <p class="or">अथवा</p>
+  <div class="poem"><p class="resp">हे स्वर्गिक पिता,<br>आपने अपने पुत्र हमारे उद्धारकर्ता येशु मसीह (ख़्रिस्त) की<br>अनमोल देह और रक्त के आत्मिक भोजन से हमें तृप्त किया।<br>इन पवित्र रहस्यों में<br>आपने हमको आश्वासन दिया है,<br>कि आपकी कृपा और भलाई हम पर बनी रहेगी।<br>और हमें इसका भी निश्चय कराया है<br>कि हम आपके पुत्र की देह के जीवित अंग<br>और आपके शाश्वत् राज्य के वारिस हैं।</p></div>
+</article>
+
+<!-- Page 139 -->
+<article class="page" data-page="१३९">
+  <span class="pnum">१३९</span>
+  <div class="poem"><p class="resp">इन सब महान उपकारों के लिए हम आपको धन्यवाद देते हैं,<br>और आपके पुत्र के साथ एक होकर<br>स्वयं को जीवित बलिदान के रूप में<br>आपको अर्पित करते हैं।<br>अब, हे पिता, हमें विदा कीजिए कि हम संसार में जाकर<br>उस कार्य को जो आपने हमें दिया है, पूरा करें;<br>और यह वर दीजिए<br>कि अपने प्रभु, येशु मसीह (ख़्रिस्त) के सच्चे गवाह बन कर<br>हम आपसे प्रेम करें और आपकी सेवा करें।<br>हे पिता, आपका और आपके पुत्र का और पवित्र आत्मा का<br>आदर और महिमा अब और सदा-सर्वदा होता रहे। आमीन।</p></div>
+  <p class="block"><span class="num">४५</span> प्रेसबिटर निम्नलिखित अथवा आशिष-वचन (देखिए क्रम संख्या ४७) से मंडली को विदा करेगा :</p>
+  <div class="poem"><p>परमेश्वर की शांति, जो सारी समझ से परे है, परमेश्वर के और उसके पुत्र हमारे प्रभु येशु मसीह (ख़्रिस्त) के ज्ञान और प्रेम में आपके हृदय और विचारों को सुरक्षित रखे।<br>और सर्वशक्तिमान परमेश्वर, पिता, पुत्र और पवित्र आत्मा की आशिष आप पर हो और आपके साथ सदा-सर्वदा बनी रहे।</p></div>
+  <div class="group"><p class="line"><span class="lbl">सब</span> <span class="resp">आमीन।</span></p></div>
+  <div class="group">
+    <p class="line"><span class="num">४६</span><span class="lbl">प्रेसबिटर</span> शांति से पूर्ण होकर जाओ; प्रभु से प्रेम करो और उसकी सेवा में लगे रहो।</p>
+    <p class="line"><span class="lbl">सब</span> <span class="resp">मसीह (ख़्रिस्त) के नाम में। आमीन।</span></p>
+  </div>
+  <p class="instr">प्रेसबिटर और मण्डली के लोग विदा होंगे और एक-दूसरे का अभिवादन करेंगे।</p>
+</article>
+
+</main>
+
+<script>
+(function () {
+  var all = Array.prototype.slice.call(document.querySelectorAll('article.page'));
+  var idx = 0;
+  var count = document.getElementById('count');
+  var prevBtn = document.getElementById('prev');
+  var nextBtn = document.getElementById('next');
+
+  // Zoom & Pan state
+  var baseScale = 1;
+  var userZoom = 1;
+  var panX = 0, panY = 0;
+  var pinchStartDist = 0;
+  var pinchStartZoom = 1;
+  var touchStartMidX = 0, touchStartMidY = 0;
+  var panStartX = 0, panStartY = 0;
+  var lastTapTime = 0;
+
+  function applyTransform(targetPage) {
+    var page = targetPage || all[idx];
+    if (!page) return;
+    if (userZoom <= 1.02) {
+      panX = 0;
+      panY = 0;
+    }
+    var totalScale = baseScale * userZoom;
+    page.style.transform = 'translate(' + panX.toFixed(1) + 'px, ' + panY.toFixed(1) + 'px) scale(' + totalScale.toFixed(3) + ')';
+    page.style.transformOrigin = 'top center';
+  }
+
+  function autoFit() {
+    if (!document.body.classList.contains('in-deck')) return;
+    var page = all[idx];
+    if (!page) return;
+    page.style.transform = '';
+    page.style.transformOrigin = 'top center';
+
+    var main = document.querySelector('main');
+    if (!main) return;
+    main.scrollTop = 0;
+    var availH = main.clientHeight;
+    var availW = main.clientWidth;
+    var contentH = page.scrollHeight;
+    var contentW = page.scrollWidth;
+    baseScale = 1;
+    if (availH > 50 && contentH > 0) {
+      var scaleH = (availH - 6) / contentH;
+      var scaleW = availW > 0 && contentW > availW ? (availW - 6) / contentW : 1;
+      var fitScale = Math.min(scaleH, scaleW);
+      if (fitScale < 1) {
+        baseScale = fitScale;
+      }
+    }
+    applyTransform(page);
+  }
+
+  var singleTapTimer = null;
+  var lastTouchEndTime = 0;
+  function toggleControls() {
+    document.body.classList.toggle('hide-controls');
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          type: 'SET_CONTROLS_VISIBILITY',
+          hidden: document.body.classList.contains('hide-controls')
+        }, '*');
+      }
+    } catch (_) {}
+  }
+
+  function show() {
+    userZoom = 1;
+    panX = 0;
+    panY = 0;
+    var main = document.querySelector('main');
+    if (main) main.scrollTop = 0;
+    document.body.classList.remove('hide-controls');
+    all.forEach(function (p) { p.classList.remove('active'); p.style.transform = ''; });
+    var page = all[idx];
+    void page.offsetWidth;
+    page.classList.add('active');
+    var label = page.getAttribute('data-page');
+    count.textContent = (label === 'आरंभ' ? 'आरंभ' : 'पृष्ठ ' + label) + ' · ' + (idx + 1) + ' / ' + all.length;
+    prevBtn.disabled = idx === 0;
+    nextBtn.disabled = idx === all.length - 1;
+    autoFit();
+  }
+
+  function start() {
+    document.body.classList.add('in-deck');
+    idx = 0;
+    show();
+  }
+  function back() {
+    userZoom = 1;
+    panX = 0;
+    panY = 0;
+    document.body.classList.remove('hide-controls');
+    all.forEach(function (p) { p.classList.remove('active'); p.style.transform = ''; });
+    document.body.classList.remove('in-deck');
+    window.scrollTo(0, 0);
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'CLOSE_BOOK' }, '*');
+        if (typeof window.parent.closePdfBook === 'function') {
+          window.parent.closePdfBook();
+        }
+      }
+    } catch (_) {}
+  }
+
+  window.addEventListener('resize', autoFit);
+  window.addEventListener('orientationchange', function () { setTimeout(autoFit, 150); });
+  function next() { if (idx < all.length - 1) { idx++; show(); } }
+  function prev() { if (idx > 0) { idx--; show(); } }
+
+  document.getElementById('start').addEventListener('click', start);
+  var menuBtn = document.getElementById('menu');
+  if (menuBtn) menuBtn.addEventListener('click', back);
+  var closeBtn = document.getElementById('close');
+  if (closeBtn) closeBtn.addEventListener('click', back);
+  nextBtn.addEventListener('click', next);
+  prevBtn.addEventListener('click', prev);
+
+  function getTouchDist(t1, t2) {
+    var dx = t1.clientX - t2.clientX;
+    var dy = t1.clientY - t2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  // Edge swipe navigation (clientX <= 44px, swiping right dx > 60px) to close book and return to app home
+  var edgeSwipeStartX = 0, edgeSwipeStartY = 0, isEdgeSwipe = false;
+  document.addEventListener('touchstart', function (e) {
+    if (e.touches && e.touches.length === 1) {
+      edgeSwipeStartX = e.touches[0].clientX;
+      edgeSwipeStartY = e.touches[0].clientY;
+      isEdgeSwipe = edgeSwipeStartX <= 44;
+    } else {
+      isEdgeSwipe = false;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', function (e) {
+    if (isEdgeSwipe && e.changedTouches && e.changedTouches.length > 0) {
+      var edgeDx = e.changedTouches[0].clientX - edgeSwipeStartX;
+      var edgeDy = e.changedTouches[0].clientY - edgeSwipeStartY;
+      if (edgeDx > 60 && Math.abs(edgeDx) > Math.abs(edgeDy) * 1.2) {
+        isEdgeSwipe = false;
+        try {
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type: 'CLOSE_BOOK' }, '*');
+            if (typeof window.parent.closePdfBook === 'function') {
+              window.parent.closePdfBook();
+            }
+          } else {
+            window.history.back();
+          }
+        } catch (_) {}
+        return;
+      }
+    }
+    isEdgeSwipe = false;
+  }, { passive: true });
+
+  document.addEventListener('touchcancel', function () {
+    isEdgeSwipe = false;
+  }, { passive: true });
+
+  // Swipe & pinch-zoom gestures
+  var sx = 0, sy = 0, tracking = false;
+  document.addEventListener('touchstart', function (e) {
+    if (!document.body.classList.contains('in-deck')) return;
+    if (e.touches.length === 2) {
+      tracking = false; // cancel swipe during pinch
+      pinchStartDist = getTouchDist(e.touches[0], e.touches[1]);
+      pinchStartZoom = userZoom;
+      touchStartMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      touchStartMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      panStartX = panX;
+      panStartY = panY;
+    } else if (e.touches.length === 1) {
+      var now = Date.now();
+      if (now - lastTapTime < 320) {
+        // Double-tap: toggle zoom
+        clearTimeout(singleTapTimer);
+        singleTapTimer = null;
+        lastTouchEndTime = Date.now();
+        if (userZoom > 1.05) {
+          userZoom = 1;
+          panX = 0;
+          panY = 0;
+        } else {
+          userZoom = 1.35;
+        }
+        applyTransform();
+        tracking = false;
+        lastTapTime = 0;
+        return;
+      }
+      lastTapTime = now;
+      sx = e.touches[0].clientX;
+      sy = e.touches[0].clientY;
+      tracking = true;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', function (e) {
+    if (!document.body.classList.contains('in-deck')) return;
+    if (e.touches.length === 2 && pinchStartDist > 0) {
+      var dist = getTouchDist(e.touches[0], e.touches[1]);
+      var factor = dist / pinchStartDist;
+      userZoom = Math.min(Math.max(pinchStartZoom * factor, 0.6), 4.0);
+
+      var midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      var midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      panX = panStartX + (midX - touchStartMidX);
+      panY = panStartY + (midY - touchStartMidY);
+
+      applyTransform();
+    } else if (e.touches.length === 1 && userZoom > 1.05) {
+      var dx = e.touches[0].clientX - sx;
+      var dy = e.touches[0].clientY - sy;
+      panX += dx * 0.45;
+      panY += dy * 0.45;
+      sx = e.touches[0].clientX;
+      sy = e.touches[0].clientY;
+      applyTransform();
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', function (e) {
+    if (e.touches.length < 2) {
+      pinchStartDist = 0;
+    }
+    if (!document.body.classList.contains('in-deck')) return;
+    if (!tracking) return;
+    tracking = false;
+
+    var dx = e.changedTouches[0].clientX - sx;
+    var dy = e.changedTouches[0].clientY - sy;
+
+    // Horizontal swipe for page navigation
+    if (userZoom <= 1.05 && Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      if (sx <= 44 && dx > 60) return; // Handled by edge swipe controller
+      if (dx < 0) next(); else prev();
+      return;
+    }
+
+    // Single tap in reading area toggles floating controls
+    if (Math.abs(dx) < 15 && Math.abs(dy) < 15) {
+      var target = e.target;
+      if (!target.closest('button, a, input, select, textarea, #deckbar, #decknav, #pinpointRoot')) {
+        lastTouchEndTime = Date.now();
+        clearTimeout(singleTapTimer);
+        singleTapTimer = setTimeout(function () {
+          toggleControls();
+        }, 220);
+      }
+    }
+  }, { passive: true });
+
+  // Mouse click toggle for desktop (ignores synthetic touch-clicks)
+  document.addEventListener('click', function (e) {
+    if (!document.body.classList.contains('in-deck')) return;
+    if (Date.now() - lastTouchEndTime < 450) return;
+    var target = e.target;
+    if (!target.closest('button, a, input, select, textarea, #deckbar, #decknav, #pinpointRoot')) {
+      toggleControls();
+    }
+  });
+
+  // AMOLED Invert Switch & Persistence
+  var THEME_KEY = 'church_companion_book_theme';
+
+  function notifySystemBars(theme) {
+    var isLight = (theme !== 'amoled' && theme !== 'dark');
+    try {
+      if (window.bridge && typeof window.bridge.updateSystemBars === 'function') {
+        window.bridge.updateSystemBars(isLight);
+      } else if (window.parent && window.parent.bridge && typeof window.parent.bridge.updateSystemBars === 'function') {
+        window.parent.bridge.updateSystemBars(isLight);
+      } else if (window.AndroidBridge && typeof window.AndroidBridge.updateSystemBars === 'function') {
+        window.AndroidBridge.updateSystemBars(isLight);
+      } else if (window.parent && window.parent.AndroidBridge && typeof window.parent.AndroidBridge.updateSystemBars === 'function') {
+        window.parent.AndroidBridge.updateSystemBars(isLight);
+      }
+    } catch (_) {}
+  }
+
+  function syncSafeArea() {
+    try {
+      if (window.parent && window.parent.document && window.parent.document.documentElement) {
+        var pStyle = window.getComputedStyle(window.parent.document.documentElement);
+        var pTop = pStyle.getPropertyValue('--safe-area-top');
+        var pBottom = pStyle.getPropertyValue('--safe-area-bottom');
+        if (pTop && pTop.trim() !== '') document.documentElement.style.setProperty('--safe-area-top', pTop.trim());
+        if (pBottom && pBottom.trim() !== '') document.documentElement.style.setProperty('--safe-area-bottom', pBottom.trim());
+      }
+    } catch (_) {}
+  }
+  syncSafeArea();
+  window.addEventListener('resize', syncSafeArea);
+  window.addEventListener('message', function (ev) {
+    if (ev.data) {
+      if (ev.data.safeAreaTop) document.documentElement.style.setProperty('--safe-area-top', ev.data.safeAreaTop);
+      if (ev.data.safeAreaBottom) document.documentElement.style.setProperty('--safe-area-bottom', ev.data.safeAreaBottom);
+      if (ev.data.type === 'SET_THEME' && ev.data.theme) applyTheme(ev.data.theme);
+    }
+  });
+
+  function applyTheme(theme) {
+    if (theme === 'amoled' || theme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'amoled');
+      document.body.classList.add('amoled-mode');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      document.body.classList.remove('amoled-mode');
+    }
+    notifySystemBars(theme);
+  }
+
+  function toggleTheme() {
+    var isAmoled = document.documentElement.getAttribute('data-theme') === 'amoled' || document.body.classList.contains('amoled-mode');
+    var nextTheme = isAmoled ? 'light' : 'amoled';
+    applyTheme(nextTheme);
+    try {
+      localStorage.setItem(THEME_KEY, nextTheme);
+    } catch (_) {}
+    try {
+      if (window.parent && typeof window.parent.setTheme === 'function') {
+        window.parent.setTheme(nextTheme);
+      }
+    } catch (_) {}
+  }
+
+  function initTheme() {
+    var savedTheme = null;
+    try {
+      savedTheme = localStorage.getItem(THEME_KEY);
+    } catch (_) {}
+    if (!savedTheme) {
+      try {
+        if (window.parent && window.parent.document && window.parent.document.documentElement) {
+          var parentTheme = window.parent.document.documentElement.getAttribute('data-theme');
+          if (parentTheme === 'amoled' || parentTheme === 'dark') {
+            savedTheme = 'amoled';
+          }
+        }
+      } catch (_) {}
+    }
+    if (savedTheme === 'amoled' || savedTheme === 'dark') {
+      applyTheme('amoled');
+    } else {
+      applyTheme('light');
+    }
+  }
+  initTheme();
+
+  var themeToggleBtn = document.getElementById('themeToggle');
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      toggleTheme();
+    });
+  }
+
+  // Keyboard: arrows move between pages, Escape returns to menu / closes book
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      back();
+      return;
+    }
+    if (!document.body.classList.contains('in-deck')) return;
+    if (e.key === 'ArrowRight') next();
+    else if (e.key === 'ArrowLeft') prev();
+  });
+})();
+</script>
+</body>
+</html>
