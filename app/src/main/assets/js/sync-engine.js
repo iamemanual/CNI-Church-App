@@ -762,14 +762,33 @@
     }
   }
 
+  // ── Session Sync Guard (Ensures strictly ONE automatic sync per app session on launch)
+  const SESSION_LAUNCH_SYNC_KEY = '__church_app_session_synced';
+  function hasSessionSynced() {
+    if (typeof window !== 'undefined' && window.__churchAppSessionSynced) return true;
+    try {
+      return typeof sessionStorage !== 'undefined' && sessionStorage.getItem(SESSION_LAUNCH_SYNC_KEY) === 'true';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function markSessionSynced() {
+    if (typeof window !== 'undefined') window.__churchAppSessionSynced = true;
+    try {
+      if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(SESSION_LAUNCH_SYNC_KEY, 'true');
+    } catch (_) {}
+  }
+
   // ── 5. SyncEngine Implementation
   const SyncEngine = {
-    _status: 'offline',
+    _status: 'idle',
     _lastSyncedAt: null,
     _realtimeChannel: null,
     _reconnectTimeout: null,
     _reconnectAttempts: 0,
     _isPulling: false,
+    _idleTransitionTimer: null,
     _listeners: [],
 
     MAX_BACKOFF_MS: 30000,
@@ -814,43 +833,54 @@
       const self = this;
       const IS_DEV = (typeof location !== 'undefined' && location.hostname === 'localhost');
 
+      // Network listeners: update indicator safely without triggering automatic background syncs
       window.addEventListener('online', function () {
-        if (IS_DEV) console.log('[RT] Online — delta pull + reconnect');
-        self._reconnectAttempts = 0;
-        self._setStatus('syncing');
-        self.pullDelta().then(function () {
-          self._subscribeRealtime();
-          self.flushOutbox();
-        });
+        if (IS_DEV) console.log('[SyncEngine] Network online — waiting for user-initiated sync.');
+        if (self._status === 'offline') {
+          self._setStatus('idle');
+        }
       });
 
       window.addEventListener('offline', function () {
-        if (IS_DEV) console.log('[RT] Offline');
+        if (IS_DEV) console.log('[SyncEngine] Network offline — local data preserved.');
         self._setStatus('offline');
-        self._stopWatchdog();
-      });
-
-      document.addEventListener('visibilitychange', function () {
-        if (document.visibilityState === 'visible' && navigator.onLine) {
-          self._lastEventAt = Date.now(); // reset watchdog on resume
-          self.pullDelta();
-        }
       });
 
       // Setup auth listener for setAuth on token refresh
       setupAuthListener();
 
-      // Ensure anonymous session exists before subscribing
+      // Ensure anonymous session exists before sync operations
       await ensureAnonSession();
 
+      // Guard: Perform exactly ONE automatic Supabase sync per app session on launch.
+      // Prevent duplicate launch syncs caused by re-renders, navigation, or script re-execution.
+      if (hasSessionSynced()) {
+        if (IS_DEV) console.log('[SyncEngine] Single launch sync already completed for this session. Automatic sync disabled.');
+        this._setStatus(navigator.onLine ? 'idle' : 'offline');
+        return;
+      }
+
+      // Mark launch sync as initiated for this session
+      markSessionSynced();
+
       if (!navigator.onLine) {
+        if (IS_DEV) console.log('[SyncEngine] Offline at app launch — preserving existing local data.');
         this._setStatus('offline');
         return;
       }
 
-      this._setStatus('syncing');
-      await this.pullDelta();
-      this._subscribeRealtime();
+      if (IS_DEV) console.log('[SyncEngine] Performing single automatic launch sync for session...');
+      await this.performSync({ isLaunch: true });
+
+      // After launch sync completes, strictly disable all automatic synchronization:
+      // no background sync, no polling, no Realtime subscriptions, no periodic refreshes,
+      // no navigation-triggered syncs, and no automatic retries.
+      this._stopWatchdog();
+      if (this._reconnectTimeout) {
+        clearTimeout(this._reconnectTimeout);
+        this._reconnectTimeout = null;
+      }
+      this._unsubscribeRealtime();
     },
 
     stop: function () {
@@ -858,30 +888,53 @@
         clearTimeout(this._reconnectTimeout);
         this._reconnectTimeout = null;
       }
-      const client = this._getClient();
-      if (this._realtimeChannel && client) {
-        try { client.removeChannel(this._realtimeChannel); } catch (_) {}
-        this._realtimeChannel = null;
-      }
+      this._stopWatchdog();
+      this._unsubscribeRealtime();
       this._setStatus('offline');
     },
 
     /**
-     * Pull Delta / Reconcile
+     * Unified Manual & Launch Sync Method
+     * - Deduplicates concurrent calls
+     * - Safely catches network/HTTP errors without wiping local Dexie data
+     * - Accurately updates Status Indicator states:
+     *     Yellow blinking = Syncing
+     *     Green blinking  = Sync Successful (then transitions to Gray = Idle after 3.5s)
+     *     Red blinking    = Offline / Failed
+     *     Gray            = Idle
      */
-    pullDelta: async function () {
-      if (this._isPulling) return;
+    performSync: async function (options) {
+      options = options || {};
+      // Prevent duplicate sync requests
+      if (this._isPulling) {
+        console.log('[SyncEngine] Sync already in progress — skipping duplicate request.');
+        return false;
+      }
+
+      if (!navigator.onLine) {
+        console.warn('[SyncEngine] Offline — skipping remote sync and preserving local cache.');
+        this._setStatus('offline');
+        return false;
+      }
+
       this._isPulling = true;
+      this._setStatus('syncing');
       const IS_DEV = (typeof location !== 'undefined' && location.hostname === 'localhost');
 
       try {
-        this._setStatus('syncing');
         const client = this._getClient();
         if (!client) {
-          this._setStatus(navigator.onLine ? 'error' : 'offline');
-          return;
+          throw new Error('Supabase client unavailable');
         }
 
+        // 1. Flush offline outbox safely
+        try {
+          await this.flushOutbox();
+        } catch (outboxErr) {
+          console.warn('[SyncEngine] Non-fatal outbox flush error:', outboxErr);
+        }
+
+        // 2. Pull remote updates for all registered segments
         const dbInstance = this._getDb();
         const segments = Object.keys(syncRegistry);
 
@@ -890,7 +943,6 @@
           const reg = syncRegistry[seg];
           if (!reg) continue;
 
-          // Read per-table lastSyncedAt from Dexie lastSyncedAt store
           let lastAt = null;
           try {
             if (dbInstance.lastSyncedAt) {
@@ -900,23 +952,39 @@
           } catch (_) {}
 
           if (!lastAt) {
-            // First launch: full pull
             await this._fullPullSegment(seg);
           } else {
-            // Delta pull by updated_at > lastAt (includes soft-deleted rows)
             await this._deltaByUpdatedAt(seg, lastAt);
           }
         }
 
         this._lastSyncedAt = new Date();
+        // Green blinking = Sync Successful
         this._setStatus('synced');
-        if (IS_DEV) console.log('[RT] pullDelta done at', this._lastSyncedAt.toISOString());
+        if (IS_DEV) console.log('[SyncEngine] Sync completed successfully at', this._lastSyncedAt.toISOString());
+
+        // Settle from Green blinking to Gray = Idle after 3.5s
+        const self = this;
+        if (this._idleTransitionTimer) clearTimeout(this._idleTransitionTimer);
+        this._idleTransitionTimer = setTimeout(function () {
+          if (self._status === 'synced') {
+            self._setStatus('idle');
+          }
+        }, 3500);
+
+        return true;
       } catch (err) {
-        console.warn('[SyncEngine v2] pullDelta error:', err);
-        this._setStatus(navigator.onLine ? 'error' : 'offline');
+        console.error('[SyncEngine] Sync failed safely (local data preserved):', err);
+        // Red blinking = Offline/Failed
+        this._setStatus(navigator.onLine ? 'failed' : 'offline');
+        return false;
       } finally {
         this._isPulling = false;
       }
+    },
+
+    pullDelta: async function () {
+      return this.performSync();
     },
 
     // Delta pull by updated_at (no sync_changes table required)
@@ -1362,72 +1430,20 @@
     },
 
     /**
-     * Unified Realtime Channel
+     * Realtime Subscriptions & Background Polling Management
+     * Strictly disabled post-launch: all subsequent synchronization must be triggered manually.
      */
-    _subscribeRealtime: function () {
+    _unsubscribeRealtime: function () {
       const client = this._getClient();
-      if (!client) return;
-
-      // Prevent duplicate channel from supabase-sync.js per-table system
-      window.__syncEngineV2Active = true;
-
-      if (this._realtimeChannel) {
+      if (this._realtimeChannel && client) {
         try { client.removeChannel(this._realtimeChannel); } catch (_) {}
         this._realtimeChannel = null;
       }
+    },
 
-      const self = this;
-      try {
-        // All 11 synced tables in ONE unified channel
-        const tables = [
-          'songs',
-          'prayer_book',
-          'announcements',
-          'todays_song_selection',
-          'almanac_entries',
-          'timeline_events',
-          'congregation_members',
-          'profiles',
-          'admin_requests',
-          'youth_access_requests',
-          'posts'
-        ];
-
-        const channel = client.channel('church-companion-sync-v2');
-        tables.forEach(function (table) {
-          channel.on(
-            'postgres_changes',
-            { event: '*', schema: 'public', table: table },
-            function (payload) {
-              self._lastEventAt = Date.now();
-              self._handleRealtimeEvent(table, payload);
-            }
-          );
-        });
-
-        channel.subscribe(function (status, err) {
-          if (status === 'SUBSCRIBED') {
-            console.log('[SyncEngine v2] Unified Realtime connected (' + tables.length + ' tables).');
-            self._reconnectAttempts = 0;
-            self._lastEventAt = Date.now();
-            self._setStatus('synced');
-            // Catch-up delta pull after any reconnect
-            self.pullDelta();
-            // Start watchdog
-            self._startWatchdog();
-          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-            console.warn('[SyncEngine v2] Realtime disconnected (' + status + ').', err || '');
-            self._setStatus(navigator.onLine ? 'error' : 'offline');
-            self._stopWatchdog();
-            self._scheduleReconnect();
-          }
-        });
-
-        this._realtimeChannel = channel;
-      } catch (e) {
-        console.error('[SyncEngine v2] Realtime channel setup error:', e);
-        this._scheduleReconnect();
-      }
+    _subscribeRealtime: function () {
+      // Disabled by policy: all subsequent synchronization is strictly user-triggered.
+      this._unsubscribeRealtime();
     },
 
     _watchdogTimer: null,
@@ -1435,32 +1451,8 @@
     WATCHDOG_MS: 300000,
 
     _startWatchdog: function () {
+      // Disabled by policy: no background polling or watchdog intervals.
       this._stopWatchdog();
-      const self = this;
-      this._watchdogTimer = setInterval(function () {
-        if (!navigator.onLine) return;
-        const client = self._getClient();
-        const ch = self._realtimeChannel;
-
-        const isClientConnected = client && client.realtime && typeof client.realtime.isConnected === 'function'
-          ? client.realtime.isConnected()
-          : true;
-        const isChannelJoined = ch && (ch.state === 'joined' || ch.state === 'subscribing');
-
-        if (isClientConnected && isChannelJoined) {
-          // Channel is healthy and active — do not thrash or reconnect
-          return;
-        }
-
-        console.warn('[SyncEngine v2] Watchdog: channel disconnected (state=' + (ch ? ch.state : 'null') + '). Reconnecting...');
-        self._setStatus('error');
-        self._stopWatchdog();
-        if (ch && client) {
-          try { client.removeChannel(ch); } catch (_) {}
-          self._realtimeChannel = null;
-        }
-        self._subscribeRealtime();
-      }, 20000); // Check every 20s
     },
 
     _stopWatchdog: function () {
@@ -1471,20 +1463,11 @@
     },
 
     _scheduleReconnect: function () {
-      if (this._reconnectTimeout) return;
-      this._reconnectAttempts++;
-      const delay = Math.min(
-        this.BASE_BACKOFF_MS * Math.pow(2, this._reconnectAttempts - 1),
-        this.MAX_BACKOFF_MS
-      );
-      const self = this;
-      this._reconnectTimeout = setTimeout(async function () {
-        self._reconnectTimeout = null;
-        if (navigator.onLine) {
-          await self.pullDelta();
-          self._subscribeRealtime();
-        }
-      }, delay);
+      // Disabled by policy: no automatic retries; all retries must be user-triggered.
+      if (this._reconnectTimeout) {
+        clearTimeout(this._reconnectTimeout);
+        this._reconnectTimeout = null;
+      }
     },
 
     _handleRealtimeEvent: async function (table, payload) {
@@ -2103,85 +2086,40 @@
     textEl: null,
     iconWrap: null,
     lastSyncingTimestamp: 0,
-    currentStatus: 'synced',
+    currentStatus: 'idle',
     _pendingSyncedTimer: null,
     _pulseTimer: null,
 
     mount: function () {
       this.container = document.getElementById('syncEngineStatusIndicator');
-      if (this.container) {
-        this.textEl = this.container.querySelector('#syncEngineStatusText') || this.container.querySelector('.sync-pill-text');
-        this.iconWrap = this.container.querySelector('.sync-pill-icon-wrap');
-      }
-
-      if (!this.container) {
-        // Fallback: locate homeManualRefreshBtn and inject directly before it
-        const refreshBtn = document.getElementById('homeManualRefreshBtn');
-        if (refreshBtn && refreshBtn.parentNode) {
-          const wrapper = document.createElement('div');
-          wrapper.id = 'syncEngineStatusIndicator';
-          wrapper.className = 'sync-status-indicator-home';
-          wrapper.setAttribute('data-status', 'synced');
-          wrapper.title = 'Cloud Sync: Online & Synced';
-          wrapper.setAttribute('aria-label', 'Cloud Sync Status: Synced');
-          wrapper.setAttribute('role', 'button');
-          wrapper.tabIndex = 0;
-
-          wrapper.innerHTML = `
-            <span class="sync-pill-icon-wrap">
-              <svg class="sync-pill-icon sync-icon-synced" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 16.2A4.5 4.5 0 0 0 17.5 8h-1.8A7 7 0 1 0 4 14.9"/>
-                <polyline points="9 13.5 11.5 16 16 11.5"/>
-              </svg>
-              <svg class="sync-pill-icon sync-icon-syncing" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-                <path class="sync-cloud-bg" d="M19 16.5A4 4 0 0 0 17.2 9h-1.5A6.5 6.5 0 1 0 5 15.5" stroke-opacity="0.35" stroke-width="1.8"/>
-                <g class="sync-arrows-orbit">
-                  <path d="M21 2v5h-5M3 22v-5h5M2.5 10.5a9.5 9.5 0 0 1 17.8-3.5M21.5 13.5a9.5 9.5 0 0 1-17.8 3.5"/>
-                </g>
-              </svg>
-              <svg class="sync-pill-icon sync-icon-offline" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22.6 16.9A5 5 0 0 0 18 10h-1.3a8 8 0 0 0-7-6M5 5a8 8 0 0 0-4 7h1.7"/>
-                <line x1="2" y1="2" x2="22" y2="22"/>
-              </svg>
-            </span>
-          `;
-
-          refreshBtn.parentNode.insertBefore(wrapper, refreshBtn);
-          this.container = wrapper;
-          this.iconWrap = wrapper.querySelector('.sync-pill-icon-wrap');
-        }
-      }
+      if (!this.container) return;
+      this.iconWrap = this.container.querySelector('.sync-pill-icon-wrap');
 
       const self = this;
       if (this.container) {
-        this.container.addEventListener('click', function (e) {
+        this.container.addEventListener('click', async function (e) {
           e.preventDefault();
-          if (self.currentStatus === 'processing' || self.currentStatus === 'syncing') {
+
+          // Prevent duplicate sync requests
+          if (SyncEngine._isPulling || self.currentStatus === 'syncing') {
             if (typeof window.showToast === 'function') {
-              window.showToast('Cloud Sync: In progress… 🔄');
+              window.showToast('Cloud Sync: Synchronization already in progress… 🔄');
             }
             return;
           }
-          if (self.currentStatus === 'offline') {
+
+          if (!navigator.onLine) {
+            self.setStatus('offline');
             if (typeof window.showToast === 'function') {
-              window.showToast('Cloud Sync: Offline mode (saved locally) ☁️');
+              window.showToast('You are currently offline. Local church data is preserved. ☁️');
             }
             return;
           }
-          self.setStatus('syncing');
-          if (typeof SyncEngine.pullDelta === 'function') {
-            Promise.resolve(SyncEngine.pullDelta()).finally(function () {
-              self.setStatus('synced');
-              self.blinkOnce();
-            });
+
+          if (typeof window.triggerManualAppRefresh === 'function') {
+            await window.triggerManualAppRefresh();
           } else {
-            setTimeout(function () {
-              self.setStatus('synced');
-              self.blinkOnce();
-            }, 600);
-          }
-          if (typeof window.showToast === 'function') {
-            window.showToast('Cloud Sync: Online & All Data Up-to-Date ✨');
+            await SyncEngine.performSync();
           }
         });
 
@@ -2202,8 +2140,8 @@
       window.addEventListener('storage', function () { self.checkVisibility(); });
       window.addEventListener('church:auth:changed', function () { self.checkVisibility(); });
 
-      // Apply initial state
-      this.setStatus('synced');
+      // Apply initial state based on network
+      this.setStatus(navigator.onLine ? (SyncEngine.status || 'idle') : 'offline');
     },
 
     blinkOnce: function () {
@@ -2230,77 +2168,37 @@
     updateState: function (status) {
       if (!this.container) return;
       this.checkVisibility();
-
-      const self = this;
-      if (this._pendingSyncedTimer) {
-        clearTimeout(this._pendingSyncedTimer);
-        this._pendingSyncedTimer = null;
-      }
-
-      if (status === 'syncing' || status === 'processing') {
-        this.lastSyncingTimestamp = Date.now();
-        this.setStatus('syncing');
-        if (this.container) this.container.title = 'Cloud Sync: Background synchronization in progress…';
-        return;
-      }
-
-      if (status === 'synced' || status === 'processed') {
-        // Prevent strobe flickering: ensure syncing was shown for at least 600ms
-        const elapsed = Date.now() - (this.lastSyncingTimestamp || 0);
-        const minHold = 600;
-        if (elapsed < minHold) {
-          this._pendingSyncedTimer = setTimeout(function () {
-            self.setStatus('synced');
-            self.blinkOnce();
-            if (self.container) self.container.title = 'Cloud Sync: Online & Up-to-Date';
-          }, minHold - elapsed);
-          return;
-        }
-        this.setStatus('synced');
-        this.blinkOnce();
-        if (this.container) this.container.title = 'Cloud Sync: Online & Up-to-Date';
-        return;
-      }
-
-      if (status === 'offline' || status === 'error') {
-        this.setStatus('offline');
-        if (this.container) {
-          this.container.title = status === 'error'
-            ? 'Cloud Sync: Connection Error (Auto-retrying)'
-            : 'Cloud Sync: Offline (Saved locally)';
-        }
-        return;
-      }
-
-      this.setStatus('idle');
-      if (this.container) this.container.title = 'Cloud Sync: Idle';
+      this.setStatus(status);
     },
 
     setStatus: function (status) {
       let norm = status;
-      if (norm === 'processed') norm = 'synced';
+      if (norm === 'processed' || norm === 'success') norm = 'synced';
       if (norm === 'processing') norm = 'syncing';
-      if (norm === 'error') norm = 'offline';
+      if (norm === 'error') norm = 'failed';
 
       this.currentStatus = norm;
       if (!this.container) return;
 
       this.container.setAttribute('data-status', norm);
 
-      let labelText = 'Online & Synced';
+      let labelText = 'Idle (Tap to sync)';
       switch (norm) {
         case 'syncing':
-          labelText = 'Background Syncing…';
+          labelText = 'Syncing in progress…';
           break;
         case 'offline':
           labelText = 'Offline (Saved locally)';
           break;
-        case 'idle':
-          labelText = 'Standby';
+        case 'failed':
+          labelText = 'Sync Failed (Tap to retry)';
           break;
         case 'synced':
+          labelText = 'Sync Successful';
+          break;
+        case 'idle':
         default:
-          labelText = 'Online & Synced';
+          labelText = 'Idle (Tap to sync)';
           break;
       }
       this.container.setAttribute('title', `Cloud Sync: ${labelText}`);

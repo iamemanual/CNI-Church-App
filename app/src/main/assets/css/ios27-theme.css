@@ -2289,8 +2289,11 @@ a, button, [role="button"], .dock-item, .quick-card, .action-pill-card,
 }
 
 /* ==========================================================================
-   Compact Circular Cloud Sync Indicator
-   Exact matching height (32px), 32px circular diameter, zero glow, fluid animation
+   Sync Status Indicator
+   - Gray = Idle
+   - Red blinking = Offline / Failed
+   - Yellow blinking = Syncing
+   - Green blinking = Sync Successful
    ========================================================================== */
 .sync-status-indicator-home {
   display: inline-flex;
@@ -2308,11 +2311,10 @@ a, button, [role="button"], .dock-item, .quick-card, .action-pill-card,
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.14);
-  color: var(--text-primary);
   cursor: pointer;
   outline: none;
   touch-action: manipulation;
-  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
   backdrop-filter: blur(12px) saturate(140%);
   -webkit-backdrop-filter: blur(12px) saturate(140%);
@@ -2324,7 +2326,6 @@ a, button, [role="button"], .dock-item, .quick-card, .action-pill-card,
 
 .sync-status-indicator-home:hover {
   background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(56, 189, 248, 0.45);
   transform: translateY(-1px);
 }
 
@@ -2355,62 +2356,98 @@ a, button, [role="button"], .dock-item, .quick-card, .action-pill-card,
   transition: transform 0.25s ease;
 }
 
-/* 1. Synced State (Crisp Emerald Cloud + Checkmark) */
-.sync-status-indicator-home[data-status="synced"] .sync-icon-synced,
-.sync-status-indicator-home[data-status="processed"] .sync-icon-synced {
-  display: block;
-  color: #10B981;
+/* 1. Gray = Idle (Steady, no blinking) */
+.sync-status-indicator-home[data-status="idle"] {
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  color: #94A3B8 !important;
+  animation: none !important;
 }
-
-/* 2. Ongoing in Background (Stationary Cloud with Fluid Orbital Sync Arcs) */
-.sync-status-indicator-home[data-status="syncing"] .sync-icon-syncing,
-.sync-status-indicator-home[data-status="processing"] .sync-icon-syncing {
-  display: block;
-  color: #38BDF8;
-}
-
-.sync-status-indicator-home[data-status="syncing"] .sync-arrows-orbit,
-.sync-status-indicator-home[data-status="processing"] .sync-arrows-orbit {
-  transform-origin: 12px 12px;
-  animation: syncSmoothOrbit 0.9s linear infinite;
-}
-
-/* 3. Offline State */
-.sync-status-indicator-home[data-status="offline"] .sync-icon-offline {
-  display: block;
-  color: #94A3B8;
-}
-
-/* 4. Idle / Standby */
 .sync-status-indicator-home[data-status="idle"] .sync-icon-synced {
-  display: block;
-  color: #64748B;
+  display: block !important;
+  color: #94A3B8 !important;
+  animation: none !important;
 }
 
-/* Continuous Fluid Orbital Spin for Background Sync */
+/* 2. Red blinking = Offline / Failed */
+.sync-status-indicator-home[data-status="offline"],
+.sync-status-indicator-home[data-status="failed"],
+.sync-status-indicator-home[data-status="error"] {
+  border-color: rgba(239, 68, 68, 0.5) !important;
+  color: #EF4444 !important;
+  animation: syncBlinkRed 1s infinite ease-in-out !important;
+}
+.sync-status-indicator-home[data-status="offline"] .sync-icon-offline,
+.sync-status-indicator-home[data-status="failed"] .sync-icon-offline,
+.sync-status-indicator-home[data-status="error"] .sync-icon-offline {
+  display: block !important;
+  color: #EF4444 !important;
+}
+
+/* 3. Yellow blinking = Syncing */
+.sync-status-indicator-home[data-status="syncing"],
+.sync-status-indicator-home[data-status="processing"] {
+  border-color: rgba(245, 158, 11, 0.5) !important;
+  color: #F59E0B !important;
+  animation: syncBlinkYellow 0.9s infinite ease-in-out !important;
+}
+.sync-status-indicator-home[data-status="syncing"] .sync-icon-synced,
+.sync-status-indicator-home[data-status="processing"] .sync-icon-synced {
+  display: block !important;
+  color: #F59E0B !important;
+}
+
+/* 4. Green blinking = Sync Successful */
+.sync-status-indicator-home[data-status="synced"],
+.sync-status-indicator-home[data-status="success"],
+.sync-status-indicator-home[data-status="processed"] {
+  border-color: rgba(16, 185, 129, 0.5) !important;
+  color: #10B981 !important;
+  animation: syncBlinkGreen 0.75s infinite ease-in-out !important;
+}
+.sync-status-indicator-home[data-status="synced"] .sync-icon-synced,
+.sync-status-indicator-home[data-status="success"] .sync-icon-synced,
+.sync-status-indicator-home[data-status="processed"] .sync-icon-synced {
+  display: block !important;
+  color: #10B981 !important;
+}
+
+/* Blinking Keyframes */
+@keyframes syncBlinkRed {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.22; }
+}
+
+@keyframes syncBlinkYellow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.26; }
+}
+
+@keyframes syncBlinkGreen {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.24; }
+}
+
+/* Continuous Fluid Orbital Spin for Syncing */
 @keyframes syncSmoothOrbit {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
 
-/* Single Micro Pop on Sync Completion (Zero Glow) */
+/* Single Micro Pop on Sync Completion */
 .sync-status-indicator-home.is-just-synced .sync-icon-synced {
   animation: syncCheckmarkPop 0.45s cubic-bezier(0.16, 1, 0.3, 1) 1;
 }
 
 @keyframes syncCheckmarkPop {
-  0% { transform: scale(0.8); }
-  50% { transform: scale(1.15); }
+  0% { transform: scale(0.85); }
+  50% { transform: scale(1.12); }
   100% { transform: scale(1); }
 }
 
-/* Reduced Motion: no spin */
+/* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
   .sync-status-indicator-home[data-status="syncing"] .sync-arrows-orbit,
   .sync-status-indicator-home[data-status="processing"] .sync-arrows-orbit {
-    animation: none !important;
-  }
-  .sync-status-indicator-home.is-just-synced .sync-icon-synced {
     animation: none !important;
   }
 }
@@ -2425,7 +2462,11 @@ a, button, [role="button"], .dock-item, .quick-card, .action-pill-card,
 
 [data-theme="light"] .sync-status-indicator-home:hover {
   background: rgba(0, 0, 0, 0.07);
-  border-color: rgba(2, 132, 199, 0.45);
+}
+
+[data-theme="light"] .sync-status-indicator-home[data-status="idle"] {
+  border-color: rgba(100, 116, 139, 0.25) !important;
+  color: #64748B !important;
 }
 
 

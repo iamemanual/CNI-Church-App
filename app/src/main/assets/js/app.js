@@ -1753,12 +1753,8 @@
       }
     });
 
-    // Periodic cloud reconciliation
-    setInterval(() => {
-      if (document.visibilityState === 'visible' && navigator.onLine) {
-        reconcileAdminStatusWithCloud();
-      }
-    }, 25000);
+    // Cloud reconciliation (triggered during app launch or manual refresh, not polling)
+    window.reconcileAdminStatusWithCloud = reconcileAdminStatusWithCloud;
 
     async function findApprovedAdmin(emailOrUser, passwordOrPin) {
       if (!emailOrUser || !passwordOrPin) return null;
@@ -10600,22 +10596,7 @@
     currentSongList = allSongs;
     window.currentSongList = allSongs;
 
-    // Background sync from Supabase Cloud on opening screen
-    if (window.ChurchSync && window.ChurchSync.Songs && typeof window.ChurchSync.Songs.list === 'function' && !openSongBookScreen._isSyncing) {
-      openSongBookScreen._isSyncing = true;
-      window.ChurchSync.Songs.list().then(async (res) => {
-        openSongBookScreen._isSyncing = false;
-        if (currentOpenSongBookKey === resolvedBookKey) {
-          if (isSongSelectionMode) {
-            return;
-          }
-          const freshSongs = await getSongsForBook(resolvedBookKey);
-          currentSongList = freshSongs;
-          window.currentSongList = freshSongs;
-          renderSongCards(freshSongs);
-        }
-      }).catch(() => { openSongBookScreen._isSyncing = false; });
-    }
+    // Local-first load from Dexie cache (navigation-triggered cloud sync disabled per policy)
 
     // Reset selection mode when opening screen
     if (!options || !options.background) {
@@ -11121,13 +11102,33 @@
     initAdminSongActions();
 
     // Manual App Refresh & Cloud Sync Button (Church Library Heading)
+    // Manual App Refresh & Cloud Sync Button (Church Library Heading)
     async function triggerManualAppRefresh() {
+      // Prevent duplicate sync requests
+      if (window.SyncEngine && window.SyncEngine._isPulling) {
+        if (typeof showToast === 'function') {
+          showToast('Synchronization already in progress… 🔄');
+        }
+        return;
+      }
+
       const btn = document.getElementById('homeManualRefreshBtn');
       if (btn && btn.classList.contains('is-refreshing')) return;
       if (btn) btn.classList.add('is-refreshing');
 
+      if (!navigator.onLine) {
+        if (window.SyncStatusIndicator && typeof window.SyncStatusIndicator.setStatus === 'function') {
+          window.SyncStatusIndicator.setStatus('offline');
+        }
+        if (typeof showToast === 'function') {
+          showToast('Device offline — local church data is safely preserved. ☁️');
+        }
+        if (btn) btn.classList.remove('is-refreshing');
+        return;
+      }
+
       if (window.SyncStatusIndicator && typeof window.SyncStatusIndicator.setStatus === 'function') {
-        window.SyncStatusIndicator.setStatus('processing');
+        window.SyncStatusIndicator.setStatus('syncing');
       }
 
       try {
@@ -11135,36 +11136,19 @@
           showToast('Refreshing application & synchronizing... 🔄');
         }
 
-        // 1. Flush offline outbox if online
-        if (window.ChurchSync && typeof window.ChurchSync.flushOfflineQueue === 'function') {
-          try { await window.ChurchSync.flushOfflineQueue(); } catch (_) {}
+        // 1. Perform unified sync through SyncEngine
+        if (window.SyncEngine && typeof window.SyncEngine.performSync === 'function') {
+          await window.SyncEngine.performSync();
+        } else if (window.ChurchSync && typeof window.ChurchSync.flushOfflineQueue === 'function') {
+          await window.ChurchSync.flushOfflineQueue();
         }
 
-        // 2. Refresh all 5 core data segments in parallel
-        const tasks = [];
-        if (window.ChurchSync) {
-          if (window.ChurchSync.Songs && typeof window.ChurchSync.Songs.list === 'function') {
-            tasks.push(window.ChurchSync.Songs.list().catch(() => {}));
-          }
-          if (window.ChurchSync.Announcements && typeof window.ChurchSync.Announcements.list === 'function') {
-            tasks.push(window.ChurchSync.Announcements.list().catch(() => {}));
-          }
-          if (window.ChurchSync.TodaysSongs && typeof window.ChurchSync.TodaysSongs.get === 'function') {
-            tasks.push(window.ChurchSync.TodaysSongs.get().catch(() => {}));
-          }
-          if (window.ChurchSync.Timeline && typeof window.ChurchSync.Timeline.list === 'function') {
-            tasks.push(window.ChurchSync.Timeline.list().catch(() => {}));
-          }
-          if (window.ChurchSync.Almanac && typeof window.ChurchSync.Almanac.list === 'function') {
-            tasks.push(window.ChurchSync.Almanac.list().catch(() => {}));
-          }
-          if (window.ChurchSync.AboutChurch && typeof window.ChurchSync.AboutChurch.get === 'function') {
-            tasks.push(window.ChurchSync.AboutChurch.get().catch(() => {}));
-          }
+        // 2. Reconcile Admin status once during manual refresh
+        if (typeof reconcileAdminStatusWithCloud === 'function') {
+          try { await reconcileAdminStatusWithCloud(); } catch (_) {}
         }
-        await Promise.allSettled(tasks);
 
-        // 3. Refresh UI views locally
+        // 3. Refresh UI views locally from updated Dexie cache
         if (typeof refreshSongBookCards === 'function') {
           try { await refreshSongBookCards(currentOpenSongBookKey); } catch (_) {}
         }
@@ -11197,10 +11181,7 @@
         }
 
         if (window.SyncStatusIndicator && typeof window.SyncStatusIndicator.setStatus === 'function') {
-          window.SyncStatusIndicator.setStatus('processed');
-          if (typeof window.SyncStatusIndicator.blinkOnce === 'function') {
-            window.SyncStatusIndicator.blinkOnce();
-          }
+          window.SyncStatusIndicator.setStatus('synced');
         }
 
         if (typeof showToast === 'function') {
@@ -11208,6 +11189,9 @@
         }
       } catch (err) {
         console.warn('[Manual Refresh] Error:', err);
+        if (window.SyncStatusIndicator && typeof window.SyncStatusIndicator.setStatus === 'function') {
+          window.SyncStatusIndicator.setStatus(navigator.onLine ? 'failed' : 'offline');
+        }
         if (typeof showToast === 'function') {
           showToast('Refresh completed with local cache.');
         }
@@ -16259,31 +16243,6 @@
     // ── Supabase Realtime Channel Hook for Universal Sync
     function hookSupabaseChatRealtime() {
       if (hookSupabaseChatRealtime._installed) {
-        // If already registered, perform cloud sync pull
-        if (window.ChurchSync) {
-          if (typeof window.ChurchSync.flushOfflineQueue === 'function') window.ChurchSync.flushOfflineQueue();
-          if (window.ChurchSync.Songs && typeof window.ChurchSync.Songs.list === 'function') {
-            window.ChurchSync.Songs.list().then(() => {
-              if (typeof refreshSongBookCards === 'function') refreshSongBookCards(currentOpenSongBookKey);
-              else if (typeof renderAdditionalSongsFromDexie === 'function') renderAdditionalSongsFromDexie();
-            }).catch(() => {});
-          }
-          if (window.ChurchSync.Announcements && typeof window.ChurchSync.Announcements.list === 'function') {
-            window.ChurchSync.Announcements.list().catch(() => {});
-          }
-          if (window.ChurchSync.TodaysSongs && typeof window.ChurchSync.TodaysSongs.get === 'function') {
-            window.ChurchSync.TodaysSongs.get().catch(() => {});
-          }
-          if (window.ChurchSync.Timeline && typeof window.ChurchSync.Timeline.list === 'function') {
-            window.ChurchSync.Timeline.list().catch(() => {});
-          }
-          if (window.ChurchSync.Almanac && typeof window.ChurchSync.Almanac.list === 'function') {
-            window.ChurchSync.Almanac.list().catch(() => {});
-          }
-          if (window.ChurchSync.AboutChurch && typeof window.ChurchSync.AboutChurch.get === 'function') {
-            window.ChurchSync.AboutChurch.get().catch(() => {});
-          }
-        }
         return;
       }
       if (!window.ChurchSync) {
@@ -16519,23 +16478,7 @@
     window.hookSupabaseChatRealtime = hookSupabaseChatRealtime;
     hookSupabaseChatRealtime();
 
-    // Auto-reconcile with Supabase cloud when app is brought to foreground
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') {
-        hookSupabaseChatRealtime();
-      }
-    });
-
-    window.addEventListener('focus', () => {
-      hookSupabaseChatRealtime();
-    });
-
-    // Background SyncEngine delta check (efficient seq-based delta pull without jumping)
-    setInterval(() => {
-      if (window.SyncEngine && typeof window.SyncEngine.pullDelta === 'function' && navigator.onLine) {
-        window.SyncEngine.pullDelta().catch(() => {});
-      }
-    }, 30000);
+    // Automatic background/visibility sync disabled: all subsequent syncs are manual per policy
 
     initSmartChatFloatingEngine();
 

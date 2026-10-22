@@ -143,23 +143,11 @@
     });
   }
 
-  // ── Connectivity Handler
+  // ── Connectivity Handler (Automatic sync disabled: all subsequent syncs are manual)
   window.addEventListener("online", () => {
     _state.online = true;
-    console.log("[Sync Engine] Connection restored — triggering realtime reconnect, outbox replay and cloud pull");
+    console.log("[Sync Engine] Connection restored — online status active.");
     _emit("online");
-    // Only reinit per-table channels if SyncEngine v2 is not active
-    if (!window.__syncEngineV2Active) {
-      _initRealtime();
-    }
-    _flushOutboxes();
-    Songs.list().then(res => {
-      if (res && res.data && typeof window.renderAdditionalSongsFromDexie === "function") {
-        window.renderAdditionalSongsFromDexie();
-      }
-    }).catch(() => {});
-    Announcements.list().catch(() => {});
-    TodaysSongs.get().catch(() => {});
   });
 
   window.addEventListener("offline", () => {
@@ -2305,34 +2293,9 @@
     }
   };
 
-  // ── Init
+  // ── Init (All background automatic syncing/realtime handled strictly by unified SyncEngine)
   async function init() {
-    console.log("[Sync Engine] Initializing Church Companion Real-Time Engine v3...");
-    // _initRealtime() is guarded internally; SyncEngine v2 unified channel takes precedence
-    _initRealtime();
-    if (_state.online) {
-      _flushOutboxes();
-      // Auto-pull initial remote datasets into local Dexie
-      try {
-        Songs.list().then(res => {
-          if (res && res.data && res.data.length > 0) {
-            console.log(`[Sync Engine] Pulled ${res.data.length} songs from Supabase Cloud`);
-            if (typeof window.refreshSongBookCards === "function") {
-              window.refreshSongBookCards(window.currentOpenSongBookKey);
-            } else if (typeof window.renderAdditionalSongsFromDexie === "function") {
-              window.renderAdditionalSongsFromDexie();
-            }
-          }
-        }).catch(err => console.warn("[Sync Engine] Initial song pull warning:", err));
-        Announcements.list().catch(() => {});
-        TodaysSongs.get().catch(() => {});
-        Timeline.list().catch(() => {});
-        Almanac.list().catch(() => {});
-        AboutChurch.get().catch(() => {});
-      } catch (err) {
-        console.warn("[Sync Engine] Initial data pull error:", err);
-      }
-    }
+    console.log("[Sync Engine] Initializing Church Companion Real-Time Engine v3 (Manual-First Policy Active)...");
     _emit("ready", { online: _state.online });
   }
 
