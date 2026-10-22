@@ -12211,7 +12211,7 @@ textarea:focus-visible,
 /* Floating Edit Button on Right side of top nav bar */
 #editPastorDirectBtn.ac-top-edit-btn {
   pointer-events: auto !important;
-  display: inline-flex !important;
+  display: none;
   align-items: center !important;
   justify-content: center !important;
   gap: 6px !important;

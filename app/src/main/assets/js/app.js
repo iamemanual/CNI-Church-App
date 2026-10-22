@@ -2517,7 +2517,11 @@
       // About Church Direct Edit & Photo Management Buttons
       const editPastorDirectBtn = document.getElementById('editPastorDirectBtn');
       if (editPastorDirectBtn) {
-        editPastorDirectBtn.style.display = isSuperAdmin ? 'inline-flex' : 'none';
+        if (isSuperAdmin) {
+          editPastorDirectBtn.style.setProperty('display', 'inline-flex', 'important');
+        } else {
+          editPastorDirectBtn.style.setProperty('display', 'none', 'important');
+        }
       }
       const addChurchPhotoDirectBtn = document.getElementById('addChurchPhotoDirectBtn');
       if (addChurchPhotoDirectBtn) {
@@ -12001,7 +12005,11 @@
       );
       const editPastorDirectBtn = document.getElementById('editPastorDirectBtn');
       if (editPastorDirectBtn) {
-        editPastorDirectBtn.style.display = isSuperAdminOnly ? 'inline-flex' : 'none';
+        if (isSuperAdminOnly) {
+          editPastorDirectBtn.style.setProperty('display', 'inline-flex', 'important');
+        } else {
+          editPastorDirectBtn.style.setProperty('display', 'none', 'important');
+        }
       }
       const addChurchPhotoDirectBtn = document.getElementById('addChurchPhotoDirectBtn');
       if (addChurchPhotoDirectBtn) {
@@ -12547,6 +12555,18 @@
         if (pastorBtn) {
           e.preventDefault();
           e.stopPropagation();
+          const p = (typeof useAppPermissions === 'function') ? useAppPermissions() : null;
+          const isSuper = Boolean(
+            p?.isSuperAdmin ||
+            p?.role === 'superadmin' ||
+            (typeof currentAuthSession !== 'undefined' && currentAuthSession && (
+              currentAuthSession.email === SUPER_ADMIN_EMAIL ||
+              currentAuthSession.role === 'superadmin'
+            ))
+          );
+          if (pastorBtn.id === 'editPastorDirectBtn' && !isSuper) {
+            return;
+          }
           if (pastorBtn.id === 'editPastorCardBtn') {
             openAboutChurchEditModal('pastor');
           } else {
@@ -12622,6 +12642,16 @@
         editPastorDirectBtn.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
+          const p = (typeof useAppPermissions === 'function') ? useAppPermissions() : null;
+          const isSuper = Boolean(
+            p?.isSuperAdmin ||
+            p?.role === 'superadmin' ||
+            (typeof currentAuthSession !== 'undefined' && currentAuthSession && (
+              currentAuthSession.email === SUPER_ADMIN_EMAIL ||
+              currentAuthSession.role === 'superadmin'
+            ))
+          );
+          if (!isSuper) return;
           openAboutChurchEditModal();
         });
       }
