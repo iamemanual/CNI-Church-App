@@ -174,7 +174,7 @@ const NATIVE_BRIDGE_INJECTION = `
 
   const bridge = {
     getAppName: function() { return "Church Companion"; },
-    getAppVersion: function() { return "v26.08.31 (APK Authentic)"; },
+    getAppVersion: function() { return "v2.1.6 (APK Authentic)"; },
     isDeviceOnline: function() { return navigator.onLine; },
     hasCameraPermission: function() { return true; },
     hasMediaPermission: function() { return true; },
@@ -457,8 +457,8 @@ const server = http.createServer((req, res) => {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({
         updateAvailable: true,
-        currentVersion: 'v26.08.31',
-        latestVersion: 'v26.09.01',
+        currentVersion: 'v2.1.6',
+        latestVersion: 'v2.1.7',
         buildCode: 4092040,
         fileSizeMb: sizeMb,
         downloadUrl: '/download/ChurchCompanion.apk',
@@ -468,7 +468,7 @@ const server = http.createServer((req, res) => {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({
         updateAvailable: false,
-        currentVersion: 'v26.08.31',
+        currentVersion: 'v2.1.6',
         message: 'No update available. You are on the latest version.'
       }));
     }

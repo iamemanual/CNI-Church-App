@@ -1,6 +1,6 @@
 # ⛪ Church Companion (CNI Church App)
 
-[![Latest Release](https://img.shields.io/github/v/release/iamemanual/CNI-Church-App?label=Release&color=blue&style=flat-square)](https://github.com/iamemanual/CNI-Church-App/releases/tag/v26.08.31)
+[![Latest Release](https://img.shields.io/github/v/release/iamemanual/CNI-Church-App?label=Release&color=blue&style=flat-square)](https://github.com/iamemanual/CNI-Church-App/releases/tag/v2.1.6)
 [![Platform](https://img.shields.io/badge/Platform-Android%208.0%2B%20%28API%2026%2B%29-3DDC84?logo=android&logoColor=white&style=flat-square)](https://developer.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin%20%7C%20JavaScript-7F52FF?logo=kotlin&logoColor=white&style=flat-square)](https://kotlinlang.org)
 [![Backend](https://img.shields.io/badge/Cloud-Supabase-3ECF8E?logo=supabase&logoColor=white&style=flat-square)](https://supabase.com)
@@ -17,7 +17,7 @@ Grab the latest official signed release APK:
 
 | Version | Package | Direct Download |
 | :--- | :--- | :--- |
-| **`v26.08.31`** (Latest) | `com.allsaints.church` | [⬇️ **Download ChurchCompanion.apk** (43.27 MB)](https://github.com/iamemanual/CNI-Church-App/releases/download/v26.08.31/ChurchCompanion.apk) |
+| **`v2.1.6`** (Latest) | `com.allsaints.church` | [⬇️ **Download ChurchCompanion.apk** (43.27 MB)](https://github.com/iamemanual/CNI-Church-App/releases/download/v2.1.6/ChurchCompanion.apk) |
 
 ---
 
@@ -160,7 +160,7 @@ The resulting APK will be generated at `app/build/outputs/apk/release/app-releas
 ## 🔏 APK Installation on Android
 
 When downloading or updating the APK:
-1. Download [ChurchCompanion.apk](https://github.com/iamemanual/CNI-Church-App/releases/download/v26.08.31/ChurchCompanion.apk).
+1. Download [ChurchCompanion.apk](https://github.com/iamemanual/CNI-Church-App/releases/download/v2.1.6/ChurchCompanion.apk).
 2. Tap the downloaded notification or file in your file manager.
 3. If prompted, grant **Install Unknown Apps** permission for your browser or file manager.
 4. Tap **Install** or **Update**.

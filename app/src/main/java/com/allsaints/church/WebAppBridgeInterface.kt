@@ -45,7 +45,7 @@ class WebAppBridgeInterface(
     fun getAppName(): String = "Church Companion"
 
     @JavascriptInterface
-    fun getAppVersion(): String = "v26.08.31"
+    fun getAppVersion(): String = "v2.1.6"
 
     @JavascriptInterface
     fun updateSystemBars(isLight: Boolean) {

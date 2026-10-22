@@ -16939,14 +16939,14 @@
     // Synchronize App Version Badges across Settings
     const appVersionStr = (window.AndroidBridge && typeof window.AndroidBridge.getAppVersion === 'function')
       ? window.AndroidBridge.getAppVersion().replace(/ \(.*\)/, '').trim()
-      : 'v26.08.31';
+      : 'v2.1.6';
     const aboutVerBadge = document.getElementById('aboutAppVersionBadge');
     if (aboutVerBadge) {
       aboutVerBadge.textContent = `App ${appVersionStr.startsWith('v') ? appVersionStr : 'v' + appVersionStr}`;
     }
     const appUpdateVer = document.getElementById('appUpdateVersionDetails');
     if (appUpdateVer) {
-      appUpdateVer.innerHTML = `Version ${appVersionStr.startsWith('v') ? appVersionStr : 'v' + appVersionStr} (Build 4092039)`;
+      appUpdateVer.innerHTML = `Version ${appVersionStr.startsWith('v') ? appVersionStr : 'v' + appVersionStr} (Build 4092040)`;
     }
 
     // =========================================================================
