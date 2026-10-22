@@ -11126,6 +11126,10 @@
       if (btn && btn.classList.contains('is-refreshing')) return;
       if (btn) btn.classList.add('is-refreshing');
 
+      if (window.SyncStatusIndicator && typeof window.SyncStatusIndicator.setStatus === 'function') {
+        window.SyncStatusIndicator.setStatus('processing');
+      }
+
       try {
         if (typeof showToast === 'function') {
           showToast('Refreshing application & synchronizing... 🔄');
@@ -11190,6 +11194,13 @@
         }
         if (typeof updateHomeDailyVerseAndDate === 'function') {
           try { updateHomeDailyVerseAndDate(); } catch (_) {}
+        }
+
+        if (window.SyncStatusIndicator && typeof window.SyncStatusIndicator.setStatus === 'function') {
+          window.SyncStatusIndicator.setStatus('processed');
+          if (typeof window.SyncStatusIndicator.blinkOnce === 'function') {
+            window.SyncStatusIndicator.blinkOnce();
+          }
         }
 
         if (typeof showToast === 'function') {
@@ -21114,7 +21125,7 @@
         // ── Helper: get conflict policy ───────────────────────────────────────────
         function getConflictPolicy() {
           const r = document.querySelector('input[name="modalConflictPolicy"]:checked');
-          return r ? r.value : 'replace';
+          return r ? r.value : 'new';
         }
 
         // ── Update engine rule banner when destination changes ────────────────────
@@ -21520,7 +21531,7 @@
 
               itemizedRecords.push({ num: song.serialNumber, title: song.title, status: recordStatus });
 
-              const finalId = (exists && conflictPolicy === 'duplicate')
+              const finalId = (exists && (conflictPolicy === 'duplicate' || conflictPolicy === 'new'))
                 ? `${songId}-dup-${Date.now()}`
                 : songId;
 

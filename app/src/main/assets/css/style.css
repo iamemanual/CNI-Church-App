@@ -518,14 +518,8 @@ button:active, .btn:active, .btn-primary:active, .btn-secondary:active, .setting
 }
 
 .daily-greeting-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-  background: linear-gradient(180deg, var(--accent-gold) 0%, var(--church-blue-base) 100%);
-  z-index: 1;
+  display: none !important;
+  content: none !important;
 }
 
 /* Faded Cross Watermark on Hero Card */

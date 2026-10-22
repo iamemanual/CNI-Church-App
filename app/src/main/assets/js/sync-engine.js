@@ -2097,17 +2097,22 @@
     };
   }
 
-  // ── 8. Super Admin Sync Status Indicator Widget (Minimalist Dot Beside Home Refresh)
+  // ── 8. Super Admin Sync Status Indicator Widget (Live Cloud Sync Pill Companion)
   const SyncStatusIndicator = {
     container: null,
-    dotEl: null,
+    textEl: null,
+    iconWrap: null,
     lastSyncingTimestamp: 0,
     currentStatus: 'synced',
     _pendingSyncedTimer: null,
+    _pulseTimer: null,
 
     mount: function () {
       this.container = document.getElementById('syncEngineStatusIndicator');
-      this.dotEl = document.getElementById('syncEngineStatusDot');
+      if (this.container) {
+        this.textEl = this.container.querySelector('#syncEngineStatusText') || this.container.querySelector('.sync-pill-text');
+        this.iconWrap = this.container.querySelector('.sync-pill-icon-wrap');
+      }
 
       if (!this.container) {
         // Fallback: locate homeManualRefreshBtn and inject directly before it
@@ -2116,23 +2121,42 @@
           const wrapper = document.createElement('div');
           wrapper.id = 'syncEngineStatusIndicator';
           wrapper.className = 'sync-status-indicator-home';
+          wrapper.setAttribute('data-status', 'synced');
           wrapper.title = 'Cloud Sync: Online & Synced';
-          wrapper.setAttribute('aria-label', 'Cloud Sync Status');
+          wrapper.setAttribute('aria-label', 'Cloud Sync Status: Synced');
+          wrapper.setAttribute('role', 'button');
+          wrapper.tabIndex = 0;
 
-          const dot = document.createElement('span');
-          dot.id = 'syncEngineStatusDot';
-          wrapper.appendChild(dot);
+          wrapper.innerHTML = `
+            <span class="sync-pill-icon-wrap">
+              <svg class="sync-pill-icon sync-icon-synced" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 16.2A4.5 4.5 0 0 0 17.5 8h-1.8A7 7 0 1 0 4 14.9"/>
+                <polyline points="9 13.5 11.5 16 16 11.5"/>
+              </svg>
+              <svg class="sync-pill-icon sync-icon-syncing" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                <path class="sync-cloud-bg" d="M19 16.5A4 4 0 0 0 17.2 9h-1.5A6.5 6.5 0 1 0 5 15.5" stroke-opacity="0.35" stroke-width="1.8"/>
+                <g class="sync-arrows-orbit">
+                  <path d="M21 2v5h-5M3 22v-5h5M2.5 10.5a9.5 9.5 0 0 1 17.8-3.5M21.5 13.5a9.5 9.5 0 0 1-17.8 3.5"/>
+                </g>
+              </svg>
+              <svg class="sync-pill-icon sync-icon-offline" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22.6 16.9A5 5 0 0 0 18 10h-1.3a8 8 0 0 0-7-6M5 5a8 8 0 0 0-4 7h1.7"/>
+                <line x1="2" y1="2" x2="22" y2="22"/>
+              </svg>
+            </span>
+          `;
 
           refreshBtn.parentNode.insertBefore(wrapper, refreshBtn);
           this.container = wrapper;
-          this.dotEl = dot;
+          this.iconWrap = wrapper.querySelector('.sync-pill-icon-wrap');
         }
       }
 
       const self = this;
       if (this.container) {
-        this.container.addEventListener('click', function () {
-          if (self.currentStatus === 'syncing') {
+        this.container.addEventListener('click', function (e) {
+          e.preventDefault();
+          if (self.currentStatus === 'processing' || self.currentStatus === 'syncing') {
             if (typeof window.showToast === 'function') {
               window.showToast('Cloud Sync: In progress… 🔄');
             }
@@ -2144,9 +2168,27 @@
             }
             return;
           }
-          SyncEngine.pullDelta();
+          self.setStatus('syncing');
+          if (typeof SyncEngine.pullDelta === 'function') {
+            Promise.resolve(SyncEngine.pullDelta()).finally(function () {
+              self.setStatus('synced');
+              self.blinkOnce();
+            });
+          } else {
+            setTimeout(function () {
+              self.setStatus('synced');
+              self.blinkOnce();
+            }, 600);
+          }
           if (typeof window.showToast === 'function') {
             window.showToast('Cloud Sync: Online & All Data Up-to-Date ✨');
+          }
+        });
+
+        this.container.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            self.container.click();
           }
         });
       }
@@ -2159,6 +2201,21 @@
 
       window.addEventListener('storage', function () { self.checkVisibility(); });
       window.addEventListener('church:auth:changed', function () { self.checkVisibility(); });
+
+      // Apply initial state
+      this.setStatus('synced');
+    },
+
+    blinkOnce: function () {
+      if (!this.container) return;
+      const self = this;
+      if (this._pulseTimer) clearTimeout(this._pulseTimer);
+      this.container.classList.remove('is-just-synced');
+      void this.container.offsetWidth; // Force CSS animation restart
+      this.container.classList.add('is-just-synced');
+      this._pulseTimer = setTimeout(function () {
+        if (self.container) self.container.classList.remove('is-just-synced');
+      }, 500);
     },
 
     checkVisibility: function () {
@@ -2171,7 +2228,7 @@
     },
 
     updateState: function (status) {
-      if (!this.container || !this.dotEl) return;
+      if (!this.container) return;
       this.checkVisibility();
 
       const self = this;
@@ -2180,56 +2237,74 @@
         this._pendingSyncedTimer = null;
       }
 
-      if (status === 'syncing') {
+      if (status === 'syncing' || status === 'processing') {
         this.lastSyncingTimestamp = Date.now();
-        this.currentStatus = 'syncing';
-        this.dotEl.classList.remove('sync-dot-synced');
-        this.dotEl.classList.add('sync-dot-pulse');
-        this.dotEl.style.background = '#f59e0b';
-        this.dotEl.style.boxShadow = '0 0 8px rgba(245, 158, 11, 0.7)';
-        this.container.title = 'Cloud Sync: Syncing latest changes…';
+        this.setStatus('syncing');
+        if (this.container) this.container.title = 'Cloud Sync: Background synchronization in progress…';
         return;
       }
 
-      if (status === 'synced') {
+      if (status === 'synced' || status === 'processed') {
         // Prevent strobe flickering: ensure syncing was shown for at least 600ms
         const elapsed = Date.now() - (this.lastSyncingTimestamp || 0);
         const minHold = 600;
         if (elapsed < minHold) {
           this._pendingSyncedTimer = setTimeout(function () {
-            self.applyState('synced');
+            self.setStatus('synced');
+            self.blinkOnce();
+            if (self.container) self.container.title = 'Cloud Sync: Online & Up-to-Date';
           }, minHold - elapsed);
           return;
         }
+        this.setStatus('synced');
+        this.blinkOnce();
+        if (this.container) this.container.title = 'Cloud Sync: Online & Up-to-Date';
+        return;
       }
 
-      this.applyState(status);
+      if (status === 'offline' || status === 'error') {
+        this.setStatus('offline');
+        if (this.container) {
+          this.container.title = status === 'error'
+            ? 'Cloud Sync: Connection Error (Auto-retrying)'
+            : 'Cloud Sync: Offline (Saved locally)';
+        }
+        return;
+      }
+
+      this.setStatus('idle');
+      if (this.container) this.container.title = 'Cloud Sync: Idle';
     },
 
-    applyState: function (status) {
-      if (!this.dotEl || !this.container) return;
-      this.currentStatus = status;
-      this.dotEl.classList.remove('sync-dot-pulse');
+    setStatus: function (status) {
+      let norm = status;
+      if (norm === 'processed') norm = 'synced';
+      if (norm === 'processing') norm = 'syncing';
+      if (norm === 'error') norm = 'offline';
 
-      switch (status) {
-        case 'synced':
-          this.dotEl.style.background = '#10b981';
-          this.dotEl.style.boxShadow = '0 0 6px rgba(16, 185, 129, 0.6)';
-          this.container.title = 'Cloud Sync: Online & Synced';
-          this.dotEl.classList.add('sync-dot-synced');
-          setTimeout(() => { if (this.dotEl) this.dotEl.classList.remove('sync-dot-synced'); }, 600);
+      this.currentStatus = norm;
+      if (!this.container) return;
+
+      this.container.setAttribute('data-status', norm);
+
+      let labelText = 'Online & Synced';
+      switch (norm) {
+        case 'syncing':
+          labelText = 'Background Syncing…';
           break;
         case 'offline':
-          this.dotEl.style.background = '#6b7280';
-          this.dotEl.style.boxShadow = 'none';
-          this.container.title = 'Cloud Sync: Offline (Local storage active)';
+          labelText = 'Offline (Saved locally)';
           break;
-        case 'error':
-          this.dotEl.style.background = '#ef4444';
-          this.dotEl.style.boxShadow = '0 0 6px rgba(239, 68, 68, 0.6)';
-          this.container.title = 'Cloud Sync: Sync Error (Auto-retrying)';
+        case 'idle':
+          labelText = 'Standby';
+          break;
+        case 'synced':
+        default:
+          labelText = 'Online & Synced';
           break;
       }
+      this.container.setAttribute('title', `Cloud Sync: ${labelText}`);
+      this.container.setAttribute('aria-label', `Cloud Sync Status: ${labelText}`);
     }
   };
 
