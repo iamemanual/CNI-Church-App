@@ -3,7 +3,7 @@
   <img src="app/src/main/assets/app_icon.png" alt="Church Companion Emblem" width="112" height="112" style="border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.35);" />
 
   # ⛪ Church Companion
-  ### *The Sanctuary Companion & Liturgical Guide for the Church of North India (CNI)*
+  ### *Church Companion & Liturgical Guide for the All Saints' Church - Church of North India (CNI)*
 
   [![Latest Release](https://img.shields.io/github/v/release/iamemanual/CNI-Church-App?label=Release&color=7F52FF&style=for-the-badge&logo=github)](https://github.com/iamemanual/CNI-Church-App/releases/tag/v2.1.9)
   [![Platform](https://img.shields.io/badge/Platform-Android%208.0%2B%20(API%2026%2B)-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com)
