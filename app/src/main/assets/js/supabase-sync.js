@@ -1631,16 +1631,53 @@
           const merged = [];
           activeItems.forEach(item => {
             const local = localList.find(l => l && l.id === item.id);
+            let itemDate = '';
+            let itemRawDate = '';
+            let itemPhotos = [];
+
+            if (item.description && typeof item.description === 'string') {
+              const metaMatch = item.description.match(/<!--TL_META:([\s\S]*?)-->/);
+              if (metaMatch) {
+                try {
+                  const parsed = JSON.parse(metaMatch[1]);
+                  if (parsed && typeof parsed === 'object') {
+                    if (parsed.date) itemDate = parsed.date;
+                    if (parsed.rawDate) itemRawDate = parsed.rawDate;
+                    if (Array.isArray(parsed.photos) && parsed.photos.length > 0) itemPhotos = parsed.photos;
+                  }
+                } catch (_) {}
+              }
+            }
+
+            const isYearOnly = (s) => /^\d{4}$/.test(String(s || '').trim());
+            const resolvedDate = (local && local.date && !isYearOnly(local.date))
+              ? local.date
+              : (itemDate || item.event_date || (local && local.date) || (item.year ? `12 July ${item.year}` : ''));
+            const resolvedRawDate = (local && local.rawDate && !isYearOnly(local.rawDate))
+              ? local.rawDate
+              : (itemRawDate || itemDate || (local && local.rawDate) || resolvedDate);
+
             if (local) {
-              merged.push({ ...local, title: item.title, description: item.description, year: item.year, date: item.year });
+              const hasLocalPhotos = Array.isArray(local.photos) && local.photos.length > 0;
+              const hasItemPhotos = Array.isArray(itemPhotos) && itemPhotos.length > 0;
+              merged.push({
+                ...local,
+                title: item.title || local.title,
+                description: item.description || local.description,
+                year: item.year || local.year,
+                date: resolvedDate,
+                rawDate: resolvedRawDate,
+                photos: hasLocalPhotos ? local.photos : (hasItemPhotos ? itemPhotos : [])
+              });
             } else {
               merged.push({
                 id: item.id,
                 year: item.year,
                 title: item.title,
                 description: item.description,
-                rawDate: item.year,
-                date: item.year
+                rawDate: resolvedRawDate,
+                date: resolvedDate,
+                photos: itemPhotos
               });
             }
           });

@@ -11,8 +11,8 @@ android {
         applicationId = "com.allsaints.church"
         minSdk = 26
         targetSdk = 34
-        versionCode = 4092040
-        versionName = "v2.1.6"
+        versionCode = 4092041
+        versionName = "v2.1.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

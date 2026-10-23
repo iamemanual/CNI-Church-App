@@ -33,7 +33,7 @@ class ChurchApplication : Application() {
     companion object {
         const val TAG: String = "ChurchCompanion"
         const val APP_NAME: String = "Church Companion"
-        const val APP_VERSION: String = "v2.1.6"
+        const val APP_VERSION: String = "v2.1.7"
 
         lateinit var instance: ChurchApplication
             private set

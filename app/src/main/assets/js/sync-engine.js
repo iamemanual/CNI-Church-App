@@ -582,12 +582,16 @@
                 description = description.replace(/\s*<!--TL_META:[\s\S]*?-->\s*$/, '').trim();
               }
 
+              var isYearOnly = function (s) { return /^\d{4}$/.test(String(s || '').trim()); };
               // Preserve existing local fields if incoming lacks them
-              if (!date && existing && existing.date) date = existing.date;
+              if ((!date || isYearOnly(date)) && existing && existing.date && !isYearOnly(existing.date)) date = existing.date;
               if (!rawDate && existing && (existing.rawDate || existing.date)) rawDate = existing.rawDate || existing.date;
               if ((!photos || photos.length === 0) && existing && Array.isArray(existing.photos)) photos = existing.photos;
 
-              if (!date) date = item.year ? String(item.year) : '2026';
+              if (!date || isYearOnly(date)) {
+                var yrVal = date || (item.year ? String(item.year) : '2026');
+                date = '12 July ' + yrVal;
+              }
               if (!rawDate) rawDate = date;
 
               const formatted = {

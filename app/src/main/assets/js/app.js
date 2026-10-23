@@ -606,7 +606,7 @@
       return clean.charAt(0).toUpperCase() + clean.slice(1);
     }
 
-    // --- AUDIT LOG ENGINE (Insert-Only) ---
+    // --- AUDIT LOG ENGINE (Insert-Only & Full Realtime Governance) ---
     function getStoredAuditLog() {
       try {
         const raw = localStorage.getItem('sanctuary_audit_log_v1');
@@ -619,68 +619,181 @@
     }
 
     function addAuditLogEntry(entry) {
+      if (!entry) return null;
       const logs = getStoredAuditLog();
+      const perms = (typeof useAppPermissions === 'function') ? useAppPermissions() : {};
+      const isSuper = Boolean(currentAuthSession.role === 'superadmin' || currentAuthSession.email === SUPER_ADMIN_EMAIL || perms.isSuperAdmin);
+      const isAdmin = Boolean(isSuper || currentAuthSession.role === 'admin' || perms.canEdit || perms.isAdmin);
+      const computedRole = entry.actor_role || (isSuper ? 'superadmin' : (isAdmin ? 'admin' : (currentAuthSession.role || 'member')));
+      const computedName = entry.actor_name || currentAuthSession.display_name || currentAuthSession.name || currentAuthSession.email || (isSuper ? 'Super Admin' : 'Admin');
+      const actorId = entry.actor_id || currentAuthSession.uid || 'admin-session';
+
       const newEntry = {
-        id: 'audit-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
+        id: entry.id || ('audit-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7)),
         action: entry.action || 'system_action',
         entity_type: entry.entity_type || 'general',
         entity_id: entry.entity_id || '',
-        actor_id: currentAuthSession.uid || 'anon',
-        actor_name: currentAuthSession.display_name || 'Believer',
-        actor_role: currentAuthSession.role || 'member',
+        actor_id: actorId,
+        actor_name: computedName,
+        actor_role: computedRole,
         details: entry.details || '',
-        created_at: new Date().toISOString()
+        created_at: entry.created_at || new Date().toISOString()
       };
+
       logs.unshift(newEntry);
       // Keep maximum 500 audit entries locally
-      if (logs.length > 500) logs.pop();
+      if (logs.length > 500) logs.length = 500;
       try {
         localStorage.setItem('sanctuary_audit_log_v1', JSON.stringify(logs));
       } catch (_) {}
-      renderAuditLogUI();
+
+      // Realtime Cloud sync to Supabase audit_log table
+      try {
+        if (window.ChurchSync && window.ChurchSync.AuditLog && typeof window.ChurchSync.AuditLog.add === 'function') {
+          window.ChurchSync.AuditLog.add({
+            action: newEntry.action,
+            entity_type: newEntry.entity_type,
+            entity_id: newEntry.entity_id,
+            actor_id: newEntry.actor_id,
+            actor_name: newEntry.actor_name,
+            actor_role: newEntry.actor_role,
+            details: newEntry.details
+          }).catch(err => console.warn('[Audit] Cloud sync warning:', err));
+        }
+      } catch (_) {}
+
+      // Local IndexedDB persistence
+      try {
+        if (typeof churchDexieDb !== 'undefined' && churchDexieDb?.audit_log) {
+          churchDexieDb.audit_log.put(newEntry).catch(() => {});
+        }
+      } catch (_) {}
+
+      if (typeof renderAuditLogUI === 'function') {
+        renderAuditLogUI();
+      }
       return newEntry;
     }
 
+    window.addAuditLogEntry = addAuditLogEntry;
+    window.getStoredAuditLog = getStoredAuditLog;
+
     let currentAuditFilter = 'all';
 
-    function renderAuditLogUI() {
+    function renderAuditLogUI(forceCloudSync = false) {
       window.renderAuditLogUI = renderAuditLogUI;
       const container = document.getElementById('auditLogScreenContainer') || document.getElementById('auditLogContainer');
       if (!container) return;
+
       let logs = getStoredAuditLog();
 
-      if (currentAuditFilter !== 'all') {
-        logs = logs.filter(l => (l.action || '').toLowerCase().includes(currentAuditFilter));
+      if (currentAuditFilter && currentAuditFilter !== 'all') {
+        logs = logs.filter(l => (l.action || '').toLowerCase().includes(currentAuditFilter.toLowerCase()));
       }
 
       if (logs.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:32px 16px; color:var(--text-secondary); font-size:0.9rem;">No administrative actions found for this filter.</div>';
-        return;
-      }
-
-      container.innerHTML = logs.map(l => {
-        let badgeColor = '#4997D0';
-        let actionIcon = '📝';
-        if (l.action.includes('delete')) { actionIcon = '🗑️'; badgeColor = '#ef4444'; }
-        else if (l.action.includes('import')) { actionIcon = '📥'; badgeColor = '#3b82f6'; }
-        else if (l.action.includes('rollback')) { actionIcon = '⏪'; badgeColor = '#8b5cf6'; }
-        else if (l.action.includes('post')) { actionIcon = '👥'; badgeColor = '#10b981'; }
-        else if (l.action.includes('name')) { actionIcon = '✍️'; badgeColor = '#6366f1'; }
-
-        const dateStr = new Date(l.created_at).toLocaleString([], { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-        return `
-          <div class="audit-log-item" style="background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); padding:12px 16px; margin-bottom:8px;">
-            <div class="audit-log-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-              <span class="audit-log-action" style="font-weight:700; color:var(--text-primary); display:flex; align-items:center; gap:6px;">${actionIcon} ${l.action.toUpperCase()}</span>
-              <span class="audit-log-time" style="font-size:0.75rem; color:var(--text-muted);">${dateStr}</span>
-            </div>
-            <div class="audit-log-details" style="color:var(--text-secondary); font-size:0.86rem; line-height:1.45; margin-bottom:4px;">${l.details}</div>
-            <div style="font-size:0.75rem; color:var(--text-muted); border-top:1px dashed var(--border-subtle); padding-top:4px; margin-top:4px;">
-              Actor: <strong style="color:var(--text-primary);">${l.actor_name}</strong> &bull; Access Tier: <span class="role-badge ${l.actor_role}" style="font-size:0.68rem; padding:1px 6px;">${l.actor_role}</span>
-            </div>
+        container.innerHTML = `
+          <div style="text-align:center; padding:48px 16px; color:var(--text-secondary);">
+            <div style="font-size:2.2rem; margin-bottom:8px;">🛡️</div>
+            <div style="font-weight:700; font-size:1rem; color:var(--text-primary); margin-bottom:4px;">No Governance Logs Found</div>
+            <div style="font-size:0.84rem; color:var(--text-muted); max-width:320px; margin:0 auto; line-height:1.45;">All administrative modifications, role adjustments, liturgical updates, and system operations by Admin or Super Admin will appear here.</div>
           </div>
         `;
-      }).join('');
+      } else {
+        container.innerHTML = logs.map(l => {
+          let badgeColor = '#4997D0';
+          let actionIcon = '📝';
+          const act = (l.action || '').toLowerCase();
+          if (act.includes('delete') || act.includes('remove') || act.includes('revoke')) {
+            actionIcon = '🗑️'; badgeColor = '#ef4444';
+          } else if (act.includes('import')) {
+            actionIcon = '📥'; badgeColor = '#3b82f6';
+          } else if (act.includes('rollback')) {
+            actionIcon = '⏪'; badgeColor = '#8b5cf6';
+          } else if (act.includes('song') || act.includes('hymn')) {
+            actionIcon = '🎵'; badgeColor = '#10b981';
+          } else if (act.includes('announcement') || act.includes('bulletin')) {
+            actionIcon = '📢'; badgeColor = '#f59e0b';
+          } else if (act.includes('church') || act.includes('photo')) {
+            actionIcon = '⛪'; badgeColor = '#8b5cf6';
+          } else if (act.includes('timeline')) {
+            actionIcon = '📜'; badgeColor = '#06b6d4';
+          } else if (act.includes('almanac') || act.includes('lectionary')) {
+            actionIcon = '📖'; badgeColor = '#ec4899';
+          } else if (act.includes('elevation') || act.includes('admin') || act.includes('role')) {
+            actionIcon = '🛡️'; badgeColor = '#eab308';
+          } else if (act.includes('post')) {
+            actionIcon = '👥'; badgeColor = '#10b981';
+          } else if (act.includes('name')) {
+            actionIcon = '✍️'; badgeColor = '#6366f1';
+          } else if (act.includes('package') || act.includes('update')) {
+            actionIcon = '📦'; badgeColor = '#3b82f6';
+          }
+
+          const actionLabel = (l.action || 'ACTION').replace(/_/g, ' ').toUpperCase();
+          const dateStr = l.created_at ? new Date(l.created_at).toLocaleString([], { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recent';
+          const role = (l.actor_role || 'admin').toLowerCase();
+          const isSuper = role === 'superadmin' || role.includes('super');
+          const roleBadgeStyle = isSuper
+            ? 'background:rgba(217,119,6,0.12); color:#d97706; border:1px solid rgba(217,119,6,0.3); font-weight:700;'
+            : 'background:rgba(73,151,208,0.12); color:#4997d0; border:1px solid rgba(73,151,208,0.25); font-weight:700;';
+          const roleLabel = isSuper ? 'Super Admin' : (role === 'admin' ? 'Admin' : (l.actor_role || 'Admin'));
+
+          return `
+            <div class="audit-log-item" style="background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:14px; padding:12px 14px; margin-bottom:10px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+              <div class="audit-log-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:6px;">
+                <span class="audit-log-action" style="font-weight:700; font-size:0.86rem; color:var(--text-primary); display:flex; align-items:center; gap:6px; letter-spacing:-0.01em;">
+                  <span>${actionIcon}</span>
+                  <span>${actionLabel}</span>
+                </span>
+                <span class="audit-log-time" style="font-size:0.72rem; color:var(--text-muted); font-weight:500;">${dateStr}</span>
+              </div>
+              <div class="audit-log-details" style="color:var(--text-secondary); font-size:0.86rem; line-height:1.48; margin-bottom:8px; word-break:break-word;">${escapeHtml(l.details || '')}</div>
+              <div class="audit-log-footer" style="display:flex; justify-content:space-between; align-items:center; font-size:0.74rem; color:var(--text-muted); border-top:1px solid var(--border-subtle); padding-top:6px; margin-top:4px; flex-wrap:wrap; gap:6px;">
+                <div>Actor: <strong style="color:var(--text-primary); font-weight:600;">${escapeHtml(l.actor_name || 'Admin')}</strong></div>
+                <span class="role-badge" style="font-size:0.68rem; padding:2px 8px; border-radius:9999px; ${roleBadgeStyle}">
+                  ${roleLabel}
+                </span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Background cloud sync to merge remote audit logs
+      if ((forceCloudSync || !window._auditLogSyncing) && window.ChurchSync && window.ChurchSync.AuditLog && typeof window.ChurchSync.AuditLog.list === 'function') {
+        window._auditLogSyncing = true;
+        window.ChurchSync.AuditLog.list(200).then(res => {
+          window._auditLogSyncing = false;
+          if (res && res.data && Array.isArray(res.data) && res.data.length > 0) {
+            const local = getStoredAuditLog();
+            const idMap = new Map();
+            local.forEach(item => {
+              const k = item.id || `${item.action}-${item.created_at}`;
+              idMap.set(k, item);
+            });
+            let changed = false;
+            res.data.forEach(item => {
+              const k = item.id || `${item.action}-${item.created_at}`;
+              if (!idMap.has(k)) {
+                idMap.set(k, item);
+                changed = true;
+              }
+            });
+            if (changed) {
+              const merged = Array.from(idMap.values());
+              merged.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+              if (merged.length > 500) merged.length = 500;
+              try {
+                localStorage.setItem('sanctuary_audit_log_v1', JSON.stringify(merged));
+              } catch (_) {}
+              renderAuditLogUI(false);
+            }
+          }
+        }).catch(() => {
+          window._auditLogSyncing = false;
+        });
+      }
     }
 
     // --- CONGREGATIONAL POSTS MANAGEMENT UI ---
@@ -1928,6 +2041,13 @@
         });
       }
 
+      addAuditLogEntry({
+        action: 'admin_elevation_approve',
+        entity_type: 'user',
+        entity_id: targetUserId || reqId,
+        details: `Super Admin approved Admin access request for ${approvedRequest?.display_name || targetUserId || 'User'}${approvedRequest?.email ? ` (${approvedRequest.email})` : ''}`
+      });
+
       renderPendingRequestsUI();
       updateAppPermissionsUI();
       showToast('Admin request approved! Admin permissions granted 🛡️');
@@ -2013,6 +2133,13 @@
           email: rejectedRequest?.email
         });
       }
+
+      addAuditLogEntry({
+        action: 'admin_elevation_reject',
+        entity_type: 'user',
+        entity_id: targetUserId || reqId,
+        details: `Super Admin declined Admin access request for ${rejectedRequest?.display_name || targetUserId || 'User'}${rejectedRequest?.email ? ` (${rejectedRequest.email})` : ''}`
+      });
 
       renderPendingRequestsUI();
       updateAppPermissionsUI();
@@ -2111,6 +2238,13 @@
           email: request?.email
         });
       }
+
+      addAuditLogEntry({
+        action: 'admin_access_revoke',
+        entity_type: 'user',
+        entity_id: targetUserId || reqId,
+        details: `Super Admin revoked Admin access from ${request?.display_name || targetUserId || 'User'}${request?.email ? ` (${request.email})` : ''}`
+      });
 
       renderPendingRequestsUI();
       updateAppPermissionsUI();
@@ -2530,6 +2664,12 @@
       const managePhotosDirectBtn = document.getElementById('managePhotosDirectBtn');
       if (managePhotosDirectBtn) {
         managePhotosDirectBtn.style.display = (isSuperAdmin || isAdmin) ? 'inline-flex' : 'none';
+      }
+
+      // Almanac Add/Import Button strictly visible to Super Admin only (Pinpoint Request)
+      const almanacAddBtn = document.getElementById('almanacAddImportYearBtn');
+      if (almanacAddBtn) {
+        almanacAddBtn.style.setProperty('display', isSuperAdmin ? 'flex' : 'none', 'important');
       }
     }
 
@@ -3496,7 +3636,7 @@
     const handleOpenAuditLog = (e) => {
       if (e) e.stopPropagation();
       switchTab('viewAuditLog');
-      renderAuditLogUI();
+      renderAuditLogUI(true);
     };
     if (auditLogSettingsGroup) {
       auditLogSettingsGroup.addEventListener('click', handleOpenAuditLog);
@@ -3514,7 +3654,7 @@
     const refreshAuditLogBtn = document.getElementById('refreshAuditLogBtn');
     if (refreshAuditLogBtn) {
       refreshAuditLogBtn.addEventListener('click', () => {
-        renderAuditLogUI();
+        renderAuditLogUI(true);
         showToast('Audit log refreshed ✨');
       });
     }
@@ -4303,6 +4443,8 @@
       if (typeof renderTodaySongAdminUI === 'function') renderTodaySongAdminUI();
     } else if (tabId === 'viewTimeline') {
       if (typeof renderTimelineList === 'function') renderTimelineList();
+    } else if (tabId === 'viewAuditLog') {
+      if (typeof renderAuditLogUI === 'function') renderAuditLogUI(true);
     }
 
     // Scroll to top smoothly
@@ -6329,19 +6471,31 @@
       `;
     });
 
-    // Beside the year card add an iOS-styled plus import card (Pinpoint #10 & Pinpoint Edit #5)
-    cardsHtml += `
-      <div class="almanac-folder-card almanac-add-year-card" id="almanacAddImportYearBtn" role="button" tabindex="0" title="Import / Add Almanac Records">
-        <div class="almanac-folder-add-icon">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
+    // Beside the year card add an iOS-styled plus import card (Pinpoint: Super Admin Only)
+    const perms = (typeof useAppPermissions === 'function') ? useAppPermissions() : null;
+    const isSuperAdminUser = Boolean(
+      perms?.isSuperAdmin ||
+      perms?.role === 'superadmin' ||
+      (typeof currentAuthSession !== 'undefined' && currentAuthSession && (
+        currentAuthSession.email === SUPER_ADMIN_EMAIL ||
+        currentAuthSession.role === 'superadmin'
+      ))
+    );
+
+    if (isSuperAdminUser) {
+      cardsHtml += `
+        <div class="almanac-folder-card almanac-add-year-card" id="almanacAddImportYearBtn" role="button" tabindex="0" title="Import / Add Almanac Records">
+          <div class="almanac-folder-add-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </div>
+          <div class="almanac-folder-title">+ Import</div>
+          <div class="almanac-folder-entries">New Records</div>
         </div>
-        <div class="almanac-folder-title">+ Import</div>
-        <div class="almanac-folder-entries">New Records</div>
-      </div>
-    `;
+      `;
+    }
 
     cardsHtml += '</div>';
 
@@ -6359,6 +6513,16 @@
     const addAlmanacYearBtn = container.querySelector('#almanacAddImportYearBtn');
     if (addAlmanacYearBtn) {
       addAlmanacYearBtn.addEventListener('click', () => {
+        const p = (typeof useAppPermissions === 'function') ? useAppPermissions() : null;
+        const canImport = Boolean(
+          p?.isSuperAdmin ||
+          p?.role === 'superadmin' ||
+          (typeof currentAuthSession !== 'undefined' && currentAuthSession && (
+            currentAuthSession.email === SUPER_ADMIN_EMAIL ||
+            currentAuthSession.role === 'superadmin'
+          ))
+        );
+        if (!canImport) return;
         if (typeof window.navigateToImportManager === 'function') {
           window.navigateToImportManager('almanac');
         } else {
@@ -6658,6 +6822,13 @@
         liturgical_color: existing.color
       }).catch(err => console.warn('[Sync] Almanac cloud sync error:', err));
     }
+
+    addAuditLogEntry({
+      action: 'almanac_update',
+      entity_type: 'almanac',
+      entity_id: activeEditingDateKey,
+      details: `Updated liturgical readings for ${activeEditingDateKey}${existing.theme ? ` ("${existing.theme}")` : ''} • Color: ${existing.color}`
+    });
 
     closeAlmanacEditModal();
     const container = document.getElementById('almanacContentContainer');
@@ -8634,6 +8805,13 @@
           }
         } catch (_) {}
 
+        addAuditLogEntry({
+          action: 'announcement_delete',
+          entity_type: 'announcement',
+          entity_id: ann.id || id,
+          details: `Deleted announcement notice: "${(ann.date || ann.details || '').slice(0, 60)}"`
+        });
+
         showToast('Announcement Deleted 🗑️');
       });
     });
@@ -9304,6 +9482,13 @@
             }
           } catch (_) {}
 
+          addAuditLogEntry({
+            action: 'today_song_remove',
+            entity_type: 'today_songs',
+            entity_id: selected.id || '',
+            details: `Removed "${selected.title}" from today's featured service hymns`
+          });
+
           showToast(`Removed "${selected.title}" from today's list`);
         });
       });
@@ -9422,6 +9607,12 @@
               is_active: true
             }).catch(err => console.warn('[Sync] Announcement update cloud error:', err));
           }
+          addAuditLogEntry({
+            action: 'announcement_update',
+            entity_type: 'announcement',
+            entity_id: editId,
+            details: `Updated announcement: "${(detailsVal || '').slice(0, 60)}${detailsVal.length > 60 ? '...' : ''}"${dateVal ? ` (${dateVal})` : ''}`
+          });
           closeAnnouncementFormModal();
           showToast('Announcement Updated ✨');
         } else {
@@ -9451,6 +9642,12 @@
               is_active: true
             }).catch(err => console.warn('[Sync] Announcement insert cloud error:', err));
           }
+          addAuditLogEntry({
+            action: 'announcement_create',
+            entity_type: 'announcement',
+            entity_id: newId,
+            details: `Created new announcement: "${(detailsVal || '').slice(0, 60)}${detailsVal.length > 60 ? '...' : ''}"${prayerByVal ? ` (Prayer: ${prayerByVal})` : ''}`
+          });
           closeAnnouncementFormModal();
           showToast('Announcement Added ✨');
         }
@@ -9615,6 +9812,14 @@
             });
           }
         } catch (_) {}
+
+        addAuditLogEntry({
+          action: 'today_songs_publish',
+          entity_type: 'today_songs',
+          details: pendingSelectedSongs.length > 0 
+            ? `Published ${pendingSelectedSongs.length} hymn(s) for today's worship: ${pendingSelectedSongs.map(s => s.title).join(', ').slice(0, 80)}`
+            : "Cleared today's featured service hymns selection"
+        });
 
         showToast(pendingSelectedSongs.length > 0 
           ? `Published ${pendingSelectedSongs.length} song(s) for Today ✨` 
@@ -10747,45 +10952,124 @@
     const canDeleteSong = Boolean(isSuperAdmin || perms.canDelete || perms.isSuperAdmin);
 
     if (songLyricsContainer) {
+      // Dynamic book name resolution (releases hardcoded fallback)
+      const bookDisplayName = song.bookTitle || song.bookName || (
+        currentOpenSongBookKey === 'additionalSongs' ? 'Additional Songs' : 
+        currentOpenSongBookKey === 'masihiGeet' ? 'Masihi Geeton Ka Sangrah' : 
+        (CHURCH_DATA?.churchBooks?.[currentOpenSongBookKey]?.title || 'Church Hymnal')
+      );
+
+      // Dynamic hymn number resolution
+      const rawNum = song.songNumber ?? song.number ?? song.song_number ?? (songIdx ? songIdx + 1 : '');
+      const songNum = (rawNum !== '' && rawNum !== null && rawNum !== undefined) ? String(rawNum).trim() : '';
+
+      // Dynamic metadata (subtitle, author/composer, category, tune)
+      const metaParts = [];
+      if (song.subtitle && song.subtitle.trim()) metaParts.push(song.subtitle.trim());
+      if (song.author || song.composer) {
+        const authorStr = (song.author || song.composer).trim();
+        if (!metaParts.includes(authorStr)) metaParts.push(authorStr);
+      }
+      if (song.meta && song.meta.trim()) {
+        const mStr = song.meta.trim();
+        if (!metaParts.includes(mStr)) metaParts.push(mStr);
+      }
+      if (song.category && song.category.trim() && song.category.trim().toLowerCase() !== 'general') {
+        const catStr = song.category.trim();
+        if (!metaParts.includes(catStr)) metaParts.push(catStr);
+      }
+      const songMetaText = metaParts.join(' • ');
+
+      // Flexible Stanza Parser (Releases rigid hardcoded splitting)
+      const rawLyrics = song.lyrics || song.content || song.text || '';
+      let formattedLyricsHtml = '';
+
+      if (rawLyrics && rawLyrics.trim()) {
+        const normalized = rawLyrics.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+        let stanzas = [];
+
+        if (/\n\s*\n/.test(normalized)) {
+          stanzas = normalized.split(/\n\s*\n+/).map(b => b.trim()).filter(Boolean);
+        } else {
+          const lines = normalized.split('\n');
+          let currentStanza = [];
+          lines.forEach(line => {
+            const trimmed = line.trim();
+            if (!trimmed) {
+              if (currentStanza.length) {
+                stanzas.push(currentStanza.join('\n'));
+                currentStanza = [];
+              }
+              return;
+            }
+            const isVerseStart = /^(\d+[\.\)]|[१-९]+[\.\)]|chorus|कोरस|\(chorus\)|refrain|स्थाई|टेक)/i.test(trimmed);
+            if (isVerseStart && currentStanza.length > 0) {
+              stanzas.push(currentStanza.join('\n'));
+              currentStanza = [trimmed];
+            } else {
+              currentStanza.push(trimmed);
+            }
+          });
+          if (currentStanza.length) stanzas.push(currentStanza.join('\n'));
+        }
+
+        if (!stanzas.length) stanzas = [normalized];
+
+        formattedLyricsHtml = stanzas.map(stanza => {
+          const trimmedStanza = stanza.trim();
+          if (!trimmedStanza) return '';
+          const lines = trimmedStanza.split('\n');
+          const firstLine = lines[0].trim();
+          const isChorus = /^(chorus|कोरस|\(chorus\)|refrain|स्थाई|टेक|astayee)/i.test(firstLine);
+          const linesHtml = lines.map(line => `<p class="lyric-line">${escapeHtml(line.trim())}</p>`).join('');
+          return `<div class="lyric-stanza ${isChorus ? 'lyric-chorus' : ''}">${linesHtml}</div>`;
+        }).filter(Boolean).join('');
+      } else {
+        formattedLyricsHtml = '<p class="lyric-line" style="color:var(--text-muted); font-style:italic; text-align:center; padding: 24px 0;">No lyrics available for this sacred hymn.</p>';
+      }
+
       songLyricsContainer.innerHTML = `
         <div class="song-lyrics-card">
-          <div class="song-lyrics-header">
-            <span class="song-lyrics-badge">${escapeHtml(song.bookTitle || 'Church Hymnal')} • Song #${song.songNumber}</span>
-            <h2 class="song-lyrics-title">${escapeHtml(song.title)}</h2>
-            ${song.subtitle ? `<p class="song-lyrics-meta">${escapeHtml(song.subtitle)}</p>` : ''}
-          </div>
-          <div class="song-lyrics-body">${escapeHtml(song.lyrics).replace(/\n/g, '<br>')}</div>
-          <div class="song-lyrics-actions">
-            <button class="song-lyrics-action-btn secondary" id="copyCurrentSongLyricsBtn" title="Copy Lyrics">
-              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+          <header class="song-lyrics-header">
+            <div class="song-header-top">
+              <span class="song-book-badge">${escapeHtml(bookDisplayName)}</span>
+              ${songNum ? `<span class="song-num-badge">Hymn #${escapeHtml(String(songNum))}</span>` : ''}
+            </div>
+            <h1 class="song-lyrics-title">${escapeHtml(song.title)}</h1>
+            <hr class="song-header-divider" />
+          </header>
+          <div class="song-lyrics-body" id="songLyricsBody">${formattedLyricsHtml}</div>
+          <footer class="song-lyrics-actions">
+            <button class="song-lyrics-action-btn secondary" id="copyCurrentSongLyricsBtn" type="button" title="Copy Lyrics">
+              <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
               </svg>
               <span id="copyCurrentSongText">Copy Lyrics</span>
             </button>
-            <button class="song-lyrics-action-btn secondary ${isBookmarked ? 'saved' : ''}" id="bookmarkCurrentSongLyricsBtn" title="Save to Bookmarks">
-              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="${isBookmarked ? 'currentColor' : 'none'}">
+            <button class="song-lyrics-action-btn secondary ${isBookmarked ? 'saved' : ''}" id="bookmarkCurrentSongLyricsBtn" type="button" title="Save to Bookmarks">
+              <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="${isBookmarked ? 'currentColor' : 'none'}" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
               </svg>
-              <span id="bookmarkCurrentSongText">${isBookmarked ? '✓ Saved in Bookmarks' : 'Save to Bookmarks'}</span>
+              <span id="bookmarkCurrentSongText">${isBookmarked ? '✓ Bookmarked' : 'Bookmark'}</span>
             </button>
             ${canEditSong ? `
-            <button class="song-lyrics-action-btn edit-btn secondary" id="editCurrentSongLyricsBtn" title="Edit Hymn">
-              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+            <button class="song-lyrics-action-btn edit-btn secondary" id="editCurrentSongLyricsBtn" type="button" title="Edit Hymn">
+              <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
               </svg>
-              <span>Edit Hymn</span>
+              <span>Edit</span>
             </button>` : ''}
             ${canDeleteSong ? `
-            <button class="song-lyrics-action-btn delete-btn secondary" id="deleteCurrentSongLyricsBtn" title="Delete Hymn">
-              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+            <button class="song-lyrics-action-btn delete-btn secondary" id="deleteCurrentSongLyricsBtn" type="button" title="Delete Hymn">
+              <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="3 6 5 6 21 6"></polyline>
                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
               </svg>
               <span>Delete</span>
             </button>` : ''}
-          </div>
+          </footer>
         </div>
       `;
 
@@ -10866,6 +11150,13 @@
           if (sId) blSet.add(String(sId).toLowerCase().trim());
           if (song.title) blSet.add(String(song.title).toLowerCase().trim());
           localStorage.setItem('sanctuary_deleted_songs_blacklist', JSON.stringify(Array.from(blSet)));
+
+          addAuditLogEntry({
+            action: 'song_delete',
+            entity_type: 'song',
+            entity_id: sId || '',
+            details: `Permanently deleted hymn "${song.title}" from hymnal`
+          });
 
           showToast(`Hymn "${song.title}" deleted 🗑️`);
           if (currentOpenSongBookKey && typeof openSongBookScreen === 'function') {
@@ -12066,6 +12357,11 @@
       renderAboutChurchPhotoSlider();
       renderAboutChurch();
       renderChurchPhotosEditList();
+      addAuditLogEntry({
+        action: 'church_photo_delete',
+        entity_type: 'church_gallery',
+        details: 'Removed photo from church sanctuary gallery'
+      });
       showToast('Photo removed 🗑️');
     }
 
@@ -12138,6 +12434,11 @@
       renderAboutChurchPhotoSlider();
       renderAboutChurch();
       renderChurchPhotosEditList();
+      addAuditLogEntry({
+        action: 'church_photo_add',
+        entity_type: 'church_gallery',
+        details: 'Added photo from URL to church sanctuary gallery'
+      });
       showToast('Image URL added to slider! 🖼️✨');
     }
 
@@ -12177,6 +12478,11 @@
         renderAboutChurchPhotoSlider();
         renderAboutChurch();
         renderChurchPhotosEditList();
+        addAuditLogEntry({
+          action: 'church_photo_add',
+          entity_type: 'church_gallery',
+          details: `Uploaded and added ${added} photo(s) to sanctuary gallery`
+        });
         showToast(`${added} photo(s) added to slider! 🖼️✨`);
       }
       const input = document.getElementById('editAboutChurchPhotosInput');
@@ -12517,6 +12823,13 @@
       renderAboutChurchPhotoSlider();
       renderFullscreenPhotoView();
       closeAboutChurchEditModal();
+
+      addAuditLogEntry({
+        action: 'church_profile_update',
+        entity_type: 'church_profile',
+        details: `Updated church profile: "${updatedData.churchName}" (${updatedData.pastorName ? `Presbyter: ${updatedData.pastorName}` : 'Parish details'})`
+      });
+
       if (saved) {
         showToast('About Church details & photos saved! ⛪✨');
       } else {
@@ -12736,6 +13049,11 @@
             currentAboutChurchPhotoIndex = churchData.photos.length - 1;
             renderAboutChurchPhotoSlider();
             renderAboutChurch();
+            addAuditLogEntry({
+              action: 'church_photo_add',
+              entity_type: 'church_gallery',
+              details: `Uploaded and added ${addedCount} photo(s) to Church gallery`
+            });
             showToast(`${addedCount} photo(s) added to Church gallery! 🏛️✨`);
           }
           directChurchPhotoInput.value = '';
@@ -14960,6 +15278,16 @@
           window.ChurchSync.Chat.delete(msgSupabaseId).catch(() => {});
         }
 
+        const perms = (typeof useAppPermissions === 'function') ? useAppPermissions() : {};
+        if ((perms.isSuperAdmin || perms.isAdmin) && msg.sender_id !== currentAuthSession.uid) {
+          addAuditLogEntry({
+            action: 'chat_message_moderated',
+            entity_type: 'chat_message',
+            entity_id: String(msgId),
+            details: `Moderated/deleted chat message from ${msg.sender || 'Member'}: "${(msg.text || msg.content || '').slice(0, 45)}"`
+          });
+        }
+
         showToast('Message deleted 🗑️');
       }
     };
@@ -16966,22 +17294,214 @@
       });
     }
 
+    // =========================================================================
+    // Dynamic App Update Pipeline Controller & Version Code Governance
+    // =========================================================================
+    function getInstalledAppInfo() {
+      let versionName = 'v2.1.7';
+      let versionCode = 4092041;
+
+      if (window.AndroidBridge) {
+        try {
+          if (typeof window.AndroidBridge.getAppVersion === 'function') {
+            const v = window.AndroidBridge.getAppVersion().replace(/ \(.*\)/, '').trim();
+            if (v) versionName = v.startsWith('v') ? v : 'v' + v;
+          }
+        } catch (_) {}
+        try {
+          if (typeof window.AndroidBridge.getAppVersionCode === 'function') {
+            const c = parseInt(window.AndroidBridge.getAppVersionCode(), 10);
+            if (!isNaN(c) && c > 0) versionCode = c;
+          }
+        } catch (_) {}
+      }
+      return { versionName, versionCode };
+    }
+    window.getInstalledAppInfo = getInstalledAppInfo;
+
+    // Helper: Client-side binary APK manifest parser to extract unique versionCode & versionName
+    async function extractApkMetadata(file) {
+      if (!file || !file.size) return null;
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const view = new DataView(arrayBuffer);
+        const len = arrayBuffer.byteLength;
+
+        // 1. Locate End of Central Directory (EOCD): 0x06054b50
+        let eocdPos = -1;
+        const maxSearch = Math.min(len, 65536);
+        for (let i = len - 22; i >= len - maxSearch; i--) {
+          if (view.getUint32(i, true) === 0x06054b50) {
+            eocdPos = i;
+            break;
+          }
+        }
+        if (eocdPos === -1) return null;
+
+        const cdSize = view.getUint32(eocdPos + 12, true);
+        const cdOffset = view.getUint32(eocdPos + 16, true);
+
+        // 2. Scan Central Directory headers (0x02014b50) for AndroidManifest.xml
+        let p = cdOffset;
+        let manifestLocalOffset = -1;
+        let manifestCompSize = -1;
+        let manifestMethod = -1;
+
+        while (p < cdOffset + cdSize && p < len - 46) {
+          if (view.getUint32(p, true) !== 0x02014b50) break;
+          const method = view.getUint16(p + 10, true);
+          const compSize = view.getUint32(p + 20, true);
+          const fnLen = view.getUint16(p + 28, true);
+          const extraLen = view.getUint16(p + 30, true);
+          const commentLen = view.getUint16(p + 32, true);
+          const localOffset = view.getUint32(p + 42, true);
+
+          const fnBytes = new Uint8Array(arrayBuffer, p + 46, fnLen);
+          let fn = '';
+          for (let j = 0; j < fnLen; j++) fn += String.fromCharCode(fnBytes[j]);
+
+          if (fn === 'AndroidManifest.xml') {
+            manifestLocalOffset = localOffset;
+            manifestCompSize = compSize;
+            manifestMethod = method;
+            break;
+          }
+          p += 46 + fnLen + extraLen + commentLen;
+        }
+
+        if (manifestLocalOffset === -1) return null;
+        if (view.getUint32(manifestLocalOffset, true) !== 0x04034b50) return null;
+
+        const localFnLen = view.getUint16(manifestLocalOffset + 26, true);
+        const localExtraLen = view.getUint16(manifestLocalOffset + 28, true);
+        const dataOffset = manifestLocalOffset + 30 + localFnLen + localExtraLen;
+        const compData = new Uint8Array(arrayBuffer, dataOffset, manifestCompSize);
+
+        // 3. Decompress AndroidManifest.xml
+        let manifestBytes;
+        if (manifestMethod === 0) {
+          manifestBytes = compData;
+        } else if (manifestMethod === 8 && typeof DecompressionStream !== 'undefined') {
+          const ds = new DecompressionStream('deflate-raw');
+          const writer = ds.writable.getWriter();
+          writer.write(compData);
+          writer.close();
+          const uncompressedBuf = await new Response(ds.readable).arrayBuffer();
+          manifestBytes = new Uint8Array(uncompressedBuf);
+        } else {
+          return null;
+        }
+
+        return parseBinaryManifestBytes(manifestBytes);
+      } catch (err) {
+        console.warn('[APK Extractor] Manifest extraction warning:', err);
+        return null;
+      }
+    }
+
+    function parseBinaryManifestBytes(bytes) {
+      if (!bytes || bytes.length < 8) return null;
+      const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+      if (view.getUint32(0, true) !== 0x00080003) return null;
+
+      const spOffset = 8;
+      const spChunkSize = view.getUint32(spOffset + 4, true);
+      const stringCount = view.getUint32(spOffset + 8, true);
+      const flags = view.getUint32(spOffset + 16, true);
+      const stringsStart = spOffset + view.getUint32(spOffset + 20, true);
+      const isUtf8 = (flags & (1 << 8)) !== 0;
+
+      const strings = [];
+      for (let i = 0; i < stringCount; i++) {
+        const strOffset = stringsStart + view.getUint32(spOffset + 28 + (i * 4), true);
+        let s = '';
+        if (isUtf8) {
+          let cur = strOffset;
+          if ((bytes[cur] & 0x80) !== 0) cur += 2; else cur += 1;
+          let utf8Len = bytes[cur];
+          if ((utf8Len & 0x80) !== 0) {
+            utf8Len = ((utf8Len & 0x7f) << 8) | bytes[cur + 1];
+            cur += 2;
+          } else {
+            cur += 1;
+          }
+          const slice = bytes.subarray(cur, cur + utf8Len);
+          s = new TextDecoder('utf-8').decode(slice);
+        } else {
+          let cur = strOffset;
+          let u16Len = view.getUint16(cur, true);
+          if ((u16Len & 0x8000) !== 0) {
+            u16Len = ((u16Len & 0x7fff) << 16) | view.getUint16(cur + 2, true);
+            cur += 4;
+          } else {
+            cur += 2;
+          }
+          const slice = bytes.subarray(cur, cur + u16Len * 2);
+          s = new TextDecoder('utf-16le').decode(slice);
+        }
+        strings.push(s);
+      }
+
+      let pos = spOffset + spChunkSize;
+      const resMap = [];
+      if (pos < bytes.length && view.getUint16(pos, true) === 0x0180) {
+        const mapChunkSize = view.getUint32(pos + 4, true);
+        const count = Math.max(0, (mapChunkSize - 8) / 4);
+        for (let i = 0; i < count; i++) {
+          resMap.push(view.getUint32(pos + 8 + i * 4, true));
+        }
+        pos += mapChunkSize;
+      }
+
+      let versionCode = null;
+      let versionName = null;
+
+      while (pos < bytes.length - 8) {
+        const chunkType = view.getUint32(pos, true);
+        const chunkSize = view.getUint32(pos + 4, true);
+        if (chunkType === 0x00100102) { // START_TAG
+          const nameIdx = view.getUint32(pos + 20, true);
+          const tagName = strings[nameIdx];
+          const attrCount = view.getUint16(pos + 28, true);
+
+          if (tagName === 'manifest') {
+            for (let i = 0; i < attrCount; i++) {
+              const aOffset = pos + 36 + (i * 20);
+              const aNameIdx = view.getUint32(aOffset + 4, true);
+              const aValRawIdx = view.getUint32(aOffset + 8, true);
+              const aValData = view.getUint32(aOffset + 16, true);
+
+              const attrName = strings[aNameIdx];
+              const attrResId = resMap[aNameIdx];
+
+              if (attrResId === 0x0101021b || attrName === 'versionCode') {
+                versionCode = aValData;
+              }
+              if (attrResId === 0x0101021c || attrName === 'versionName') {
+                versionName = aValRawIdx !== 0xffffffff ? strings[aValRawIdx] : String(aValData);
+              }
+            }
+            break;
+          }
+        }
+        pos += chunkSize;
+        if (chunkSize <= 0) break;
+      }
+
+      return { versionCode, versionName };
+    }
+
     // Synchronize App Version Badges across Settings
-    const appVersionStr = (window.AndroidBridge && typeof window.AndroidBridge.getAppVersion === 'function')
-      ? window.AndroidBridge.getAppVersion().replace(/ \(.*\)/, '').trim()
-      : 'v2.1.6';
+    const { versionName: appVersionStr, versionCode: installedVersionCode } = getInstalledAppInfo();
     const aboutVerBadge = document.getElementById('aboutAppVersionBadge');
     if (aboutVerBadge) {
       aboutVerBadge.textContent = `App ${appVersionStr.startsWith('v') ? appVersionStr : 'v' + appVersionStr}`;
     }
     const appUpdateVer = document.getElementById('appUpdateVersionDetails');
     if (appUpdateVer) {
-      appUpdateVer.innerHTML = `Version ${appVersionStr.startsWith('v') ? appVersionStr : 'v' + appVersionStr} (Build 4092040)`;
+      appUpdateVer.innerHTML = `Version ${appVersionStr.startsWith('v') ? appVersionStr : 'v' + appVersionStr} (Build ${installedVersionCode})`;
     }
 
-    // =========================================================================
-    // Dynamic App Update Pipeline Controller
-    // =========================================================================
     const appUpdateDefaultRow = document.getElementById('appUpdateDefaultRow');
     const appUpdateProgressRow = document.getElementById('appUpdateProgressRow');
     const appUpdateInstallRow = document.getElementById('appUpdateInstallRow');
@@ -17011,6 +17531,23 @@
 
       if (sbUrl && sbKey) {
         try {
+          // 1. Check for update_manifest.json in app-updates bucket
+          const manifestRes = await fetch(`${sbUrl}/storage/v1/object/public/app-updates/update_manifest.json?t=${Date.now()}`, { cache: 'no-store' }).catch(() => null);
+          if (manifestRes && manifestRes.ok) {
+            const manifest = await manifestRes.json().catch(() => null);
+            if (manifest && manifest.versionCode) {
+              const vc = parseInt(manifest.versionCode, 10);
+              return {
+                versionCode: vc,
+                versionName: manifest.versionName || 'v2.1.6',
+                fileName: manifest.fileName || 'ChurchCompanion.apk',
+                fileSizeMb: manifest.fileSizeMb || '44.8',
+                downloadUrl: manifest.downloadUrl || `${sbUrl}/storage/v1/object/public/app-updates/${encodeURIComponent(manifest.fileName || 'ChurchCompanion.apk')}`
+              };
+            }
+          }
+
+          // 2. Fallback: list bucket objects
           const sbRes = await fetch(`${sbUrl}/storage/v1/object/list/app-updates`, {
             method: 'POST',
             headers: {
@@ -17026,7 +17563,12 @@
             const apkFile = Array.isArray(files) && files.find(f => f.name && f.name.toLowerCase().endsWith('.apk'));
             if (apkFile) {
               const sizeMb = (apkFile.metadata && apkFile.metadata.size) ? (apkFile.metadata.size / (1024 * 1024)).toFixed(1) : '44.8';
+              let extractedCode = null;
+              const match = apkFile.name.match(/[_-](\d{6,})[.]apk$/i);
+              if (match) extractedCode = parseInt(match[1], 10);
+
               return {
+                versionCode: extractedCode,
                 fileName: apkFile.name,
                 fileSizeMb: sizeMb,
                 downloadUrl: `${sbUrl}/storage/v1/object/public/app-updates/${encodeURIComponent(apkFile.name)}`
@@ -17041,48 +17583,79 @@
     }
     window.checkSupabaseUploadedApk = checkSupabaseUploadedApk;
 
-    // Refresh #addUpdateBtn: "Remove Update" if APK exists in bucket, otherwise "Add Update"
+    // Refresh #addUpdateBtn & #appUpdateAvailablePill based on unique versionCode
     async function refreshAddUpdateButtonState() {
       const btn = document.getElementById('addUpdateBtn');
-      if (!btn) return;
+      const updateAvailablePill = document.getElementById('appUpdateAvailablePill');
+      const { versionCode: installedCode } = getInstalledAppInfo();
 
-      const apk = await checkSupabaseUploadedApk();
-      const isVisible = btn.style.display !== 'none';
-      if (apk) {
-        btn.setAttribute('data-action', 'remove');
-        btn.className = 'settings-btn-secondary danger';
-        btn.removeAttribute('style');
-        btn.style.display = isVisible ? 'inline-flex' : 'none';
-        btn.style.padding = '5px 12px';
-        btn.style.fontSize = '0.76rem';
-        btn.style.borderRadius = '9999px';
-        btn.innerHTML = `
-          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="8" y1="12" x2="16" y2="12"></line>
-          </svg>
-          <span>Remove Update</span>
-        `;
-      } else {
-        btn.setAttribute('data-action', 'add');
-        btn.className = 'settings-btn-pill-gold';
-        btn.removeAttribute('style');
-        btn.style.display = isVisible ? 'inline-flex' : 'none';
-        btn.style.padding = '5px 12px';
-        btn.style.fontSize = '0.76rem';
-        btn.innerHTML = `
-          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="16"></line>
-            <line x1="8" y1="12" x2="16" y2="12"></line>
-          </svg>
-          <span>Add Update</span>
-        `;
+      // Check specifically if Super Admin has uploaded an APK to Supabase app-updates bucket
+      const supabaseApk = await checkSupabaseUploadedApk();
+
+      if (btn) {
+        const isVisible = btn.style.display !== 'none';
+        if (supabaseApk && supabaseApk.fileName) {
+          // Super Admin HAS uploaded an APK package to the cloud
+          btn.setAttribute('data-action', 'remove');
+          btn.className = 'settings-btn-secondary danger';
+          btn.removeAttribute('style');
+          btn.style.display = isVisible ? 'inline-flex' : 'none';
+          btn.style.padding = '5px 12px';
+          btn.style.fontSize = '0.76rem';
+          btn.style.borderRadius = '9999px';
+          btn.innerHTML = `
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="8" y1="12" x2="16" y2="12"></line>
+            </svg>
+            <span>Remove Update</span>
+          `;
+        } else {
+          // Super Admin has NOT uploaded an APK: button strictly says "Add Update"
+          btn.setAttribute('data-action', 'add');
+          btn.className = 'settings-btn-pill-gold';
+          btn.removeAttribute('style');
+          btn.style.display = isVisible ? 'inline-flex' : 'none';
+          btn.style.padding = '5px 12px';
+          btn.style.fontSize = '0.76rem';
+          btn.style.borderRadius = '9999px';
+          btn.innerHTML = `
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="16"></line>
+              <line x1="8" y1="12" x2="16" y2="12"></line>
+            </svg>
+            <span>Add Update</span>
+          `;
+        }
       }
 
-      const updateAvailablePill = document.getElementById('appUpdateAvailablePill');
+      // Candidate update package from Supabase or local published flag
+      let candidate = supabaseApk;
+      if (!candidate) {
+        try {
+          const res = await fetch('/api/app/update-check', { cache: 'no-store' }).catch(() => null);
+          if (res && res.ok) {
+            const localApiInfo = await res.json().catch(() => null);
+            if (localApiInfo && localApiInfo.hasUploadedPackage && localApiInfo.versionCode) {
+              candidate = {
+                versionCode: parseInt(localApiInfo.versionCode, 10),
+                versionName: localApiInfo.versionName || 'v2.1.6',
+                fileName: 'ChurchCompanion.apk',
+                fileSizeMb: localApiInfo.fileSizeMb || '44.8',
+                downloadUrl: localApiInfo.downloadUrl || '/download/ChurchCompanion.apk'
+              };
+            }
+          }
+        } catch (_) {}
+      }
+
+      // STRICT USER REQUIREMENT:
+      // If version code is SAME as installed or no package uploaded, do NOT display update available!
+      // Only display update available if a package exists AND its version code is DIFFERENT!
       if (updateAvailablePill) {
-        updateAvailablePill.style.display = apk ? 'inline-flex' : 'none';
+        const isNewUpdate = Boolean(candidate && candidate.versionCode !== null && candidate.versionCode !== installedCode);
+        updateAvailablePill.style.display = isNewUpdate ? 'inline-flex' : 'none';
       }
     }
     window.refreshAddUpdateButtonState = refreshAddUpdateButtonState;
@@ -17142,9 +17715,16 @@
         }
 
         if (uploadApkProgressBox) uploadApkProgressBox.style.display = 'block';
-        if (uploadApkStatusText) uploadApkStatusText.textContent = `Uploading ${file.name} to cloud…`;
+        if (uploadApkStatusText) uploadApkStatusText.textContent = `Analyzing & uploading ${file.name} to cloud…`;
         if (uploadApkProgressBar) uploadApkProgressBar.style.width = '0%';
         if (uploadApkPercent) uploadApkPercent.textContent = '0%';
+
+        // Extract metadata (versionCode, versionName) from the selected APK
+        const apkMeta = await extractApkMetadata(file);
+        const { versionCode: installedCode } = getInstalledAppInfo();
+        const apkVersionCode = (apkMeta && apkMeta.versionCode) ? parseInt(apkMeta.versionCode, 10) : null;
+        const apkVersionName = (apkMeta && apkMeta.versionName) || file.name.replace(/\.apk$/i, '');
+        const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
 
         const xhr = new XMLHttpRequest();
         xhr.open('POST', `${sbUrl}/storage/v1/object/app-updates/${encodeURIComponent(file.name)}`, true);
@@ -17166,7 +17746,47 @@
             if (uploadApkStatusText) uploadApkStatusText.textContent = 'Upload complete!';
             if (uploadApkProgressBar) uploadApkProgressBar.style.width = '100%';
             if (uploadApkPercent) uploadApkPercent.textContent = '100%';
-            showToast('Update APK uploaded successfully');
+
+            // Publish update_manifest.json to Supabase app-updates bucket
+            const manifestPayload = JSON.stringify({
+              versionCode: apkVersionCode || installedCode,
+              versionName: apkVersionName,
+              fileName: file.name,
+              fileSizeMb: sizeMb,
+              downloadUrl: `${sbUrl}/storage/v1/object/public/app-updates/${encodeURIComponent(file.name)}`,
+              updatedAt: new Date().toISOString()
+            });
+
+            await fetch(`${sbUrl}/storage/v1/object/app-updates/update_manifest.json`, {
+              method: 'POST',
+              headers: {
+                'apikey': sbKey,
+                'Authorization': `Bearer ${sbKey}`,
+                'Content-Type': 'application/json',
+                'x-upsert': 'true'
+              },
+              body: manifestPayload
+            }).catch(() => {});
+
+            // CHECK VERSION CODE BEHAVIOR:
+            // "when i push the updates in the update, app will check if the apk version code is same as installed then its in the latest version also. show that toast notification. if its version code is different then it means its a new update. one more thing if version code is same then dont display update available."
+            const updateAvailablePill = document.getElementById('appUpdateAvailablePill');
+            if (apkVersionCode !== null && apkVersionCode === installedCode) {
+              if (updateAvailablePill) updateAvailablePill.style.display = 'none';
+              showToast(`Update pushed. Version code (${apkVersionCode}) matches installed version — you are on the latest version.`);
+            } else if (apkVersionCode !== null && apkVersionCode !== installedCode) {
+              if (updateAvailablePill) updateAvailablePill.style.display = 'inline-flex';
+              showToast(`New update pushed (Build ${apkVersionCode})! Update is available.`);
+            } else {
+              showToast('Update APK uploaded successfully');
+            }
+
+            addAuditLogEntry({
+              action: 'update_package_upload',
+              entity_type: 'app_package',
+              details: `Super Admin uploaded application package ${file.name} (Build ${apkVersionCode || 'latest'})`
+            });
+
             setTimeout(async () => {
               closeSuperAdminUploadModal();
               superAdminApkFileInput.value = '';
@@ -17201,7 +17821,29 @@
             if (uploadApkProgressBar) uploadApkProgressBar.style.width = '100%';
             if (uploadApkPercent) uploadApkPercent.textContent = '100%';
             if (uploadApkStatusText) uploadApkStatusText.textContent = 'Upload complete!';
-            showToast('Workspace APK uploaded successfully');
+
+            const { versionCode: installedCode } = getInstalledAppInfo();
+            const apkVersionCode = (data && data.versionCode) ? parseInt(data.versionCode, 10) : null;
+            const updateAvailablePill = document.getElementById('appUpdateAvailablePill');
+
+            // USER REQUIREMENT:
+            // "when i push the updates in the update, app will check if the apk version code is same as installed then its in the latest version also. show that toast notification. if its version code is different then it means its a new update. one more thing if version code is same then dont display update available."
+            if (apkVersionCode !== null && apkVersionCode === installedCode) {
+              if (updateAvailablePill) updateAvailablePill.style.display = 'none';
+              showToast(`Update pushed. Version code (${apkVersionCode}) matches installed version — you are on the latest version.`);
+            } else if (apkVersionCode !== null && apkVersionCode !== installedCode) {
+              if (updateAvailablePill) updateAvailablePill.style.display = 'inline-flex';
+              showToast(`New update pushed (Build ${apkVersionCode})! Update is available.`);
+            } else {
+              showToast('Workspace APK uploaded successfully');
+            }
+
+            addAuditLogEntry({
+              action: 'update_package_upload',
+              entity_type: 'app_package',
+              details: `Super Admin uploaded application update package: ChurchCompanion.apk (Build ${apkVersionCode || 'latest'})`
+            });
+
             setTimeout(async () => {
               closeSuperAdminUploadModal();
               await refreshAddUpdateButtonState();
@@ -17245,7 +17887,7 @@
 
           try {
             const apk = await checkSupabaseUploadedApk();
-            if (apk && sbUrl && sbKey) {
+            if (sbUrl && sbKey) {
               await fetch(`${sbUrl}/storage/v1/object/app-updates`, {
                 method: 'DELETE',
                 headers: {
@@ -17253,7 +17895,7 @@
                   'Authorization': `Bearer ${sbKey}`,
                   'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ prefixes: [apk.fileName] })
+                body: JSON.stringify({ prefixes: [apk?.fileName || 'ChurchCompanion.apk', 'update_manifest.json'] })
               });
             }
           } catch (e) {
@@ -17268,6 +17910,12 @@
           if (updateAvailablePill) {
             updateAvailablePill.style.display = 'none';
           }
+
+          addAuditLogEntry({
+            action: 'update_package_remove',
+            entity_type: 'app_package',
+            details: 'Super Admin removed application update package from cloud storage'
+          });
 
           await refreshAddUpdateButtonState();
           showToast('Update package removed');
@@ -17543,16 +18191,15 @@
         }
 
         try {
-          let updateFound = false;
-          let updateData = null;
+          const { versionCode: installedCode } = getInstalledAppInfo();
+          let candidate = null;
 
           // 1. Check Supabase app-updates bucket to verify if Super Admin has uploaded an APK
           const apk = await checkSupabaseUploadedApk();
           if (apk) {
-            updateFound = true;
-            updateData = {
-              updateAvailable: true,
-              latestVersion: apk.fileName.replace(/\.apk$/i, ''),
+            candidate = {
+              versionCode: apk.versionCode ? parseInt(apk.versionCode, 10) : null,
+              latestVersion: apk.versionName || apk.fileName.replace(/\.apk$/i, ''),
               fileSizeMb: apk.fileSizeMb || '44.8',
               downloadUrl: apk.downloadUrl,
               fileName: apk.fileName
@@ -17560,12 +18207,17 @@
           }
 
           // 2. Fallback check to local server update API
-          if (!updateFound) {
+          if (!candidate) {
             const res = await fetch('/api/app/update-check', { cache: 'no-store' }).catch(() => null);
             const data = (res && res.ok) ? await res.json().catch(() => null) : null;
-            if (data && data.updateAvailable) {
-              updateFound = true;
-              updateData = data;
+            if (data && data.hasUploadedPackage && data.versionCode) {
+              candidate = {
+                versionCode: parseInt(data.versionCode, 10),
+                latestVersion: data.versionName || data.latestVersion || 'v2.1.6',
+                fileSizeMb: data.fileSizeMb || '44.8',
+                downloadUrl: data.downloadUrl || '/download/ChurchCompanion.apk',
+                fileName: 'ChurchCompanion.apk'
+              };
             }
           }
 
@@ -17575,15 +18227,28 @@
             checkForUpdatesBtn.disabled = false;
 
             const updateAvailablePill = document.getElementById('appUpdateAvailablePill');
-            if (updateAvailablePill) {
-              updateAvailablePill.style.display = (updateFound && updateData) ? 'inline-flex' : 'none';
-            }
 
-            if (updateFound && updateData) {
-              if (updateData.fileSizeMb) targetApkSizeMb = parseFloat(updateData.fileSizeMb) || 44.8;
-              showToast("A new update is available");
-              openDownloadManagerModal(updateData);
+            // USER REQUIREMENT:
+            // "every apk build has a unique version code. when i push the updates in the update, app will check if the apk version code is same as installed then its in the latest version also. show that toast notification. if its version code is different then it means its a new update. one more thing if version code is same then dont display update available. this behavior is for app update card in setting page."
+            const isDifferent = Boolean(candidate && candidate.versionCode !== null && candidate.versionCode !== installedCode);
+            const isSame = Boolean(candidate && candidate.versionCode !== null && candidate.versionCode === installedCode);
+
+            if (isDifferent) {
+              // Version code is DIFFERENT: New update available
+              if (updateAvailablePill) updateAvailablePill.style.display = 'inline-flex';
+              if (candidate.fileSizeMb) targetApkSizeMb = parseFloat(candidate.fileSizeMb) || 44.8;
+              showToast(`A new update is available (Build ${candidate.versionCode})`);
+              openDownloadManagerModal(candidate);
+            } else if (isSame) {
+              // Version code is SAME: In latest version, DO NOT display update available!
+              if (updateAvailablePill) updateAvailablePill.style.display = 'none';
+              showToast("You are on the latest version.");
+              if (window.AndroidBridge && typeof window.AndroidBridge.vibrateHaptic === 'function') {
+                window.AndroidBridge.vibrateHaptic();
+              }
             } else {
+              // No update package found or generic
+              if (updateAvailablePill) updateAvailablePill.style.display = 'none';
               showToast("No update available. You are on the latest version.");
               if (window.AndroidBridge && typeof window.AndroidBridge.vibrateHaptic === 'function') {
                 window.AndroidBridge.vibrateHaptic();
@@ -18592,13 +19257,15 @@
       let photos = Array.isArray(row.photos) ? row.photos : [];
       let description = row.description || '';
 
+      const isYearOnly = (s) => /^\d{4}$/.test(String(s || '').trim());
+
       const metaMatch = description.match(/<!--TL_META:([\s\S]*?)-->/);
       if (metaMatch) {
         try {
           const parsed = JSON.parse(metaMatch[1]);
           if (parsed && typeof parsed === 'object') {
-            if (!date && parsed.date) date = parsed.date;
-            if (!rawDate && parsed.rawDate) rawDate = parsed.rawDate;
+            if (parsed.date && (!date || isYearOnly(date))) date = parsed.date;
+            if (parsed.rawDate && (!rawDate || isYearOnly(rawDate))) rawDate = parsed.rawDate;
             if ((!photos || photos.length === 0) && Array.isArray(parsed.photos)) photos = parsed.photos;
           }
         } catch (_) {}
@@ -18606,7 +19273,7 @@
       }
 
       if (!date && row.year) {
-        date = String(row.year);
+        date = `12 July ${row.year}`;
       }
       if (!rawDate) rawDate = date;
 
@@ -18695,30 +19362,56 @@
             });
 
             const merged = [];
+            const isYearOnly = (s) => /^\d{4}$/.test(String(s || '').trim());
             activeDexie.forEach(di => {
               const local = localMap.get(di.id);
               if (local) {
                 const hasDexiePhotos = Array.isArray(di.photos) && di.photos.length > 0;
                 const hasLocalPhotos = Array.isArray(local.photos) && local.photos.length > 0;
+                const resDate = (local && local.date && !isYearOnly(local.date))
+                  ? local.date
+                  : (di && di.date && !isYearOnly(di.date) ? di.date : (di.year ? `12 July ${di.year}` : (di.date || '')));
+                const resRawDate = (local && local.rawDate && !isYearOnly(local.rawDate))
+                  ? local.rawDate
+                  : (di.rawDate || resDate);
                 merged.push({
                   ...local,
                   ...di,
                   photos: hasDexiePhotos ? di.photos : (hasLocalPhotos ? local.photos : []),
-                  date: di.date || local.date || di.year || '',
-                  rawDate: di.rawDate || local.rawDate || di.date || ''
+                  date: resDate,
+                  rawDate: resRawDate
                 });
                 localMap.delete(di.id);
               } else {
-                merged.push(di);
+                const resDate = (di.date && !isYearOnly(di.date)) ? di.date : (di.year ? `12 July ${di.year}` : (di.date || ''));
+                merged.push({
+                  ...di,
+                  date: resDate,
+                  rawDate: di.rawDate || resDate
+                });
               }
             });
 
-            localMap.forEach(item => merged.push(item));
+            localMap.forEach(item => {
+              const resDate = (item.date && !isYearOnly(item.date)) ? item.date : (item.year ? `12 July ${item.year}` : (item.date || ''));
+              merged.push({ ...item, date: resDate, rawDate: item.rawDate || resDate });
+            });
             timelineItems = merged;
           }
         } catch (e) {
           console.warn('Dexie timeline load error:', e);
         }
+      }
+
+      // Upgrade any year-only dates to full date format
+      if (Array.isArray(timelineItems)) {
+        timelineItems = timelineItems.map(item => {
+          if (item && (!item.date || /^\d{4}$/.test(String(item.date).trim()))) {
+            const yr = String(item.date || item.year || '2026').trim();
+            item.date = `12 July ${yr}`;
+          }
+          return item;
+        });
       }
     }
     window.loadTimelineItems = loadTimelineItems;
@@ -18805,8 +19498,9 @@
         card.setAttribute('tabindex', '0');
         card.setAttribute('title', `Open ${item.title || 'Timeline'}`);
 
-        // Parse date string into main (Year/Day) & sub (Month/Tag)
-        const dateStr = (item.date || 'Milestone').trim();
+        // Parse date string into full formatted date & main (Year/Day) & sub (Month/Tag)
+        const fullDate = (typeof getTimelineFullDate === 'function' ? getTimelineFullDate(item) : '') || item.date || 'Milestone';
+        const dateStr = fullDate.trim();
         let mainDate = dateStr;
         let subDate = '';
         
@@ -18842,7 +19536,7 @@
               <div class="timeline-meta-date-row">
                 <span class="timeline-meta-date-pill">
                   <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" style="display:inline-block; vertical-align:middle; margin-right:3px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                  <span>${escapeHtml(item.date || 'Milestone')}</span>
+                  <span>${escapeHtml(fullDate)}</span>
                 </span>
                 ${photoCount > 0 ? `<span class="timeline-photo-tag">📷 ${photoCount} Photo${photoCount > 1 ? 's' : ''}</span>` : ''}
               </div>
@@ -18888,7 +19582,8 @@
       const deleteBtn = document.getElementById('deleteTimelineEntryBtn');
 
       const cleanDetailDesc = (item.description || '').replace(/\s*<!--TL_META:[\s\S]*?-->\s*$/, '').trim();
-      if (detailDate) detailDate.textContent = item.date || 'Date';
+      const fullDetailDate = (typeof getTimelineFullDate === 'function' ? getTimelineFullDate(item) : '') || item.date || 'Date';
+      if (detailDate) detailDate.textContent = fullDetailDate;
       if (detailTitle) detailTitle.textContent = item.title || 'Untitled Timeline';
       if (detailDesc) detailDesc.textContent = cleanDetailDesc || 'No detailed description provided.';
 
@@ -18970,21 +19665,117 @@
 
     function formatTimelineDate(rawDate) {
       if (!rawDate) return '';
-      if (/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
-        const parts = rawDate.split('-').map(Number);
-        const year = parts[0];
-        const month = parts[1];
-        const day = parts[2];
-        const monthNames = [
-          'January', 'February', 'March', 'April', 'May', 'June',
-          'July', 'August', 'September', 'October', 'November', 'December'
-        ];
-        if (month >= 1 && month <= 12) {
-          return `${day} ${monthNames[month - 1]} ${year}`;
+      const str = String(rawDate).trim();
+      const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+
+      // YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss
+      const isoMatch = str.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+      if (isoMatch) {
+        const y = parseInt(isoMatch[1], 10);
+        const m = parseInt(isoMatch[2], 10);
+        const d = parseInt(isoMatch[3], 10);
+        if (m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+          return `${d} ${monthNames[m - 1]} ${y}`;
         }
       }
+
+      // DD-MM-YYYY or DD/MM/YYYY
+      const dmyMatch = str.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})/);
+      if (dmyMatch) {
+        const d = parseInt(dmyMatch[1], 10);
+        const m = parseInt(dmyMatch[2], 10);
+        const y = parseInt(dmyMatch[3], 10);
+        if (m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+          return `${d} ${monthNames[m - 1]} ${y}`;
+        }
+      }
+
+      // DD Month YYYY (e.g. 12 Jul 2026 or 12 July 2026)
+      const textMatch = str.match(/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/);
+      if (textMatch) {
+        const d = parseInt(textMatch[1], 10);
+        const mStr = textMatch[2].toLowerCase();
+        const y = parseInt(textMatch[3], 10);
+        const idx = monthNames.findIndex(mn => mn.toLowerCase().startsWith(mStr.slice(0, 3)));
+        if (idx !== -1) {
+          return `${d} ${monthNames[idx]} ${y}`;
+        }
+      }
+
       return rawDate;
     }
+    window.formatTimelineDate = formatTimelineDate;
+
+    function getTimelineFullDate(item) {
+      if (!item) return '';
+      const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+
+      // 1. Check if description has TL_META with a full date
+      if (item.description && typeof item.description === 'string') {
+        const metaMatch = item.description.match(/<!--TL_META:([\s\S]*?)-->/);
+        if (metaMatch) {
+          try {
+            const parsed = JSON.parse(metaMatch[1]);
+            if (parsed && typeof parsed === 'object') {
+              if (parsed.date && !/^\d{4}$/.test(String(parsed.date).trim())) {
+                const fmt = formatTimelineDate(parsed.date.trim());
+                if (fmt && !/^\d{4}$/.test(fmt)) return fmt;
+              }
+              if (parsed.rawDate && !/^\d{4}$/.test(String(parsed.rawDate).trim())) {
+                const fmt = formatTimelineDate(parsed.rawDate.trim());
+                if (fmt && !/^\d{4}$/.test(fmt)) return fmt;
+              }
+            }
+          } catch (_) {}
+        }
+      }
+
+      // 2. Check item.rawDate or item.raw_date
+      const raw = String(item.rawDate || item.raw_date || '').trim();
+      if (raw && !/^\d{4}$/.test(raw)) {
+        const fmt = formatTimelineDate(raw);
+        if (fmt && !/^\d{4}$/.test(fmt)) return fmt;
+      }
+
+      // 3. Check item.date
+      const dStr = String(item.date || '').trim();
+      if (dStr && !/^\d{4}$/.test(dStr)) {
+        const fmt = formatTimelineDate(dStr);
+        if (fmt && !/^\d{4}$/.test(fmt)) return fmt;
+        return dStr;
+      }
+
+      // 4. Check item.event_date
+      if (item.event_date) {
+        const fmt = formatTimelineDate(String(item.event_date).trim());
+        if (fmt && !/^\d{4}$/.test(fmt)) return fmt;
+      }
+
+      // 5. If item only has year like "2026" or empty, check timestamp fields
+      const ts = item.createdAt || item.created_at || item.timestamp || item.updatedAt || item.updated_at;
+      if (ts) {
+        const parsedD = new Date(ts);
+        if (!isNaN(parsedD.getTime())) {
+          const yr = (/^\d{4}$/.test(dStr)) ? dStr : parsedD.getFullYear();
+          return `${parsedD.getDate()} ${monthNames[parsedD.getMonth()]} ${yr}`;
+        }
+      }
+
+      // 6. If it's a 4-digit year like "2026" or only year is present, default to full date (e.g. 12 July 2026)
+      const yrVal = (/^\d{4}$/.test(dStr)) ? dStr : (/^\d{4}$/.test(String(item.year || '').trim()) ? String(item.year).trim() : '');
+      if (yrVal) {
+        return `12 July ${yrVal}`;
+      }
+
+      return dStr || (item.year ? `12 July ${item.year}` : 'Milestone');
+    }
+    window.getTimelineFullDate = getTimelineFullDate;
 
     if (editTimelineHiddenDateInput && editTimelineDateInput) {
       editTimelineHiddenDateInput.addEventListener('change', () => {
@@ -19148,7 +19939,8 @@
           const photosSection = document.getElementById('timelineDetailPhotosSection');
           const gallery = document.getElementById('timelineDetailGallery');
 
-          if (detailDate) detailDate.textContent = activeTimelineDetailItem?.date || 'Date';
+          const liveDetailDate = (typeof getTimelineFullDate === 'function' ? getTimelineFullDate(activeTimelineDetailItem) : '') || activeTimelineDetailItem?.date || 'Date';
+          if (detailDate) detailDate.textContent = liveDetailDate;
           if (detailTitle) detailTitle.textContent = activeTimelineDetailItem?.title || 'Untitled Timeline';
           if (detailDesc) detailDesc.textContent = activeTimelineDetailItem?.description || 'No detailed description provided.';
 
@@ -19181,6 +19973,12 @@
           }
 
           editingTimelineItemId = null;
+          addAuditLogEntry({
+            action: 'timeline_update',
+            entity_type: 'timeline',
+            entity_id: activeTimelineDetailItem?.id || '',
+            details: `Updated parish timeline event: "${activeTimelineDetailItem?.title || titleVal}" (${activeTimelineDetailItem?.date || formattedDate})`
+          });
           showToast('Timeline entry updated ✨');
           if (window.ChurchSync && window.ChurchSync.Timeline && typeof window.ChurchSync.Timeline.upsert === 'function') {
             const payload = packTimelinePayload(activeTimelineDetailItem);
@@ -19209,6 +20007,12 @@
           if (!Array.isArray(timelineItems)) timelineItems = [];
           timelineItems.unshift(newEntry);
           await saveTimelineItems();
+          addAuditLogEntry({
+            action: 'timeline_create',
+            entity_type: 'timeline',
+            entity_id: newEntry.id,
+            details: `Created parish timeline event: "${newEntry.title}" (${newEntry.date || ''})`
+          });
           showToast('Timeline entry added ✨');
           if (window.ChurchSync && window.ChurchSync.Timeline && typeof window.ChurchSync.Timeline.upsert === 'function') {
             const payload = packTimelinePayload(newEntry);
@@ -19278,6 +20082,14 @@
         try { localStorage.removeItem('sanctuary_active_timeline_id'); } catch (_) {}
         renderTimelineList();
         switchTab('viewTimeline');
+
+        addAuditLogEntry({
+          action: 'timeline_delete',
+          entity_type: 'timeline',
+          entity_id: strId,
+          details: `Deleted parish timeline event (ID: ${strId})`
+        });
+
         showToast('Timeline entry deleted 🗑️');
       });
     }
@@ -19653,6 +20465,13 @@
           active.lyrics = lyrics;
           if (numVal) active.songNumber = numVal;
         }
+
+        addAuditLogEntry({
+          action: active ? 'song_update' : 'song_create',
+          entity_type: 'song',
+          entity_id: songId,
+          details: `${active ? 'Updated' : 'Added'} hymn "${title}"${author ? ` (${author})` : ''}${numVal ? ` • Hymn #${numVal}` : ''}`
+        });
 
         showToast(`Hymn "${title}" saved! 🎵`);
         if (typeof renderAdditionalSongsFromDexie === 'function') renderAdditionalSongsFromDexie();
@@ -21635,6 +22454,11 @@
             });
 
             // Celebratory Toast
+            addAuditLogEntry({
+              action: 'song_import',
+              entity_type: 'import',
+              details: `Imported ${added + updated} hymns into ${songDestination.label || 'Songbook'} (${added} added, ${updated} updated, ${skipped} skipped)`
+            });
             showToast(`🎉 ${added + updated} hymns successfully imported and indexed!`);
 
             // Reset button after celebration
@@ -21758,6 +22582,11 @@
             });
 
             // Celebratory Toast
+            addAuditLogEntry({
+              action: 'almanac_import',
+              entity_type: 'import',
+              details: `Imported ${addedDays + updatedDays} liturgical lectionary records into Almanac (${addedDays} added, ${updatedDays} updated, ${skippedDays} skipped)`
+            });
             showToast(`🎉 Almanac updated! ${addedDays + updatedDays} days synced.`);
 
             // Reset button after celebration

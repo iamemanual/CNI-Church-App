@@ -45,7 +45,58 @@ class WebAppBridgeInterface(
     fun getAppName(): String = "Church Companion"
 
     @JavascriptInterface
-    fun getAppVersion(): String = "v2.1.6"
+    fun getAppVersion(): String {
+        return try {
+            val pInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                activity.packageManager.getPackageInfo(activity.packageName, PackageManager.PackageInfoFlags.of(0))
+            } else {
+                @Suppress("DEPRECATION")
+                activity.packageManager.getPackageInfo(activity.packageName, 0)
+            }
+            pInfo.versionName ?: "v2.1.7"
+        } catch (e: Exception) {
+            "v2.1.7"
+        }
+    }
+
+    @JavascriptInterface
+    fun getAppVersionCode(): Long {
+        return try {
+            val pInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                activity.packageManager.getPackageInfo(activity.packageName, PackageManager.PackageInfoFlags.of(0))
+            } else {
+                @Suppress("DEPRECATION")
+                activity.packageManager.getPackageInfo(activity.packageName, 0)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                pInfo.longVersionCode
+            } else {
+                @Suppress("DEPRECATION")
+                pInfo.versionCode.toLong()
+            }
+        } catch (e: Exception) {
+            4092041L
+        }
+    }
+
+    @JavascriptInterface
+    fun getApkVersionCode(apkFilePath: String): Long {
+        return try {
+            val pInfo = activity.packageManager.getPackageArchiveInfo(apkFilePath, 0)
+            if (pInfo != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    pInfo.longVersionCode
+                } else {
+                    @Suppress("DEPRECATION")
+                    pInfo.versionCode.toLong()
+                }
+            } else {
+                -1L
+            }
+        } catch (e: Exception) {
+            -1L
+        }
+    }
 
     @JavascriptInterface
     fun updateSystemBars(isLight: Boolean) {

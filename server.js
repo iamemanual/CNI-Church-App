@@ -440,35 +440,71 @@ const server = http.createServer((req, res) => {
     }, null, 2));
   }
 
+  // Helper: Extract APK versionCode and versionName using aapt or manifest parsing
+  function getApkDetails(apkPath) {
+    let versionCode = 4092040;
+    let versionName = 'v2.1.6';
+    if (!fs.existsSync(apkPath)) return { versionCode, versionName };
+
+    try {
+      const { execSync } = require('child_process');
+      const out = execSync(`aapt dump badging "${apkPath}" 2>/dev/null`, { timeout: 3000 }).toString();
+      const vcMatch = out.match(/versionCode='(\d+)'/);
+      if (vcMatch) versionCode = parseInt(vcMatch[1], 10);
+      const vnMatch = out.match(/versionName='([^']+)'/);
+      if (vnMatch) versionName = vnMatch[1];
+    } catch (_) {}
+    return { versionCode, versionName };
+  }
+
   // 3d. API: App Update Check
   if (pathname === '/api/app/update-check' && req.method === 'GET') {
+    const installedVersionCode = 4092041;
     const updatePublishPath = path.join(PROJECT_ROOT, '.update_published.json');
     const workspaceUpdateFlag = '/storage/emulated/0/Workspace/.update_published.json';
     const isPublished = fs.existsSync(updatePublishPath) || fs.existsSync(workspaceUpdateFlag);
 
-    if (isPublished) {
-      const apkPath = '/storage/emulated/0/Workspace/ChurchCompanion.apk';
-      let sizeMb = '66.7';
-      if (fs.existsSync(apkPath)) {
-        try {
-          sizeMb = (fs.statSync(apkPath).size / (1024 * 1024)).toFixed(1);
-        } catch (_) {}
+    let published = null;
+    try {
+      if (fs.existsSync(updatePublishPath)) {
+        published = JSON.parse(fs.readFileSync(updatePublishPath, 'utf8'));
+      } else if (fs.existsSync(workspaceUpdateFlag)) {
+        published = JSON.parse(fs.readFileSync(workspaceUpdateFlag, 'utf8'));
       }
+    } catch (_) {}
+
+    const apkPath = '/storage/emulated/0/Workspace/ChurchCompanion.apk';
+    let sizeMb = '44.8';
+    if (fs.existsSync(apkPath)) {
+      try { sizeMb = (fs.statSync(apkPath).size / (1024 * 1024)).toFixed(1); } catch (_) {}
+    }
+
+    if (isPublished && published && published.versionCode) {
+      const apkVersionCode = parseInt(published.versionCode, 10);
+      const isNewUpdate = apkVersionCode !== installedVersionCode;
+
       res.writeHead(200, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({
-        updateAvailable: true,
-        currentVersion: 'v2.1.6',
-        latestVersion: 'v2.1.7',
-        buildCode: 4092040,
-        fileSizeMb: sizeMb,
+        hasUploadedPackage: true,
+        updateAvailable: isNewUpdate,
+        versionCode: apkVersionCode,
+        versionName: published.versionName || 'v2.1.7',
+        installedVersionCode: installedVersionCode,
+        currentVersion: 'v2.1.7',
+        latestVersion: published.versionName || 'v2.1.7',
+        buildCode: apkVersionCode,
+        fileSizeMb: published.fileSizeMb || sizeMb,
         downloadUrl: '/download/ChurchCompanion.apk',
-        releaseNotes: 'Update uploaded by Super Admin.'
+        releaseNotes: isNewUpdate ? 'A new update is available.' : 'You are on the latest version.'
       }));
     } else {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({
+        hasUploadedPackage: false,
         updateAvailable: false,
-        currentVersion: 'v2.1.6',
+        versionCode: null,
+        installedVersionCode: installedVersionCode,
+        currentVersion: 'v2.1.7',
         message: 'No update available. You are on the latest version.'
       }));
     }
@@ -483,6 +519,7 @@ const server = http.createServer((req, res) => {
     }
     const stat = fs.statSync(apkPath);
     const sizeMb = (stat.size / (1024 * 1024)).toFixed(1);
+    const apkDetails = getApkDetails(apkPath);
     const https = require('https');
     const supabaseKey = "sb_publishable_skaLU__XWX2Nx8lAUcy50A_ImTZpWZG";
 
@@ -504,15 +541,52 @@ const server = http.createServer((req, res) => {
       uploadRes.on('end', () => {
         if (uploadRes.statusCode >= 200 && uploadRes.statusCode < 300) {
           const updatePublishPath = path.join(PROJECT_ROOT, '.update_published.json');
+          const publishPayload = {
+            publishedAt: new Date().toISOString(),
+            fileName: 'ChurchCompanion.apk',
+            versionCode: apkDetails.versionCode,
+            versionName: apkDetails.versionName,
+            fileSizeMb: sizeMb
+          };
           try {
-            fs.writeFileSync(updatePublishPath, JSON.stringify({
-              publishedAt: new Date().toISOString(),
-              fileName: 'ChurchCompanion.apk',
-              fileSizeMb: sizeMb
-            }), 'utf8');
+            fs.writeFileSync(updatePublishPath, JSON.stringify(publishPayload, null, 2), 'utf8');
           } catch (_) {}
+
+          // Also upload update_manifest.json to Supabase app-updates bucket
+          const manifestPayload = JSON.stringify({
+            versionCode: apkDetails.versionCode,
+            versionName: apkDetails.versionName,
+            fileName: 'ChurchCompanion.apk',
+            fileSizeMb: sizeMb,
+            downloadUrl: 'https://eqwgrxcitwoyickthfpd.supabase.co/storage/v1/object/public/app-updates/ChurchCompanion.apk',
+            updatedAt: new Date().toISOString()
+          });
+
+          const manifestReq = https.request({
+            hostname: 'eqwgrxcitwoyickthfpd.supabase.co',
+            port: 443,
+            path: '/storage/v1/object/app-updates/update_manifest.json',
+            method: 'POST',
+            headers: {
+              'apikey': supabaseKey,
+              'authorization': `Bearer ${supabaseKey}`,
+              'content-type': 'application/json',
+              'content-length': Buffer.byteLength(manifestPayload),
+              'x-upsert': 'true'
+            }
+          }, () => {});
+          manifestReq.on('error', () => {});
+          manifestReq.write(manifestPayload);
+          manifestReq.end();
+
           res.writeHead(200, { 'Content-Type': 'application/json' });
-          return res.end(JSON.stringify({ success: true, fileName: 'ChurchCompanion.apk', fileSizeMb: sizeMb }));
+          return res.end(JSON.stringify({
+            success: true,
+            fileName: 'ChurchCompanion.apk',
+            fileSizeMb: sizeMb,
+            versionCode: apkDetails.versionCode,
+            versionName: apkDetails.versionName
+          }));
         } else {
           res.writeHead(uploadRes.statusCode || 500, { 'Content-Type': 'application/json' });
           return res.end(JSON.stringify({ success: false, error: data }));
@@ -533,7 +607,7 @@ const server = http.createServer((req, res) => {
   if (pathname === '/api/app/update/delete-apk' && req.method === 'POST') {
     const https = require('https');
     const supabaseKey = "sb_publishable_skaLU__XWX2Nx8lAUcy50A_ImTZpWZG";
-    let body = JSON.stringify({ prefixes: ['ChurchCompanion.apk'] });
+    let body = JSON.stringify({ prefixes: ['ChurchCompanion.apk', 'update_manifest.json'] });
 
     const delReq = https.request({
       hostname: 'eqwgrxcitwoyickthfpd.supabase.co',
