@@ -1808,7 +1808,10 @@ button:active, .btn:active, .btn-primary:active, .btn-secondary:active, .setting
 
 .timeline-lightbox-header {
   width: 100%;
-  padding: 16px 20px;
+  padding-top: calc(max(env(safe-area-inset-top, 0px), var(--safe-area-top, 36px)) + 12px) !important;
+  padding-bottom: 12px;
+  padding-left: 20px;
+  padding-right: 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -16468,7 +16471,7 @@ textarea:focus-visible,
 
     <!-- 16. Timeline Fullscreen Photo Lightbox -->
     <div id="timelinePhotoLightboxOverlay" class="timeline-lightbox-overlay hidden" aria-modal="true" role="dialog">
-      <div class="timeline-lightbox-header">
+      <div class="timeline-lightbox-header" style="padding-top: calc(max(env(safe-area-inset-top, 0px), var(--safe-area-top, 36px)) + 12px) !important;">
         <div class="timeline-lightbox-counter" id="timelineLightboxCounter">1 / 1</div>
         <button type="button" class="timeline-lightbox-close-btn" id="timelineLightboxCloseBtn" aria-label="Close fullscreen view">
           <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.2" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
