@@ -9,7 +9,7 @@
   [![Platform](https://img.shields.io/badge/Platform-Android%208.0%2B%20(API%2026%2B)-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com)
   [![Language](https://img.shields.io/badge/Kotlin%201.9-Hybrid%20Bridge-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)](https://kotlinlang.org)
   [![Backend](https://img.shields.io/badge/Supabase-Realtime%20Cloud-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
-  [![UI Design](https://img.shields.io/badge/Design-Velvet%20Liquid%20Glass-C5A059?style=for-the-badge)](https://developer.apple.com/design/)
+  [![UI Design](https://img.shields.io/badge/Design-%20Liquid%20Glass-C5A059?style=for-the-badge)](https://developer.apple.com/design/)
   [![Architecture](https://img.shields.io/badge/Storage-Offline--First%20Dual%20DB-0284C7?style=for-the-badge)](#-offline-first-dual-layer-persistence)
 
   <br />
