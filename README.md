@@ -7,7 +7,7 @@
 [![Build Tool](https://img.shields.io/badge/Build-Gradle%208.7-02303A?logo=gradle&logoColor=white&style=flat-square)](https://gradle.org)
 [![License](https://img.shields.io/badge/License-Proprietary%20%2F%20Church%20Use-amber?style=flat-square)](#license)
 
-> **Church Companion** is a sanctuary companion application designed for the **Church of North India (CNI)** and **All Saints' Cathedral**. Built with a hybrid offline-first architecture, it provides an immersive, edge-to-edge experience for worship, liturgical lectionary readings, multilingual hymn singing, sacramental services, and parish fellowship.
+> **Church Companion** is a companion application designed for the **Church of North India (CNI)** and **All Saints' Church**. Built with a hybrid offline-first architecture, it provides an immersive, edge-to-edge experience for worship, liturgical lectionary readings, multilingual hymn singing, sacramental services, and parish fellowship.
 
 ---
 
