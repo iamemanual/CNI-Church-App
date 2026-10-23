@@ -13099,3 +13099,103 @@ textarea:focus-visible,
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6) !important;
 }
 
+/* ==========================================================
+   APPLE HIG & HIGH-PERFORMANCE 60/120FPS HARDWARE ENGINE
+   ========================================================== */
+:root {
+  --spring-fluid: cubic-bezier(0.16, 1, 0.3, 1);
+  --spring-snappy: cubic-bezier(0.2, 0, 0, 1);
+  --spring-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --spring-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Fluid Scrolling & Touch Physics across all scrollable regions */
+html, body, .app-container, .main-content, .scrollable-content, #viewChat .wa-chat-messages-container, .song-card-list, #timelineListContainer, #almanacListContainer, .wa-modal-members-body {
+  -webkit-overflow-scrolling: touch !important;
+  scroll-behavior: smooth !important;
+  overscroll-behavior-y: contain !important;
+}
+
+/* Native tactile micro-interactions on interactive cards and buttons */
+.song-list-item-card,
+.anc-reference-card,
+.timeline-card,
+.daily-verse-card,
+.almanac-day-card,
+.settings-card,
+.quick-action-pill,
+.btn-primary,
+.btn-secondary,
+.dock-item {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform;
+}
+
+.song-list-item-card:active,
+.anc-reference-card:active,
+.timeline-card:active,
+.daily-verse-card:active,
+.almanac-day-card:active,
+.settings-card:active,
+.btn-primary:active,
+.btn-secondary:active {
+  transform: scale3d(0.98, 0.98, 1) !important;
+  transition: transform 0.12s var(--spring-snappy) !important;
+}
+
+.dock-item:active .dock-icon-wrap {
+  transform: scale3d(0.90, 0.90, 1) !important;
+  transition: transform 0.12s var(--spring-snappy) !important;
+}
+
+/* Smooth Modal Sheets & Overlays */
+.modal-overlay {
+  transition: opacity 0.28s var(--spring-fluid), backdrop-filter 0.28s var(--spring-fluid) !important;
+}
+
+.modal-card, .wa-modal-sheet, .ios-bottom-sheet {
+  transform-origin: center bottom;
+  animation: fluidSheetEntrance 0.32s var(--spring-fluid) !important;
+}
+
+@keyframes fluidSheetEntrance {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0) scale3d(0.96, 0.96, 1);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  }
+}
+
+/* Smooth Chat Message Entrance */
+.wa-bubble {
+  animation: fluidBubbleEntrance 0.24s var(--spring-fluid) !important;
+  will-change: transform, opacity;
+}
+
+@keyframes fluidBubbleEntrance {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0) scale3d(0.97, 0.97, 1);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  }
+}
+
+/* Accessibility: reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+

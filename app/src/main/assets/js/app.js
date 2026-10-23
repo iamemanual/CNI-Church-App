@@ -2,9 +2,161 @@
   "use strict";
 
   /**
- * Sanctuary App - Church Library, Hymnal, Scripture & Almanac Data
- */
+   * Sanctuary App - Church Library, Hymnal, Scripture & Almanac Data
+   * Unified Security Hardening, HTML Escaping, and Realtime Launch Synchronization Engine
+   */
 
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;')
+      .replace(/`/g, '&#96;');
+  }
+  window.escapeHtml = escapeHtml;
+
+  function sanitizeUrl(rawUrl) {
+    if (!rawUrl || typeof rawUrl !== 'string') return '';
+    const trimmed = rawUrl.trim();
+    if (/^(https?:|\/|data:image\/|blob:)/i.test(trimmed)) {
+      return trimmed;
+    }
+    return '';
+  }
+  window.sanitizeUrl = sanitizeUrl;
+
+  // Unified Realtime Launch & Foreground Synchronization Engine
+  let _launchSyncRunning = false;
+  let _lastLaunchSyncTime = 0;
+
+  async function triggerLaunchSync(force = false) {
+    const now = Date.now();
+    if (!force && (now - _lastLaunchSyncTime < 8000 || _launchSyncRunning)) {
+      return;
+    }
+    if (!navigator.onLine) {
+      console.log('[Launch Sync] Device is offline, retaining local Dexie/storage cache.');
+      return;
+    }
+    if (!window.ChurchSync) {
+      console.log('[Launch Sync] ChurchSync not yet available.');
+      return;
+    }
+
+    _launchSyncRunning = true;
+    _lastLaunchSyncTime = now;
+    console.log('[Launch Sync] 🔄 Realtime synchronization initiated on app launch / resume...');
+
+    try {
+      const syncTasks = [];
+
+      // 1. Sync Songs & evict deleted
+      if (window.ChurchSync.Songs && typeof window.ChurchSync.Songs.list === 'function') {
+        syncTasks.push(
+          window.ChurchSync.Songs.list()
+            .then(() => {
+              if (typeof window.refreshSongBookCards === 'function') {
+                window.refreshSongBookCards(window.currentOpenSongBookKey || 'masihiGeet');
+              }
+            })
+            .catch(e => console.warn('[Launch Sync] Songs error:', e))
+        );
+      }
+
+      // 2. Sync Timeline milestones
+      if (window.ChurchSync.Timeline && typeof window.ChurchSync.Timeline.list === 'function') {
+        syncTasks.push(
+          window.ChurchSync.Timeline.list()
+            .then(async () => {
+              if (typeof window.loadTimelineItems === 'function') {
+                await window.loadTimelineItems();
+              }
+              if (typeof window.renderTimelineList === 'function') {
+                window.renderTimelineList();
+              }
+            })
+            .catch(e => console.warn('[Launch Sync] Timeline error:', e))
+        );
+      }
+
+      // 3. Sync Liturgical Almanac
+      if (window.ChurchSync.Almanac && typeof window.ChurchSync.Almanac.list === 'function') {
+        syncTasks.push(
+          window.ChurchSync.Almanac.list()
+            .then(() => {
+              if (typeof hydrateAlmanacStore === 'function') hydrateAlmanacStore();
+              if (typeof renderAlmanacModule === 'function') renderAlmanacModule();
+              if (typeof updateHomeDailyVerseAndDate === 'function') updateHomeDailyVerseAndDate();
+            })
+            .catch(e => console.warn('[Launch Sync] Almanac error:', e))
+        );
+      }
+
+      // 4. Sync Announcements / Notices
+      if (window.ChurchSync.Announcements && typeof window.ChurchSync.Announcements.list === 'function') {
+        syncTasks.push(
+          window.ChurchSync.Announcements.list(true)
+            .then(() => {
+              if (typeof renderAnnouncementHomeUI === 'function') renderAnnouncementHomeUI();
+            })
+            .catch(e => console.warn('[Launch Sync] Announcements error:', e))
+        );
+      }
+
+      // 5. Sync Today's Songs
+      if (window.ChurchSync.TodaysSongs && typeof window.ChurchSync.TodaysSongs.get === 'function') {
+        syncTasks.push(
+          window.ChurchSync.TodaysSongs.get()
+            .then(() => {
+              if (typeof renderTodaySongHomeUI === 'function') renderTodaySongHomeUI();
+            })
+            .catch(e => console.warn('[Launch Sync] Today\'s Songs error:', e))
+        );
+      }
+
+      // 6. Sync About Church profile
+      if (window.ChurchSync.AboutChurch && typeof window.ChurchSync.AboutChurch.get === 'function') {
+        syncTasks.push(
+          window.ChurchSync.AboutChurch.get()
+            .then(() => {
+              if (typeof renderAboutChurch === 'function') renderAboutChurch();
+            })
+            .catch(e => console.warn('[Launch Sync] About Church error:', e))
+        );
+      }
+
+      // 7. Sync Audit Logs (if admin / superadmin)
+      if (window.ChurchSync.AuditLog && typeof window.ChurchSync.AuditLog.list === 'function') {
+        if (typeof isSuperAdmin === 'function' && (isSuperAdmin() || (currentAuthSession && (currentAuthSession.role === 'admin' || currentAuthSession.role === 'superadmin')))) {
+          syncTasks.push(
+            window.ChurchSync.AuditLog.list(200)
+              .then(res => {
+                if (res && res.data && Array.isArray(res.data) && typeof renderAuditLogs === 'function') {
+                  renderAuditLogs(res.data);
+                }
+              })
+              .catch(e => console.warn('[Launch Sync] Audit log error:', e))
+          );
+        }
+      }
+
+      // 8. Flush offline queues
+      if (typeof window.ChurchSync.flushOfflineQueue === 'function') {
+        syncTasks.push(
+          Promise.resolve().then(() => window.ChurchSync.flushOfflineQueue()).catch(e => console.warn('[Launch Sync] Outbox flush error:', e))
+        );
+      }
+
+      await Promise.allSettled(syncTasks);
+      console.log('[Launch Sync] ✨ Realtime launch sync completed successfully.');
+    } finally {
+      _launchSyncRunning = false;
+    }
+  }
+  window.triggerLaunchSync = triggerLaunchSync;
 
     // ==============================================================================
     // CHURCH COMPANION: AUTHENTICATION, RBAC & DEXIE OFFLINE-FIRST ENGINE
@@ -3229,6 +3381,13 @@
     updateAppPermissionsUI();
     if (typeof initAboutChurchModule === 'function') initAboutChurchModule();
     if (typeof hookSupabaseChatRealtime === 'function') hookSupabaseChatRealtime();
+
+    // Trigger seamless background realtime synchronization on startup
+    setTimeout(() => {
+      if (typeof triggerLaunchSync === 'function') {
+        triggerLaunchSync(true);
+      }
+    }, 250);
 
     // ==========================================================================
     // CORE SPEC v1: EVENT LISTENERS (ONBOARDING, CHAT GATE, POSTS, AUDIT)
@@ -14637,23 +14796,24 @@
       // Quoted Reply Preview
       let quotedHtml = '';
       if (msg.reply_to_message_id || msg.reply_preview) {
-        const qAuthor = (msg.reply_preview && msg.reply_preview.sender) || 'Fellowship Member';
-        const qText = (msg.reply_preview && msg.reply_preview.text) || 'Quoted message...';
+        const qAuthor = escapeHtml((msg.reply_preview && msg.reply_preview.sender) || 'Fellowship Member');
+        const qText = escapeHtml((msg.reply_preview && msg.reply_preview.text) || 'Quoted message...');
         quotedHtml = `
-          <div class="wa-quoted-preview-block" data-reply-target="${msg.reply_to_message_id || ''}">
+          <div class="wa-quoted-preview-block" data-reply-target="${escapeHtml(msg.reply_to_message_id || '')}">
             <div class="wa-quoted-author">${qAuthor}</div>
-            <div class="wa-quoted-text">${qText.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+            <div class="wa-quoted-text">${qText}</div>
           </div>
         `;
       }
 
       // Media Image Attachment
       let mediaHtml = '';
-      const mediaSrc = msg.public_url || msg.media_path || msg.image;
+      const rawMedia = msg.public_url || msg.media_path || msg.image;
+      const mediaSrc = sanitizeUrl(rawMedia);
       if (mediaSrc) {
         mediaHtml = `
-          <div class="wa-chat-media-attachment" data-media-url="${mediaSrc}">
-            <img src="${mediaSrc}" alt="Fellowship Photo" loading="lazy" />
+          <div class="wa-chat-media-attachment" data-media-url="${escapeHtml(mediaSrc)}">
+            <img src="${escapeHtml(mediaSrc)}" alt="Fellowship Photo" loading="lazy" />
           </div>
         `;
       }
@@ -14663,17 +14823,18 @@
       if (msg.reactions && Object.keys(msg.reactions).length > 0) {
         reactionHtml = '<div class="wa-bubble-reaction-pill-row">';
         Object.entries(msg.reactions).forEach(([emoji, count]) => {
-          reactionHtml += `<span class="wa-reaction-pill" data-emoji="${emoji}">${emoji} ${count > 1 ? count : ''}</span>`;
+          reactionHtml += `<span class="wa-reaction-pill" data-emoji="${escapeHtml(emoji)}">${escapeHtml(emoji)} ${count > 1 ? count : ''}</span>`;
         });
         reactionHtml += '</div>';
       } else if (msg.reaction) {
-        reactionHtml = `<div class="wa-bubble-reaction-pill-row"><span class="wa-reaction-pill">${msg.reaction}</span></div>`;
+        reactionHtml = `<div class="wa-bubble-reaction-pill-row"><span class="wa-reaction-pill">${escapeHtml(msg.reaction)}</span></div>`;
       }
 
       const editedTag = msg.edited ? ' <span class="wa-edited-pill" style="font-size:0.68rem; color:#8696a0; font-style:italic; margin-left:4px;">(edited)</span>' : '';
       const safeMsgText = String(msg.text || msg.content || '');
-      const safeEscapedText = safeMsgText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      const safeTime = msg.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const safeEscapedText = escapeHtml(safeMsgText);
+      const safeTime = escapeHtml(msg.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      const safeSender = escapeHtml(msg.sender || 'Fellowship Member');
 
       if (msg.audio) {
         const audioDuration = msg.duration ? `${Math.floor(msg.duration / 60)}:${String(Math.floor(msg.duration % 60)).padStart(2, '0')}` : '0:05';
@@ -14707,8 +14868,8 @@
           `;
         } else {
           bubble.innerHTML = `
-            <div class="wa-author-tag ${msg.color || 'color-pastor'}">
-              <span>${msg.sender || 'Fellowship Member'}</span>
+            <div class="wa-author-tag ${escapeHtml(msg.color || 'color-pastor')}">
+              <span>${safeSender}</span>
             </div>
             ${quotedHtml}
             ${mediaHtml}
@@ -14732,8 +14893,8 @@
         `;
       } else {
         bubble.innerHTML = `
-          <div class="wa-author-tag ${msg.color || 'color-pastor'}">
-            <span>${msg.sender || 'Fellowship Member'}</span>
+          <div class="wa-author-tag ${escapeHtml(msg.color || 'color-pastor')}">
+            <span>${safeSender}</span>
           </div>
           ${quotedHtml}
           ${mediaHtml}
@@ -19456,6 +19617,7 @@
       }
     }
     window.saveTimelineItems = saveTimelineItems;
+    window.loadTimelineItems = loadTimelineItems;
 
     function renderTimelineList() {
       const container = document.getElementById('timelineListContainer');
@@ -22719,5 +22881,24 @@
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
+  }
+
+  // Unified Realtime Launch & Foreground Synchronization Listeners
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      console.log('[Launch Sync] App returned to foreground, executing realtime sync check...');
+      triggerLaunchSync(false);
+    }
+  });
+
+  window.addEventListener('online', () => {
+    console.log('[Launch Sync] Network connectivity restored, syncing cloud stores...');
+    triggerLaunchSync(true);
+  });
+
+  if (typeof window.ChurchSync !== 'undefined' && window.ChurchSync && typeof window.ChurchSync.on === 'function') {
+    window.ChurchSync.on('ready', () => {
+      triggerLaunchSync(false);
+    });
   }
 })();

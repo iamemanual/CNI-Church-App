@@ -105,50 +105,119 @@ function getFileTree(dir, basePath = '') {
   return results;
 }
 
-function resolveAssetPath(requestPath) {
-  let clean = requestPath.replace(/^\/+/, '');
-  let target = path.normalize(path.join(ASSETS_DIR, clean));
+function isPathInside(childPath, parentDir) {
+  const rel = path.relative(parentDir, childPath);
+  return !rel.startsWith('..') && !path.isAbsolute(rel);
+}
 
-  if (fs.existsSync(target) && fs.statSync(target).isFile()) {
-    return target;
+function resolveAssetPath(requestPath) {
+  if (!requestPath || typeof requestPath !== 'string') return null;
+  let decoded;
+  try {
+    decoded = decodeURIComponent(requestPath);
+  } catch (_) {
+    return null;
+  }
+  if (decoded.includes('\0')) return null;
+
+  let clean = decoded.replace(/^\/+/, '');
+  if (clean.split(/[\\/]/).some(seg => seg === '..')) {
+    return null;
   }
 
-  // Check if stripping 'assets/' helps
+  const resolvedAssetsDir = path.resolve(ASSETS_DIR);
+  const workspaceHtmlDir = '/storage/emulated/0/Workspace/HTML';
+  const resolvedWorkspaceHtml = path.resolve(workspaceHtmlDir);
+
+  // 1. Direct match in ASSETS_DIR
+  let target = path.resolve(resolvedAssetsDir, clean);
+  if (isPathInside(target, resolvedAssetsDir)) {
+    if (fs.existsSync(target) && fs.statSync(target).isFile()) {
+      return target;
+    }
+  }
+
+  // 2. Check if stripping 'assets/' helps
   if (clean.startsWith('assets/')) {
     let stripped = clean.substring('assets/'.length);
-    let candidate = path.normalize(path.join(ASSETS_DIR, stripped));
-    if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
-      return candidate;
+    let candidate = path.resolve(resolvedAssetsDir, stripped);
+    if (isPathInside(candidate, resolvedAssetsDir)) {
+      if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+        return candidate;
+      }
     }
   }
 
-  // Check if prepending 'assets/' helps
-  let nested = path.normalize(path.join(ASSETS_DIR, 'assets', clean));
-  if (fs.existsSync(nested) && fs.statSync(nested).isFile()) {
-    return nested;
+  // 3. Check if prepending 'assets/' helps
+  let nested = path.resolve(resolvedAssetsDir, 'assets', clean);
+  if (isPathInside(nested, resolvedAssetsDir)) {
+    if (fs.existsSync(nested) && fs.statSync(nested).isFile()) {
+      return nested;
+    }
   }
 
-  // Check Workspace/HTML folder
-  const workspaceHtmlDir = '/storage/emulated/0/Workspace/HTML';
+  // 4. Check books/ folder in assets
+  let booksCandidate = path.resolve(resolvedAssetsDir, 'books', clean);
+  if (isPathInside(booksCandidate, resolvedAssetsDir)) {
+    if (fs.existsSync(booksCandidate) && fs.statSync(booksCandidate).isFile()) {
+      return booksCandidate;
+    }
+  }
+
+  // 5. Check Workspace/HTML folder
   if (/^html\//i.test(clean)) {
     let sub = clean.replace(/^html\//i, '');
-    let candidate = path.normalize(path.join(workspaceHtmlDir, sub));
-    if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
-      return candidate;
+    let candidate = path.resolve(resolvedWorkspaceHtml, sub);
+    if (isPathInside(candidate, resolvedWorkspaceHtml)) {
+      if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+        return candidate;
+      }
     }
   }
-  let directHtmlCandidate = path.normalize(path.join(workspaceHtmlDir, clean));
-  if (fs.existsSync(directHtmlCandidate) && fs.statSync(directHtmlCandidate).isFile()) {
-    return directHtmlCandidate;
-  }
-
-  // Check books/ folder in assets
-  let booksCandidate = path.normalize(path.join(ASSETS_DIR, 'books', clean));
-  if (fs.existsSync(booksCandidate) && fs.statSync(booksCandidate).isFile()) {
-    return booksCandidate;
+  let directHtmlCandidate = path.resolve(resolvedWorkspaceHtml, clean);
+  if (isPathInside(directHtmlCandidate, resolvedWorkspaceHtml)) {
+    if (fs.existsSync(directHtmlCandidate) && fs.statSync(directHtmlCandidate).isFile()) {
+      return directHtmlCandidate;
+    }
   }
 
   return null;
+}
+
+function parseSafeJsonBody(req, res, maxBytes = 2 * 1024 * 1024, callback) {
+  let body = '';
+  let received = 0;
+  let aborted = false;
+
+  req.on('data', chunk => {
+    if (aborted) return;
+    received += chunk.length;
+    if (received > maxBytes) {
+      aborted = true;
+      req.destroy();
+      res.writeHead(413, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Payload too large (max ' + Math.round(maxBytes / 1024 / 1024) + 'MB)' }));
+      return;
+    }
+    body += chunk;
+  });
+
+  req.on('end', () => {
+    if (aborted) return;
+    try {
+      const parsed = body ? JSON.parse(body) : {};
+      callback(null, parsed);
+    } catch (err) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Invalid JSON payload: ' + err.message }));
+    }
+  });
+
+  req.on('error', err => {
+    if (aborted) return;
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Request stream error: ' + err.message }));
+  });
 }
 
 const NATIVE_BRIDGE_INJECTION = `
@@ -174,7 +243,9 @@ const NATIVE_BRIDGE_INJECTION = `
 
   const bridge = {
     getAppName: function() { return "Church Companion"; },
-    getAppVersion: function() { return "v2.1.6 (APK Authentic)"; },
+    getAppVersion: function() { return "v2.1.7"; },
+    getAppVersionCode: function() { return 4092041; },
+    getApkVersionCode: function(filePath) { return 4092041; },
     isDeviceOnline: function() { return navigator.onLine; },
     hasCameraPermission: function() { return true; },
     hasMediaPermission: function() { return true; },
@@ -248,7 +319,7 @@ const NATIVE_BRIDGE_INJECTION = `
       return JSON.stringify({
         status: "PASSED",
         engine: "ChurchApplicationEngine",
-        version: "v04092030"
+        version: "v4092041"
       });
     },
     logAuditEvent: function(mod, act, det) {
@@ -288,8 +359,11 @@ const server = http.createServer((req, res) => {
   const pathname = parsedUrl.pathname;
 
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, apikey, Prefer');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
@@ -298,11 +372,9 @@ const server = http.createServer((req, res) => {
 
   // 1. API: Submit Pinpoint Edit Request from Localhost
   if (pathname === '/api/edits/submit' && req.method === 'POST') {
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', () => {
+    parseSafeJsonBody(req, res, 2 * 1024 * 1024, (err, item) => {
+      if (err || !item) return;
       try {
-        const item = JSON.parse(body);
         item.id = Date.now();
         item.status = 'pending';
 
@@ -349,11 +421,9 @@ const server = http.createServer((req, res) => {
 
   // 3b. API: Delete Specific Pending Edit
   if (pathname === '/api/edits/delete' && req.method === 'POST') {
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', () => {
+    parseSafeJsonBody(req, res, 512 * 1024, (err, payload) => {
+      if (err || !payload) return;
       try {
-        const payload = JSON.parse(body || '{}');
         let edits = readPendingEdits();
         edits = edits.filter(e => e.id !== payload.id);
         savePendingEdits(edits);
@@ -369,11 +439,10 @@ const server = http.createServer((req, res) => {
 
   // 3c. API: Save Almanac Edit directly to disk JSON files
   if (pathname === '/api/almanac/save' && req.method === 'POST') {
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', () => {
+    parseSafeJsonBody(req, res, 2 * 1024 * 1024, (err, payload) => {
+      if (err || !payload) return;
       try {
-        const { dateKey, entry } = JSON.parse(body || '{}');
+        const { dateKey, entry } = payload;
         if (!dateKey || !entry) throw new Error('Missing dateKey or entry');
 
         const fullYearPath = path.join(ASSETS_DIR, 'data', 'almanac_full_year_2026.json');
@@ -397,17 +466,17 @@ const server = http.createServer((req, res) => {
         const workspaceMdPath = '/data/data/com.termux/files/home/Almanac.md';
         if (fs.existsSync(workspaceMdPath)) {
           try {
-            let md = '# Church Companion — Liturgical Almanac 2026\\n\\n> Complete Liturgical Almanac & Lectionary readings for the Year 2026 (All 365 Days).\\n\\n---\\n\\n';
+            let md = '# Church Companion — Liturgical Almanac 2026\n\n> Complete Liturgical Almanac & Lectionary readings for the Year 2026 (All 365 Days).\n\n---\n\n';
             for (const k of Object.keys(fullYear).sort()) {
               const d = fullYear[k];
-              md += `### ${String(d.day).padStart(2, '0')} ${d.monthName} ${d.year} (${d.dayName})\\n\\n`;
-              md += `- **Date:** \`${d.dateKey}\`\\n`;
-              md += `- **Theme / Festival:** ${d.theme || 'Daily Liturgical Reading'}\\n`;
-              md += `- **Liturgical Color:** ${d.color || 'Green'}\\n`;
-              if (d.morningWorship && d.morningWorship.length) md += `- **Morning Worship:**\\n` + d.morningWorship.map(r => `  - ${r}`).join('\\n') + '\\n';
-              if (d.eveningWorship && d.eveningWorship.length) md += `- **Evening Worship:**\\n` + d.eveningWorship.map(r => `  - ${r}`).join('\\n') + '\\n';
-              if (d.lordsSupper && d.lordsSupper.length) md += `- **Lord\\'s Supper:**\\n` + d.lordsSupper.map(r => `  - ${r}`).join('\\n') + '\\n';
-              md += '\\n';
+              md += `### ${String(d.day).padStart(2, '0')} ${d.monthName} ${d.year} (${d.dayName})\n\n`;
+              md += `- **Date:** \`${d.dateKey}\`\n`;
+              md += `- **Theme / Festival:** ${d.theme || 'Daily Liturgical Reading'}\n`;
+              md += `- **Liturgical Color:** ${d.color || 'Green'}\n`;
+              if (d.morningWorship && d.morningWorship.length) md += `- **Morning Worship:**\n` + d.morningWorship.map(r => `  - ${r}`).join('\n') + '\n';
+              if (d.eveningWorship && d.eveningWorship.length) md += `- **Evening Worship:**\n` + d.eveningWorship.map(r => `  - ${r}`).join('\n') + '\n';
+              if (d.lordsSupper && d.lordsSupper.length) md += `- **Lord's Supper:**\n` + d.lordsSupper.map(r => `  - ${r}`).join('\n') + '\n';
+              md += '\n';
             }
             fs.writeFileSync(workspaceMdPath, md, 'utf8');
           } catch (_) {}
@@ -677,11 +746,9 @@ const server = http.createServer((req, res) => {
 
   // 4b. API: Delete Member from Chat Messages File
   if (pathname === '/api/chat/delete-member' && req.method === 'POST') {
-    let body = '';
-    req.on('data', chunk => { body += chunk; });
-    req.on('end', () => {
+    parseSafeJsonBody(req, res, 512 * 1024, (err, payload) => {
+      if (err || !payload) return;
       try {
-        const payload = JSON.parse(body || '{}');
         const targetName = (payload.name || '').toLowerCase().trim();
         const targetId = (payload.id || '').toLowerCase().trim();
         const chatFilePath = path.join(ASSETS_DIR, 'data', 'cni_chat_messages.json');
@@ -717,8 +784,23 @@ const server = http.createServer((req, res) => {
     const https = require('https');
 
     let bodyChunks = [];
-    req.on('data', chunk => bodyChunks.push(chunk));
+    let receivedBytes = 0;
+    const MAX_PROXY_BODY = 10 * 1024 * 1024;
+    let aborted = false;
+
+    req.on('data', chunk => {
+      if (aborted) return;
+      receivedBytes += chunk.length;
+      if (receivedBytes > MAX_PROXY_BODY) {
+        aborted = true;
+        req.destroy();
+        res.writeHead(413, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ error: 'Supabase proxy payload too large' }));
+      }
+      bodyChunks.push(chunk);
+    });
     req.on('end', () => {
+      if (aborted) return;
       const bodyBuffer = Buffer.concat(bodyChunks);
       const headers = {
         'host': 'eqwgrxcitwoyickthfpd.supabase.co',
