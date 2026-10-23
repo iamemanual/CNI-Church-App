@@ -15,6 +15,7 @@ build/
 .server.log
 pending_edits.json
 .server.pid
+.update_published.json
 
 # Local AI agent files
 .agents/
