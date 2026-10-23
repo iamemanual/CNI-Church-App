@@ -220,7 +220,29 @@ function parseSafeJsonBody(req, res, maxBytes = 2 * 1024 * 1024, callback) {
   });
 }
 
-const NATIVE_BRIDGE_INJECTION = `
+function getAppVersionInfo() {
+  try {
+    const vProp = path.join(PROJECT_ROOT, 'app', 'version.properties');
+    if (fs.existsSync(vProp)) {
+      const raw = fs.readFileSync(vProp, 'utf8');
+      const codeMatch = raw.match(/versionCode\s*=\s*(\d+)/);
+      const majorMatch = raw.match(/versionMajor\s*=\s*(\d+)/);
+      const minorMatch = raw.match(/versionMinor\s*=\s*(\d+)/);
+      const patchMatch = raw.match(/versionPatch\s*=\s*(\d+)/);
+      if (codeMatch && majorMatch && minorMatch && patchMatch) {
+        return {
+          versionCode: parseInt(codeMatch[1], 10),
+          versionName: `v${majorMatch[1]}.${minorMatch[1]}.${patchMatch[1]}`
+        };
+      }
+    }
+  } catch (_) {}
+  return { versionCode: 4092041, versionName: 'v2.1.7' };
+}
+
+function getNativeBridgeInjection() {
+  const vInfo = getAppVersionInfo();
+  return `
 <!-- ==========================================================
      AUTHENTIC ANDROID BRIDGE (Browser Support)
      ========================================================== -->
@@ -243,9 +265,9 @@ const NATIVE_BRIDGE_INJECTION = `
 
   const bridge = {
     getAppName: function() { return "Church Companion"; },
-    getAppVersion: function() { return "v2.1.7"; },
-    getAppVersionCode: function() { return 4092041; },
-    getApkVersionCode: function(filePath) { return 4092041; },
+    getAppVersion: function() { return "${vInfo.versionName}"; },
+    getAppVersionCode: function() { return ${vInfo.versionCode}; },
+    getApkVersionCode: function(filePath) { return ${vInfo.versionCode}; },
     isDeviceOnline: function() { return navigator.onLine; },
     hasCameraPermission: function() { return true; },
     hasMediaPermission: function() { return true; },
@@ -319,7 +341,7 @@ const NATIVE_BRIDGE_INJECTION = `
       return JSON.stringify({
         status: "PASSED",
         engine: "ChurchApplicationEngine",
-        version: "v4092041"
+        version: "v${vInfo.versionCode}"
       });
     },
     logAuditEvent: function(mod, act, det) {
@@ -353,6 +375,7 @@ const NATIVE_BRIDGE_INJECTION = `
 })();
 </script>
 `;
+}
 
 const server = http.createServer((req, res) => {
   const parsedUrl = url.parse(req.url, true);
@@ -528,7 +551,8 @@ const server = http.createServer((req, res) => {
 
   // 3d. API: App Update Check
   if (pathname === '/api/app/update-check' && req.method === 'GET') {
-    const installedVersionCode = 4092041;
+    const vInfo = getAppVersionInfo();
+    const installedVersionCode = vInfo.versionCode;
     const updatePublishPath = path.join(PROJECT_ROOT, '.update_published.json');
     const workspaceUpdateFlag = '/storage/emulated/0/Workspace/.update_published.json';
     const isPublished = fs.existsSync(updatePublishPath) || fs.existsSync(workspaceUpdateFlag);
@@ -557,10 +581,10 @@ const server = http.createServer((req, res) => {
         hasUploadedPackage: true,
         updateAvailable: isNewUpdate,
         versionCode: apkVersionCode,
-        versionName: published.versionName || 'v2.1.7',
+        versionName: published.versionName || vInfo.versionName,
         installedVersionCode: installedVersionCode,
-        currentVersion: 'v2.1.7',
-        latestVersion: published.versionName || 'v2.1.7',
+        currentVersion: vInfo.versionName,
+        latestVersion: published.versionName || vInfo.versionName,
         buildCode: apkVersionCode,
         fileSizeMb: published.fileSizeMb || sizeMb,
         downloadUrl: '/download/ChurchCompanion.apk',
@@ -573,7 +597,7 @@ const server = http.createServer((req, res) => {
         updateAvailable: false,
         versionCode: null,
         installedVersionCode: installedVersionCode,
-        currentVersion: 'v2.1.7',
+        currentVersion: vInfo.versionName,
         message: 'No update available. You are on the latest version.'
       }));
     }
@@ -916,10 +940,11 @@ const server = http.createServer((req, res) => {
     try {
       let content = fs.readFileSync(indexPath, 'utf8');
       // Inject native bridge right before </head>
+      const bridgeInjection = getNativeBridgeInjection();
       if (content.includes('</head>')) {
-        content = content.replace('</head>', NATIVE_BRIDGE_INJECTION + '\n</head>');
+        content = content.replace('</head>', bridgeInjection + '\n</head>');
       } else {
-        content = NATIVE_BRIDGE_INJECTION + content;
+        content = bridgeInjection + content;
       }
 
       // Inject pinpoint inspector right before </body> if enabled
@@ -974,10 +999,11 @@ const server = http.createServer((req, res) => {
       fileStream.pipe(res);
     } else if (ext === '.html') {
       let content = fs.readFileSync(filePath, 'utf8');
+      const bridgeInjection = getNativeBridgeInjection();
       if (content.includes('</head>')) {
-        content = content.replace('</head>', NATIVE_BRIDGE_INJECTION + '\n</head>');
+        content = content.replace('</head>', bridgeInjection + '\n</head>');
       } else {
-        content = NATIVE_BRIDGE_INJECTION + content;
+        content = bridgeInjection + content;
       }
 
       if (ENABLE_PINPOINT) {

@@ -53,9 +53,9 @@ class WebAppBridgeInterface(
                 @Suppress("DEPRECATION")
                 activity.packageManager.getPackageInfo(activity.packageName, 0)
             }
-            pInfo.versionName ?: "v2.1.7"
+            pInfo.versionName ?: BuildConfig.VERSION_NAME
         } catch (e: Exception) {
-            "v2.1.7"
+            BuildConfig.VERSION_NAME
         }
     }
 
@@ -75,7 +75,7 @@ class WebAppBridgeInterface(
                 pInfo.versionCode.toLong()
             }
         } catch (e: Exception) {
-            4092041L
+            BuildConfig.VERSION_CODE.toLong()
         }
     }
 
