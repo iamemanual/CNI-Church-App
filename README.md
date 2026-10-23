@@ -43,7 +43,6 @@
 | **Latest Release** | **`v2.1.9`** (Automated Build `4092043`) |
 | **Package ID** | `com.allsaints.church` |
 | **Direct APK Download** | [⬇️ **Download ChurchCompanion.apk** (43.28 MB)](https://github.com/iamemanual/CNI-Church-App/releases/download/v2.1.9/ChurchCompanion.apk) |
-| **Always-Current Download** | [⬇️ **Download Latest Release**](https://github.com/iamemanual/CNI-Church-App/releases/latest/download/ChurchCompanion.apk) |
 | **Target Android OS** | Android 14.0 (API Level 34) |
 | **Minimum Android OS** | Android 8.0 Oreo (API Level 26) |
 | **SHA-256 Checksum** | `9292b1a3274884eb143c3383de4c98f58b7bf290ef6e08b932a32e64a8fa6ecb` |
@@ -282,5 +281,5 @@ When downloading or updating the APK package manually:
 Distributed for church parish, ministry, and diocesan worship use. Liturgical texts, lectionary tables, and hymns remain the heritage and intellectual property of their respective publishers, diocesan councils, and ecclesiastical authorities.
 
 <div align="center">
-  <sub>Soli Deo Gloria ♱ Built with reverence for All Saints' Church & the Church of North India</sub>
+  <sub>Emanual ♱ Built with faith for All Saints' Church & the Church of North India</sub>
 </div>
