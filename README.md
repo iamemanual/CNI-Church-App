@@ -1,6 +1,6 @@
 # ⛪ Church Companion (CNI Church App)
 
-[![Latest Release](https://img.shields.io/github/v/release/iamemanual/CNI-Church-App?label=Release&color=blue&style=flat-square)](https://github.com/iamemanual/CNI-Church-App/releases/tag/v2.1.6)
+[![Latest Release](https://img.shields.io/github/v/release/iamemanual/CNI-Church-App?label=Release&color=blue&style=flat-square)](https://github.com/iamemanual/CNI-Church-App/releases/tag/v2.1.9)
 [![Platform](https://img.shields.io/badge/Platform-Android%208.0%2B%20%28API%2026%2B%29-3DDC84?logo=android&logoColor=white&style=flat-square)](https://developer.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin%20%7C%20JavaScript-7F52FF?logo=kotlin&logoColor=white&style=flat-square)](https://kotlinlang.org)
 [![Backend](https://img.shields.io/badge/Cloud-Supabase-3ECF8E?logo=supabase&logoColor=white&style=flat-square)](https://supabase.com)
@@ -17,7 +17,8 @@ Grab the latest official signed release APK:
 
 | Version | Package | Direct Download |
 | :--- | :--- | :--- |
-| **`v2.1.6`** (Latest) | `com.allsaints.church` | [⬇️ **Download ChurchCompanion.apk** (43.27 MB)](https://github.com/iamemanual/CNI-Church-App/releases/download/v2.1.6/ChurchCompanion.apk) |
+| **`v2.1.9`** (Latest) | `com.allsaints.church` | [⬇️ **Download ChurchCompanion.apk** (43.28 MB)](https://github.com/iamemanual/CNI-Church-App/releases/download/v2.1.9/ChurchCompanion.apk) |
+| **Latest Release (Always Current)** | `com.allsaints.church` | [⬇️ **Download Latest Release**](https://github.com/iamemanual/CNI-Church-App/releases/latest/download/ChurchCompanion.apk) |
 
 ---
 
@@ -53,13 +54,15 @@ Grab the latest official signed release APK:
   - **SQLite (`ChurchOfflineStore.kt`)** for native persistence, encrypted cache, and durability.
 - **Supabase Cloud Sync**: Transparent background two-way synchronization with conflict resolution once connectivity is restored.
 
-### 🔄 In-App APK Updates
-- **Automatic Version Check**: Detects new GitHub releases and prompts users with clean update badges.
+### 🔄 In-App APK Updates & Auto-Incrementing Versioning
+- **Automatic Version Check**: Detects new GitHub releases and Supabase storage updates and prompts users with clean update badges.
+- **Automated Version Controller**: Integrated build engine tracks `version.properties`, auto-incrementing `versionCode` (+1) and semantic patch version with every release build, exposing dynamic versions across native Kotlin `BuildConfig` and the WebApp bridge.
 - **One-Tap In-App Installation**: Downloads and launches Android's package installer directly within the application using modern `FileProvider` APIs.
 - **Auto-Cleanup**: Automatically cleans up temporary installer files post-installation to conserve device storage.
 
 ### 🎨 Velvet Purple & Liquid Glass UI
-- **True Edge-to-Edge**: Seamless display with display cutout (notch) handling and translucent system bars.
+- **True Edge-to-Edge**: Seamless display with display cutout (notch) handling, dynamic safe-area insets (`env(safe-area-inset-top)`), and translucent system bars.
+- **Display Refresh Rate Optimization**: Silky smooth 60fps/120fps hardware-accelerated animations and high-refresh scrolling.
 - **Deep Velvet Theme**: Tailored for reverent worship environments with AMOLED high-contrast dark themes to preserve battery life and prevent distraction during services.
 - **Fluid Typography**: Balanced layout featuring Apple SF Pro Display, Cinzel, and Newsreader serif typography.
 
@@ -95,7 +98,8 @@ graph TD
 ```text
 CNI-Church-App/
 ├── app/
-│   ├── build.gradle.kts                        # Android build configuration (SDK 34, Min 26)
+│   ├── version.properties                      # Auto-incrementing version tracker (versionCode & versionName)
+│   ├── build.gradle.kts                        # Android build configuration (SDK 34, Min 26, auto-increment)
 │   ├── proguard-rules.pro                      # R8 / ProGuard optimization rules
 │   └── src/main/
 │       ├── AndroidManifest.xml                 # Android Manifest & permissions
@@ -160,7 +164,7 @@ The resulting APK will be generated at `app/build/outputs/apk/release/app-releas
 ## 🔏 APK Installation on Android
 
 When downloading or updating the APK:
-1. Download [ChurchCompanion.apk](https://github.com/iamemanual/CNI-Church-App/releases/download/v2.1.6/ChurchCompanion.apk).
+1. Download [ChurchCompanion.apk](https://github.com/iamemanual/CNI-Church-App/releases/download/v2.1.9/ChurchCompanion.apk) (or from the [Latest Release page](https://github.com/iamemanual/CNI-Church-App/releases/latest)).
 2. Tap the downloaded notification or file in your file manager.
 3. If prompted, grant **Install Unknown Apps** permission for your browser or file manager.
 4. Tap **Install** or **Update**.
