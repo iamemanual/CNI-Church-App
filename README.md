@@ -1,95 +1,168 @@
-# ⛪ Church Companion (CNI Church App)
+<div align="center">
 
-[![Latest Release](https://img.shields.io/github/v/release/iamemanual/CNI-Church-App?label=Release&color=blue&style=flat-square)](https://github.com/iamemanual/CNI-Church-App/releases/tag/v2.1.9)
-[![Platform](https://img.shields.io/badge/Platform-Android%208.0%2B%20%28API%2026%2B%29-3DDC84?logo=android&logoColor=white&style=flat-square)](https://developer.android.com)
-[![Language](https://img.shields.io/badge/Language-Kotlin%20%7C%20JavaScript-7F52FF?logo=kotlin&logoColor=white&style=flat-square)](https://kotlinlang.org)
-[![Backend](https://img.shields.io/badge/Cloud-Supabase-3ECF8E?logo=supabase&logoColor=white&style=flat-square)](https://supabase.com)
-[![Build Tool](https://img.shields.io/badge/Build-Gradle%208.7-02303A?logo=gradle&logoColor=white&style=flat-square)](https://gradle.org)
-[![License](https://img.shields.io/badge/License-Proprietary%20%2F%20Church%20Use-amber?style=flat-square)](#license)
+  <img src="app/src/main/assets/app_icon.png" alt="Church Companion Emblem" width="112" height="112" style="border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.35);" />
 
-> **Church Companion** is a companion application designed for the **Church of North India (CNI)** and **All Saints' Church**. Built with a hybrid offline-first architecture, it provides an immersive, edge-to-edge experience for worship, liturgical lectionary readings, multilingual hymn singing, sacramental services, and parish fellowship.
+  # ⛪ Church Companion
+  ### *The Sanctuary Companion & Liturgical Guide for the Church of North India (CNI)*
+
+  [![Latest Release](https://img.shields.io/github/v/release/iamemanual/CNI-Church-App?label=Release&color=7F52FF&style=for-the-badge&logo=github)](https://github.com/iamemanual/CNI-Church-App/releases/tag/v2.1.9)
+  [![Platform](https://img.shields.io/badge/Platform-Android%208.0%2B%20(API%2026%2B)-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com)
+  [![Language](https://img.shields.io/badge/Kotlin%201.9-Hybrid%20Bridge-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)](https://kotlinlang.org)
+  [![Backend](https://img.shields.io/badge/Supabase-Realtime%20Cloud-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
+  [![UI Design](https://img.shields.io/badge/Design-Velvet%20Liquid%20Glass-C5A059?style=for-the-badge)](https://developer.apple.com/design/)
+  [![Architecture](https://img.shields.io/badge/Storage-Offline--First%20Dual%20DB-0284C7?style=for-the-badge)](#-offline-first-dual-layer-persistence)
+
+  <br />
+
+  <p align="center">
+    <b>Church Companion</b> is a companion application designed for the <b>Church of North India (CNI)</b> and <b>All Saints' Church</b>. Built with a hybrid offline-first architecture, it provides an immersive, edge-to-edge experience for worship, liturgical lectionary readings, multilingual hymn singing, sacramental services, and parish fellowship.
+  </p>
+
+  <p align="center">
+    <a href="https://github.com/iamemanual/CNI-Church-App/releases/latest/download/ChurchCompanion.apk">
+      <img src="https://img.shields.io/badge/⬇️%20Download%20APK-v2.1.9%20(43.28%20MB)-7F52FF?style=for-the-badge&logo=android" alt="Download APK" />
+    </a>
+    &nbsp;
+    <a href="https://github.com/iamemanual/CNI-Church-App/releases">
+      <img src="https://img.shields.io/badge/📦%20All%20Releases-GitHub-23272D?style=for-the-badge&logo=github" alt="All Releases" />
+    </a>
+    &nbsp;
+    <a href="#-key-features">
+      <img src="https://img.shields.io/badge/✨%20Explore%20Features-Overview-334155?style=for-the-badge" alt="Explore Features" />
+    </a>
+  </p>
+
+</div>
 
 ---
 
-## 📲 Quick Download
+## 📲 Quick Download & Release Details
 
-Grab the latest official signed release APK:
+| Specification | Information |
+| :--- | :--- |
+| **Latest Release** | **`v2.1.9`** (Automated Build `4092043`) |
+| **Package ID** | `com.allsaints.church` |
+| **Direct APK Download** | [⬇️ **Download ChurchCompanion.apk** (43.28 MB)](https://github.com/iamemanual/CNI-Church-App/releases/download/v2.1.9/ChurchCompanion.apk) |
+| **Always-Current Download** | [⬇️ **Download Latest Release**](https://github.com/iamemanual/CNI-Church-App/releases/latest/download/ChurchCompanion.apk) |
+| **Target Android OS** | Android 14.0 (API Level 34) |
+| **Minimum Android OS** | Android 8.0 Oreo (API Level 26) |
+| **SHA-256 Checksum** | `9292b1a3274884eb143c3383de4c98f58b7bf290ef6e08b932a32e64a8fa6ecb` |
 
-| Version | Package | Direct Download |
-| :--- | :--- | :--- |
-| **`v2.1.9`** (Latest) | `com.allsaints.church` | [⬇️ **Download ChurchCompanion.apk** (43.28 MB)](https://github.com/iamemanual/CNI-Church-App/releases/download/v2.1.9/ChurchCompanion.apk) |
-| **Latest Release (Always Current)** | `com.allsaints.church` | [⬇️ **Download Latest Release**](https://github.com/iamemanual/CNI-Church-App/releases/latest/download/ChurchCompanion.apk) |
+> [!TIP]
+> **One-Tap In-App Updates**: If Church Companion is already installed on your device, you can update without manual browser downloads. Simply navigate to **Settings > App Update** to check for and install the latest build instantly.
 
 ---
 
 ## ✨ Key Features
 
-### 📅 Liturgical Almanac & Daily Lectionary
-- **Full Church Calendar**: Follow liturgical seasons (Advent, Christmas, Epiphany, Lent, Easter, Pentecost, Ordinary Time) with standard liturgical colors.
-- **Three-Service Daily Readings**: Daily Scripture appointed for Morning Prayer (Matins), Holy Communion (Eucharist), and Evening Prayer (Evensong).
-- **Liturgical Feasts & Commemorations**: Automatic calculation of church feasts, solemnities, and saints' days.
+### 📅 Liturgical Almanac & Three-Fold Lectionary
+- **Full Liturgical Calendar**: Tracks all liturgical seasons (Advent, Christmas, Epiphany, Lent, Holy Week, Easter, Pentecost, Ordinary Time) with accurate liturgical colors (Purple, White/Gold, Red, Green).
+- **Three Daily Services**: Prescribed Scripture lections for **Morning Prayer (Matins)**, **Holy Communion (Eucharist)**, and **Evening Prayer (Evensong)**.
+- **Feasts, Fasts & Commemorations**: Automatic calculation of church feasts, solemnities, and saints' days aligned with the Church of North India calendar.
 
 ### 🎵 Multilingual Church Hymnal
-- **Bilingual Repertoire**: Complete collection of hymns in English, Hindi (*Masihi Geet*), and Urdu scripts with romanized phonetic transliteration.
-- **Instant Search**: Find hymns instantly by number, title, opening line, season, or lyrics.
-- **Favorites & Setlists**: Bookmark favorite hymns and organize custom service setlists for worship teams.
-- **Audio & Notation Support**: Integrated playback support for audio recordings and vocal guides.
-
-### 📖 Sacramental Orders & Liturgy Reader
-- **Sacramental Service Books**: Interactive, reader-friendly liturgies:
-  - **Prabhu Bhoj (प्रभु भोज)** — The Order for the Lord's Supper / Holy Eucharist in Hindi.
-  - **Aaradhana (आराधना)** — Common worship and liturgy.
-  - **Ashaye Rabbani (عشائے ربانی)** — Sacramental communion in Urdu script.
-- **Integrated PDF Engine**: Embedded PDF.js reader allowing offline viewing of official liturgical prints with page jumping and zoom controls.
-
-### 💬 Fellowship Community & Parish Channels
-- **Parish Chat Channels**: Real-time communication for prayer requests, parish announcements, and ministry groups.
-- **Role-Based Access Control (RBAC)**: Permission gates ensuring safe youth interaction and community moderation (Super Admin, Admin, Member, Visitor).
-- **Parish Timeline & Heritage**: Historical timeline of All Saints' Cathedral and CNI milestones (1871–2026).
-
-### ⚡ Offline-First Dual-Layer Persistence
-- **Zero-Network Reliance**: Works 100% offline inside sanctuaries or areas with poor cellular reception.
-- **Dual Persistence Architecture**:
-  - **Dexie.js (IndexedDB)** for instant in-browser UI queries and local mutations.
-  - **SQLite (`ChurchOfflineStore.kt`)** for native persistence, encrypted cache, and durability.
-- **Supabase Cloud Sync**: Transparent background two-way synchronization with conflict resolution once connectivity is restored.
-
-### 🔄 In-App APK Updates & Auto-Incrementing Versioning
-- **Automatic Version Check**: Detects new GitHub releases and Supabase storage updates and prompts users with clean update badges.
-- **Automated Version Controller**: Integrated build engine tracks `version.properties`, auto-incrementing `versionCode` (+1) and semantic patch version with every release build, exposing dynamic versions across native Kotlin `BuildConfig` and the WebApp bridge.
-- **One-Tap In-App Installation**: Downloads and launches Android's package installer directly within the application using modern `FileProvider` APIs.
-- **Auto-Cleanup**: Automatically cleans up temporary installer files post-installation to conserve device storage.
-
-### 🎨 Velvet Purple & Liquid Glass UI
-- **True Edge-to-Edge**: Seamless display with display cutout (notch) handling, dynamic safe-area insets (`env(safe-area-inset-top)`), and translucent system bars.
-- **Display Refresh Rate Optimization**: Silky smooth 60fps/120fps hardware-accelerated animations and high-refresh scrolling.
-- **Deep Velvet Theme**: Tailored for reverent worship environments with AMOLED high-contrast dark themes to preserve battery life and prevent distraction during services.
-- **Fluid Typography**: Balanced layout featuring Apple SF Pro Display, Cinzel, and Newsreader serif typography.
+- **Trilingual Hymnody**: Complete repertoire of hymns across English, Hindi (*Masihi Geet*), and Urdu scripts with romanized phonetic transliteration.
+- **High-Speed Instant Search**: Search songs instantly by hymn number, opening lyric line, title, tune, or category.
+- **Choir & Personal Setlists**: Bookmark hymns for Sunday services, choir rehearsals, and prayer meetings.
+- **Audio & Vocal Accompaniments**: Playback support for organ tunes and vocal guides.
 
 ---
 
-## 🛠️ Architecture & Tech Stack
+### 📖 Sacramental Orders & Liturgical Reader
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center" width="33%">
+        <img src="app/src/main/assets/covers/prabhu_bhoj.png" alt="Prabhu Bhoj" width="160" style="border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,0.25);" /><br />
+        <b>Prabhu Bhoj (प्रभु भोज)</b><br />
+        <sub>The Order for Holy Communion in Hindi</sub>
+      </td>
+      <td align="center" width="33%">
+        <img src="app/src/main/assets/covers/prata_sayan_kalin.png" alt="Prata va Sayan Kalin Aaradhana" width="160" style="border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,0.25);" /><br />
+        <b>Aaradhana (दैनिक आराधना)</b><br />
+        <sub>Morning & Evening Common Prayer</sub>
+      </td>
+      <td align="center" width="33%">
+        <img src="app/src/main/assets/covers/ashaye_rabbani.png" alt="Ashaye Rabbani" width="160" style="border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,0.25);" /><br />
+        <b>Ashaye Rabbani (عشائے ربانی)</b><br />
+        <sub>Sacramental Order in Urdu</sub>
+      </td>
+    </tr>
+  </table>
+</div>
+
+- **Built-in Offline PDF Engine**: Embedded PDF.js core delivers crisp rendering of official liturgical texts directly within the application without needing third-party readers.
+- **Reader-Focused Typography**: Fluid scaling controls, night mode, and chapter navigation tailored for reading from the pews or the pulpit.
+
+---
+
+### 💬 Fellowship Community & Parish Channels
+- **Parish Announcements & Prayer Wall**: Real-time communication channels for intercessory prayer requests, parish news, and ministry updates.
+- **Role-Based Access Control (RBAC)**: Fine-grained security permissions (`Super Admin`, `Admin`, `Member`, `Visitor`) to maintain safe, constructive community interactions.
+- **Parish Heritage & Timeline**: Interactive timeline celebrating church milestones and parish heritage from 1871 to 2026.
+
+### ⚡ Offline-First Dual-Layer Persistence
+- **Zero-Network Sanctuary Guarantee**: Engineered to function 100% offline within stone sanctuaries or areas with weak mobile reception.
+- **Dual Persistence Architecture**:
+  - **IndexedDB (`Dexie.js v4`)**: Powers instant in-browser UI queries, optimistic updates, and reactive components.
+  - **SQLite Native Cache (`ChurchOfflineStore.kt`)**: Native Android database layer guaranteeing encrypted local storage and crash resilience.
+- **Supabase Cloud Sync**: Two-way background synchronization engine with automatic conflict resolution as soon as network access resumes.
+
+### 🔄 In-App APK Updates & Automated Version Controller
+- **Automated Version Controller**: Integrated build engine tracks `version.properties`, auto-incrementing `versionCode` (+1) and semantic patch versions (`v2.1.x`) on every build.
+- **One-Tap In-App Installation**: Downloads new packages and launches Android's package installer safely through scoped `FileProvider` APIs.
+- **Automatic Storage Cleanup**: Automatically wipes temporary downloaded APK files post-installation to keep device storage clean.
+
+### 🎨 Velvet Purple & Liquid Glass UI
+- **True Edge-to-Edge**: Modern immersive layout with display cutout / notch adaptation and dynamic safe-area insets (`env(safe-area-inset-top)`).
+- **Smooth 60/120fps Refresh**: Hardware-accelerated fluid spring animations (`cubic-bezier(0.16, 1, 0.3, 1)`) for buttery scrolling and screen transitions.
+- **Deep Velvet Theme**: High-contrast AMOLED dark palette designed for reverent worship environments to save battery and avoid harsh screen glare.
+- **Fluid Typography**: Balanced typography featuring Apple SF Pro Display, Cinzel serif headings, and Newsreader for scripture clarity.
+
+---
+
+## 🛠️ Architecture & Data Pipeline
 
 ```mermaid
-graph TD
-    A[Native Android Container<br/>MainActivity.kt - Edge-to-Edge] --> B[WebAppBridgeInterface.kt<br/>Hardware, In-App Installer, Network]
-    A --> C[ChurchOfflineStore.kt<br/>SQLite Native Storage]
-    A --> D[NetworkSyncReceiver.kt<br/>Connectivity Watcher]
-    
-    B <==> E[Web UI Client<br/>index.html, app.js]
-    E --> F[Dexie.js<br/>IndexedDB Local DB]
-    E --> G[Supabase Sync Engine<br/>Realtime, Auth, Database]
-    E --> H[Interactive Books & PDF.js<br/>Prabhu Bhoj, Aaradhana]
+flowchart TD
+    subgraph NativeAndroid["🤖 Native Android Container (Kotlin 1.9 / SDK 34)"]
+        direction TB
+        Main["MainActivity.kt<br/><i>Edge-to-Edge WebContainer</i>"]
+        Bridge["WebAppBridgeInterface.kt<br/><i>Native Hardware & Installer Bridge</i>"]
+        SQLite["ChurchOfflineStore.kt<br/><i>Native SQLite Persistence</i>"]
+        NetWatch["NetworkSyncReceiver.kt<br/><i>Connectivity Sentinel</i>"]
+        
+        Main --> Bridge
+        Main --> SQLite
+        Main --> NetWatch
+    end
 
-    G <==> I[(Supabase Cloud Database)]
+    subgraph HybridEngine["⚡ Sanctuary Web Engine"]
+        direction TB
+        AppJS["app.js / index.html<br/><i>Liquid Glass UI & Router</i>"]
+        Dexie["Dexie.js (IndexedDB)<br/><i>Instant Local Cache & State</i>"]
+        PDF["PDF.js Engine<br/><i>Prabhu Bhoj / Aaradhana / Ashaye Rabbani</i>"]
+        SyncWorker["sync-engine.js<br/><i>Two-Way Background Sync</i>"]
+
+        AppJS <--> Dexie
+        AppJS --> PDF
+        AppJS <--> SyncWorker
+    end
+
+    subgraph Cloud["☁️ Supabase Cloud Platform"]
+        direction TB
+        SupaDB[("PostgreSQL Database<br/>RLS Security Policies")]
+        SupaRealtime["Realtime Engine<br/>WebSocket Fellowship Chat"]
+        SupaStorage["Cloud Storage<br/>app-updates / ChurchCompanion.apk"]
+    end
+
+    Bridge <==>|"Bi-directional Bridge"| AppJS
+    NetWatch -.->|"Connection Events"| SyncWorker
+    SyncWorker <==>|"Secure HTTPS / WSS"| SupaDB
+    SyncWorker <==>|"Realtime Sync"| SupaRealtime
+    Bridge <-->|"In-App Update Pipeline"| SupaStorage
 ```
-
-### Core Technologies
-- **Android Shell**: Kotlin 1.9+, Android SDK 34 (Min SDK 26), AndroidX, ViewBinding, `enableEdgeToEdge`.
-- **Hybrid Bridge**: Custom `WebAppBridgeInterface` exposing native package installation, system clipboard, file management, and connectivity events to the JavaScript layer.
-- **Local Storage**: SQLite 3 (`church_offline.db`) + IndexedDB (`Dexie.js v4`).
-- **Cloud Backend**: [Supabase](https://supabase.com) (PostgreSQL, Row Level Security, Realtime websockets, Storage).
-- **UI & Presentation**: HTML5, Liquid Glassmorphism CSS, JavaScript (ES6+), PDF.js.
 
 ---
 
@@ -98,89 +171,116 @@ graph TD
 ```text
 CNI-Church-App/
 ├── app/
-│   ├── version.properties                      # Auto-incrementing version tracker (versionCode & versionName)
-│   ├── build.gradle.kts                        # Android build configuration (SDK 34, Min 26, auto-increment)
-│   ├── proguard-rules.pro                      # R8 / ProGuard optimization rules
+│   ├── version.properties                  # Automated version controller (versionCode & versionName)
+│   ├── build.gradle.kts                    # Android build config (SDK 34, Min 26, auto-increment)
+│   ├── proguard-rules.pro                  # R8 / ProGuard optimization rules
 │   └── src/main/
-│       ├── AndroidManifest.xml                 # Android Manifest & permissions
-│       ├── assets/                             # Web application assets
-│       │   ├── index.html                      # Primary Edge-to-Edge sanctuary interface
-│       │   ├── manifest.json                   # Web app manifest
-│       │   ├── css/                            # Liquid Glass & Velvet styles
-│       │   ├── js/                             # app.js, supabase-sync.js, sync-engine.js
-│       │   ├── libs/                           # dexie.min.js, pdf.min.js, supabase.js
-│       │   └── assets/books/                   # Prabhu Bhoj, Aaradhana, Ashaye Rabbani
+│       ├── AndroidManifest.xml             # Android manifest & FileProvider configuration
+│       ├── assets/                         # Sanctuary Web App assets
+│       │   ├── index.html                  # Primary Edge-to-Edge sanctuary interface
+│       │   ├── app_icon.png                # High-resolution application emblem
+│       │   ├── church_bg.jpg               # Sanctuary backdrop
+│       │   ├── covers/                     # Official liturgical book covers (PNG)
+│       │   │   ├── prabhu_bhoj.png
+│       │   │   ├── prata_sayan_kalin.png
+│       │   │   └── ashaye_rabbani.png
+│       │   ├── books/                      # Sacramental liturgical orders
+│       │   ├── css/                        # Liquid Glass & Velvet Dark styling
+│       │   ├── js/                         # app.js, supabase-sync.js, sync-engine.js
+│       │   └── libs/                       # dexie.min.js, pdf.min.js, supabase.js
 │       ├── java/com/allsaints/church/
-│       │   ├── ChurchApplication.kt            # Application initialization & update cleanup
-│       │   ├── MainActivity.kt                 # Edge-to-Edge WebView container
-│       │   ├── WebAppBridgeInterface.kt        # Android-to-JS native bridge & APK installer
-│       │   ├── ChurchOfflineStore.kt           # SQLite persistent storage engine
-│       │   ├── ChurchSyncManager.kt            # Background sync worker
-│       │   ├── NetworkSyncReceiver.kt          # Broadcast network state receiver
-│       │   └── engine/                         # Native liturgical & lectionary engines
-│       └── res/                                # Android XML layouts, drawables, app icons
-├── build.sh                                    # Automated build & signing script
-├── settings.gradle.kts                         # Gradle project structure
-├── build.gradle.kts                            # Root build definition
-├── supabase_sync_engine_v1.sql                 # Supabase schema, RLS policies & tables
-└── README.md                                   # Project documentation
+│       │   ├── ChurchApplication.kt        # Application lifecycle & installer cleanup
+│       │   ├── MainActivity.kt             # Edge-to-Edge WebView container
+│       │   ├── WebAppBridgeInterface.kt    # Android-to-JS native bridge & APK installer
+│       │   ├── ChurchOfflineStore.kt       # Native SQLite persistence layer
+│       │   ├── ChurchSyncManager.kt        # Background sync orchestrator
+│       │   ├── NetworkSyncReceiver.kt      # Broadcast network state receiver
+│       │   └── engine/                     # Liturgical calendar & lectionary computation
+│       └── res/                            # Android XML drawables, colors, & mipmap launcher icons
+├── build.sh                                # Automated build, optimization & signing script
+├── settings.gradle.kts                     # Gradle multi-project settings
+├── build.gradle.kts                        # Root project build configuration
+├── supabase_sync_engine_v1.sql             # Supabase schema, RLS policies, tables & triggers
+└── README.md                               # Project documentation
 ```
 
 ---
 
-## 🚀 Getting Started & Building
+## 🚀 Build & Development Guide
 
 ### Prerequisites
-- **Java**: JDK 17
-- **Android SDK**: Build-Tools `34.0.0`, Platforms `android-34`
-- **Gradle**: 8.7
+- **JDK**: Java Development Kit 17
+- **Android SDK**: Build-Tools `34.0.0`, Platforms `android-34` (Minimum SDK `26`)
+- **Gradle**: 8.7+ (or bundled Gradle wrapper)
+- **Environment**: Compatible with Android Studio, Linux, macOS, and Termux
 
-### Clone the Repository
+### 1. Clone the Repository
 ```bash
 git clone https://github.com/iamemanual/CNI-Church-App.git
 cd CNI-Church-App
 ```
 
-### Build with Android Studio
+### 2. Build via Android Studio
 1. Launch **Android Studio**.
-2. Select **Open** and point to the cloned `CNI-Church-App` directory.
+2. Select **Open** and choose the `CNI-Church-App` directory.
 3. Allow Gradle to synchronize dependencies.
-4. Connect an Android device or emulator (Android 8.0 / API 26 or higher).
-5. Press **Run (Shift + F10)**.
+4. Connect an Android device or emulator running Android 8.0 (API 26) or higher.
+5. Click **Run (Shift + F10)**.
 
-### Build via Command Line (or Termux)
-To build a signed release package:
+### 3. Build via Command Line (CLI or Termux)
+Automated build scripts are provided for headless and mobile development environments:
+
 ```bash
-# Debug build
+# Make the build script executable
+chmod +x build.sh
+
+# Compile a Debug APK
 ./build.sh debug
 
-# Signed Release build
+# Compile an Optimized, Signed Release APK
 ./build.sh release
 ```
-The resulting APK will be generated at `app/build/outputs/apk/release/app-release.apk` (or output directory).
+
+The resulting signed release APK will be assembled at:
+```text
+app/build/outputs/apk/release/app-release.apk
+```
 
 ---
 
-## 🔏 APK Installation on Android
+## 🔏 Android Installation Guide
 
-When downloading or updating the APK:
-1. Download [ChurchCompanion.apk](https://github.com/iamemanual/CNI-Church-App/releases/download/v2.1.9/ChurchCompanion.apk) (or from the [Latest Release page](https://github.com/iamemanual/CNI-Church-App/releases/latest)).
-2. Tap the downloaded notification or file in your file manager.
-3. If prompted, grant **Install Unknown Apps** permission for your browser or file manager.
-4. Tap **Install** or **Update**.
+When downloading or updating the APK package manually:
 
-*Note: In-app updates will automatically trigger the installation prompt once you tap "Install Update" in the settings panel.*
+1. Download [`ChurchCompanion.apk`](https://github.com/iamemanual/CNI-Church-App/releases/download/v2.1.9/ChurchCompanion.apk) from the [Latest Release Page](https://github.com/iamemanual/CNI-Church-App/releases/latest).
+2. Tap the download notification or locate the APK in your device's **Files / Downloads** folder.
+3. If prompted by Android, grant **Allow from this source** under *Install unknown apps*.
+4. Select **Install** (or **Update** if updating an existing installation).
+5. Launch Church Companion and begin worship!
 
 ---
 
-## 🤝 Community & Support
+## 🛡️ Security, Privacy & Integrity
+
+- **Row Level Security (RLS)**: PostgreSQL tables on Supabase are protected with granular RLS policies, guaranteeing that parishioners only update their own profile records while retaining church-wide read access.
+- **Offline Sandbox Isolation**: User preferences, personal bookmarks, and offline drafts are stored within isolated application sandbox storage.
+- **Cross-Site Scripting (XSS) Sanitization**: All user inputs in fellowship channels are strictly sanitized via escaping engines before DOM injection.
+- **Secure FileProvider Installation**: APK updates are verified and executed via scoped Android `content://` URIs, never exposing raw file paths to external applications.
+
+---
+
+## 🤝 Fellowship & Support
 
 - **Repository**: [iamemanual/CNI-Church-App](https://github.com/iamemanual/CNI-Church-App)
-- **Issues & Requests**: [GitHub Issues](https://github.com/iamemanual/CNI-Church-App/issues)
-- **Parish**: All Saints' Cathedral, Church of North India (CNI)
+- **Issue Tracker**: [GitHub Issues](https://github.com/iamemanual/CNI-Church-App/issues)
+- **Parish**: [All Saints' Church](https://github.com/iamemanual/CNI-Church-App), Church of North India (CNI)
 
 ---
 
-## 📜 License
+## 📜 Liturgical Heritage & License
 
-Distributed under custom church parish and ministry usage terms. Liturgical texts and hymns remain the intellectual property of their respective publishers, committees, and diocesan authorities.
+Distributed for church parish, ministry, and diocesan worship use. Liturgical texts, lectionary tables, and hymns remain the heritage and intellectual property of their respective publishers, diocesan councils, and ecclesiastical authorities.
+
+<div align="center">
+  <sub>Soli Deo Gloria ♱ Built with reverence for All Saints' Church & the Church of North India</sub>
+</div>
