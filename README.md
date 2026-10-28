@@ -5,9 +5,9 @@
   # ⛪ Church Companion
   ### *Church Companion & Liturgical Guide for the All Saints' Church - Church of North India (CNI)*
 
-  [![Latest Release](https://img.shields.io/github/v/release/iamemanual/CNI-Church-App?label=Release&color=7F52FF&style=for-the-badge&logo=github)](https://github.com/iamemanual/CNI-Church-App/releases/tag/v2.1.9)
+  [![Latest Release](https://img.shields.io/github/v/release/iamemanual/CNI-Church-App?label=Release&color=7F52FF&style=for-the-badge&logo=github)](https://github.com/iamemanual/CNI-Church-App/releases/tag/v2.1.13)
   [![Platform](https://img.shields.io/badge/Platform-Android%208.0%2B%20(API%2026%2B)-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com)
-  [![Language](https://img.shields.io/badge/Kotlin%201.9-Hybrid%20Bridge-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)](https://kotlinlang.org)
+  [![Language](https://img.shields.io/badge/Kotlin%202.0-Hybrid%20Bridge-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)](https://kotlinlang.org)
   [![Backend](https://img.shields.io/badge/Supabase-Realtime%20Cloud-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
   [![UI Design](https://img.shields.io/badge/Design-%20Liquid%20Glass-C5A059?style=for-the-badge)](https://developer.apple.com/design/)
   [![Architecture](https://img.shields.io/badge/Storage-Offline--First%20Dual%20DB-0284C7?style=for-the-badge)](#-offline-first-dual-layer-persistence)
@@ -20,7 +20,7 @@
 
   <p align="center">
     <a href="https://github.com/iamemanual/CNI-Church-App/releases/latest/download/ChurchCompanion.apk">
-      <img src="https://img.shields.io/badge/⬇️%20Download%20APK-v2.1.9%20(43.28%20MB)-7F52FF?style=for-the-badge&logo=android" alt="Download APK" />
+      <img src="https://img.shields.io/badge/⬇️%20Download%20APK-v2.1.13%20(43.67%20MB)-7F52FF?style=for-the-badge&logo=android" alt="Download APK" />
     </a>
     &nbsp;
     <a href="https://github.com/iamemanual/CNI-Church-App/releases">
@@ -40,12 +40,13 @@
 
 | Specification | Information |
 | :--- | :--- |
-| **Latest Release** | **`v2.1.9`** (Automated Build `4092043`) |
+| **Latest Release** | **`v2.1.13`** (Automated Build `4092047`) |
 | **Package ID** | `com.allsaints.church` |
-| **Direct APK Download** | [⬇️ **Download ChurchCompanion.apk** (43.28 MB)](https://github.com/iamemanual/CNI-Church-App/releases/download/v2.1.9/ChurchCompanion.apk) |
+| **Direct APK Download** | [⬇️ **Download ChurchCompanion.apk** (43.67 MB)](https://github.com/iamemanual/CNI-Church-App/releases/download/v2.1.13/ChurchCompanion.apk) |
+| **Always-Current Download** | [⬇️ **Download Latest Release**](https://github.com/iamemanual/CNI-Church-App/releases/latest/download/ChurchCompanion.apk) |
 | **Target Android OS** | Android 14.0 (API Level 34) |
 | **Minimum Android OS** | Android 8.0 Oreo (API Level 26) |
-| **SHA-256 Checksum** | `9292b1a3274884eb143c3383de4c98f58b7bf290ef6e08b932a32e64a8fa6ecb` |
+| **SHA-256 Checksum** | `16972bbc8ef6f58073c87018a5f7b26ea44e5a77492df0386d1d985bc0d85c53` |
 
 > [!TIP]
 > **One-Tap In-App Updates**: If Church Companion is already installed on your device, you can update without manual browser downloads. Simply navigate to **Settings > App Update** to check for and install the latest build instantly.
@@ -111,7 +112,16 @@
 ### 🔄 In-App APK Updates & Automated Version Controller
 - **Automated Version Controller**: Integrated build engine tracks `version.properties`, auto-incrementing `versionCode` (+1) and semantic patch versions (`v2.1.x`) on every build.
 - **One-Tap In-App Installation**: Downloads new packages and launches Android's package installer safely through scoped `FileProvider` APIs.
+- **APK Package Inspection**: Real-time structured display showing APK file name, version number, version code, application size, and build date before and during updates.
 - **Automatic Storage Cleanup**: Automatically wipes temporary downloaded APK files post-installation to keep device storage clean.
+
+### 🔔 Pure Native Android OS Push Notifications & iOS Toggle
+- **Zero In-App UI Clutter**: System notifications post directly to the native Android notification tray, heads-up banner, and lock screen via `NotificationManagerCompat` on high-importance channels.
+- **Deep-Linking**: Instant navigation into announcements and liturgical notices upon notification click.
+- **Geometrical iOS Toggle**: Fluid settings switch requesting runtime device push notification permissions dynamically.
+
+### 🎥 Native YouTube App Deep-Linking
+- **Direct App Launch**: Instantly plays sacred hymn accompaniments in the native YouTube application via `vnd.youtube` intents and package-targeted resolution.
 
 ### 🎨 Velvet Purple & Liquid Glass UI
 - **True Edge-to-Edge**: Modern immersive layout with display cutout / notch adaptation and dynamic safe-area insets (`env(safe-area-inset-top)`).
@@ -125,7 +135,7 @@
 
 ```mermaid
 flowchart TD
-    subgraph NativeAndroid["🤖 Native Android Container (Kotlin 1.9 / SDK 34)"]
+    subgraph NativeAndroid["🤖 Native Android Container (Kotlin 2.0 / SDK 34)"]
         direction TB
         Main["MainActivity.kt<br/><i>Edge-to-Edge WebContainer</i>"]
         Bridge["WebAppBridgeInterface.kt<br/><i>Native Hardware & Installer Bridge</i>"]
