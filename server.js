@@ -1,3 +1,29 @@
+
+// Dynamically discover all available years that actually contain almanac data
+function getAvailableYears() {
+  const years = new Set();
+  try {
+    const dataDir = path.join(ASSETS_DIR, 'data');
+    if (fs.existsSync(dataDir)) {
+      const files = fs.readdirSync(dataDir);
+      files.forEach(f => {
+        const m = f.match(/^almanac_(\d{4})\.json$/);
+        if (m) {
+          try {
+            const content = JSON.parse(fs.readFileSync(path.join(dataDir, f), 'utf8'));
+            if (content && typeof content === 'object') {
+              years.add(parseInt(m[1], 10));
+            }
+          } catch (_) {}
+        }
+      });
+    }
+  } catch (_) {}
+  if (years.size === 0) {
+    years.add(2026);
+  }
+  return Array.from(years).sort((a, b) => a - b);
+}
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -516,6 +542,182 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // 3d. API: Available Liturgical Years (Almanac Module)
+  if (pathname === '/api/years' && req.method === 'GET') {
+    const years = getAvailableYears();
+    res.writeHead(200, {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'no-cache, no-store, must-revalidate'
+    });
+    return res.end(JSON.stringify({ years }));
+  }
+
+  // 3e. API: Add Liturgical Year (POST)
+  if (pathname === '/api/years/add' && req.method === 'POST') {
+    return parseSafeJsonBody(req, res, 64 * 1024, (err, payload) => {
+      if (err || !payload) return;
+      try {
+        const year = parseInt(payload.year, 10);
+        if (isNaN(year) || year < 1900 || year > 2200) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+          return res.end(JSON.stringify({ error: 'Valid 4-digit year between 1900 and 2200 is required' }));
+        }
+
+        const dataDir = path.join(ASSETS_DIR, 'data');
+        if (!fs.existsSync(dataDir)) {
+          fs.mkdirSync(dataDir, { recursive: true });
+        }
+
+        const filePath = path.join(dataDir, `almanac_${year}.json`);
+        if (!fs.existsSync(filePath)) {
+          fs.writeFileSync(filePath, JSON.stringify({}, null, 2), 'utf8');
+        }
+
+        const years = getAvailableYears();
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        return res.end(JSON.stringify({ success: true, year, years }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+        return res.end(JSON.stringify({ error: 'Failed to add year: ' + err.message }));
+      }
+    });
+  }
+
+  // 3f. API: Delete Liturgical Year (POST or DELETE)
+  if ((pathname === '/api/years/delete' && (req.method === 'POST' || req.method === 'DELETE')) ||
+      (pathname.startsWith('/api/years/') && req.method === 'DELETE')) {
+    return parseSafeJsonBody(req, res, 64 * 1024, (err, payload) => {
+      try {
+        let yr = payload && payload.year ? parseInt(payload.year, 10) : null;
+        if (!yr && pathname.startsWith('/api/years/')) {
+          yr = parseInt(pathname.replace('/api/years/', ''), 10);
+        }
+
+        if (isNaN(yr) || yr < 1900 || yr > 2200) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+          return res.end(JSON.stringify({ error: 'Valid 4-digit year between 1900 and 2200 is required' }));
+        }
+
+        const dataDir = path.join(ASSETS_DIR, 'data');
+        const filePath = path.join(dataDir, `almanac_${yr}.json`);
+        if (fs.existsSync(filePath)) {
+          if (yr === 2026) {
+            fs.copyFileSync(filePath, path.join(dataDir, 'almanac_2026.backup.json'));
+            fs.writeFileSync(filePath, JSON.stringify({}, null, 2), 'utf8');
+          } else {
+            fs.unlinkSync(filePath);
+          }
+        }
+
+        const years = getAvailableYears();
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        return res.end(JSON.stringify({ success: true, deletedYear: yr, years }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+        return res.end(JSON.stringify({ error: 'Failed to delete year: ' + err.message }));
+      }
+    });
+  }
+
+  // 3g. API: Save Almanac Day (POST)
+  if (pathname === '/api/almanac/save-day' && req.method === 'POST') {
+    return parseSafeJsonBody(req, res, 256 * 1024, (err, entry) => {
+      if (err || !entry) return;
+      if (!entry.dateKey || !/^\d{4}-\d{2}-\d{2}$/.test(entry.dateKey)) {
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+        return res.end(JSON.stringify({ error: 'Valid dateKey (YYYY-MM-DD) is required' }));
+      }
+
+      const year = parseInt(entry.dateKey.split('-')[0], 10);
+      const dataDir = path.join(ASSETS_DIR, 'data');
+      const yearFile = path.join(dataDir, `almanac_${year}.json`);
+
+      let yearData = {};
+      try {
+        if (fs.existsSync(yearFile)) {
+          yearData = JSON.parse(fs.readFileSync(yearFile, 'utf8'));
+        }
+      } catch (_) {
+        yearData = {};
+      }
+
+      yearData[entry.dateKey] = {
+        dateKey: entry.dateKey,
+        day: parseInt(entry.day || entry.dateKey.split('-')[2], 10),
+        month: parseInt(entry.month || entry.dateKey.split('-')[1], 10),
+        monthName: entry.monthName || '',
+        year: year,
+        dayName: entry.dayName || '',
+        theme: entry.theme || 'Daily Liturgical Reading',
+        color: entry.color || 'Green',
+        hasCommunion: Boolean(entry.hasCommunion),
+        morningWorship: Array.isArray(entry.morningWorship) ? entry.morningWorship : [],
+        eveningWorship: Array.isArray(entry.eveningWorship) ? entry.eveningWorship : [],
+        lordsSupper: Array.isArray(entry.lordsSupper) ? entry.lordsSupper : []
+      };
+
+      try {
+        if (!fs.existsSync(dataDir)) {
+          fs.mkdirSync(dataDir, { recursive: true });
+        }
+        fs.writeFileSync(yearFile, JSON.stringify(yearData, null, 2), 'utf8');
+        if (year === 2026) {
+          const fullYearFile = path.join(dataDir, 'almanac_full_year_2026.json');
+          try {
+            let fullYearData = {};
+            if (fs.existsSync(fullYearFile)) {
+              fullYearData = JSON.parse(fs.readFileSync(fullYearFile, 'utf8'));
+            }
+            fullYearData[entry.dateKey] = yearData[entry.dateKey];
+            fs.writeFileSync(fullYearFile, JSON.stringify(fullYearData, null, 2), 'utf8');
+          } catch (_) {}
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        return res.end(JSON.stringify({ success: true, dateKey: entry.dateKey, year: year, totalDays: Object.keys(yearData).length }));
+      } catch (e) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+        return res.end(JSON.stringify({ error: 'Failed to write data file: ' + e.message }));
+      }
+    });
+  }
+
+  // 3h. API: Delete Almanac Day (POST)
+  if (pathname === '/api/almanac/delete-day' && req.method === 'POST') {
+    return parseSafeJsonBody(req, res, 16 * 1024, (err, payload) => {
+      if (err || !payload) return;
+      if (!payload.dateKey || !/^\d{4}-\d{2}-\d{2}$/.test(payload.dateKey)) {
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+        return res.end(JSON.stringify({ error: 'Valid dateKey (YYYY-MM-DD) is required' }));
+      }
+
+      const year = parseInt(payload.dateKey.split('-')[0], 10);
+      const dataDir = path.join(ASSETS_DIR, 'data');
+      const yearFile = path.join(dataDir, `almanac_${year}.json`);
+
+      if (fs.existsSync(yearFile)) {
+        try {
+          const yearData = JSON.parse(fs.readFileSync(yearFile, 'utf8'));
+          delete yearData[payload.dateKey];
+          fs.writeFileSync(yearFile, JSON.stringify(yearData, null, 2), 'utf8');
+        if (year === 2026) {
+          const fullYearFile = path.join(dataDir, 'almanac_full_year_2026.json');
+          try {
+            let fullYearData = {};
+            if (fs.existsSync(fullYearFile)) {
+              fullYearData = JSON.parse(fs.readFileSync(fullYearFile, 'utf8'));
+            }
+            fullYearData[entry.dateKey] = yearData[entry.dateKey];
+            fs.writeFileSync(fullYearFile, JSON.stringify(fullYearData, null, 2), 'utf8');
+          } catch (_) {}
+        }
+        } catch (_) {}
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      return res.end(JSON.stringify({ success: true, dateKey: payload.dateKey }));
+    });
+  }
+
   // 3c. API: Server Status & Wi-Fi IP Info
   if (pathname === '/api/status' && req.method === 'GET') {
     const edits = readPendingEdits();
@@ -528,7 +730,8 @@ const server = http.createServer((req, res) => {
       wifiIp: wifiIp,
       localUrl: `http://localhost:${PORT}`,
       networkUrl: `http://${wifiIp}:${PORT}`,
-      pendingEditsCount: edits.length
+      pendingEditsCount: edits.length,
+      availableYears: getAvailableYears()
     }, null, 2));
   }
 
@@ -605,10 +808,16 @@ const server = http.createServer((req, res) => {
 
   // 3ea. API: Super Admin Upload Workspace APK to Supabase app-updates bucket
   if (pathname === '/api/app/update/upload-workspace' && req.method === 'POST') {
-    const apkPath = '/storage/emulated/0/Workspace/ChurchCompanion.apk';
+    let apkPath = '/storage/emulated/0/Notifications/ChurchCompanion.apk';
+    if (!fs.existsSync(apkPath)) {
+      apkPath = '/storage/emulated/0/Workspace/ChurchCompanion.apk';
+    }
+    if (!fs.existsSync(apkPath)) {
+      apkPath = path.join(PROJECT_ROOT, 'app/build/outputs/apk/release/app-release.apk');
+    }
     if (!fs.existsSync(apkPath)) {
       res.writeHead(400, { 'Content-Type': 'application/json' });
-      return res.end(JSON.stringify({ success: false, error: 'ChurchCompanion.apk not found in Workspace' }));
+      return res.end(JSON.stringify({ success: false, error: 'ChurchCompanion.apk not found in Notifications or Workspace' }));
     }
     const stat = fs.statSync(apkPath);
     const sizeMb = (stat.size / (1024 * 1024)).toFixed(1);

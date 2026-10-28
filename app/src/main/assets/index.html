@@ -4843,6 +4843,8 @@ input:checked + .slider-round:before {
 /* In Song Mode (both Song List and Song Lyrics screens) */
 body.in-song-mode .main-content {
   padding-top: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
 /* Header Island Integrated Back Button */
@@ -4890,8 +4892,8 @@ body.in-song-mode .main-content {
   opacity: 1 !important;
   padding-top: calc(var(--safe-area-top, 48px) + 160px) !important;
   padding-bottom: calc(var(--safe-area-bottom, 28px) + 100px) !important;
-  padding-left: 12px !important;
-  padding-right: 12px !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
   min-height: auto !important;
   height: auto !important;
   overflow: visible !important;
@@ -4918,8 +4920,8 @@ body.in-song-mode .main-content {
   opacity: 1 !important;
   padding-top: calc(var(--safe-area-top, 48px) + 164px) !important;
   padding-bottom: calc(var(--safe-area-bottom, 28px) + 100px) !important;
-  padding-left: 12px !important;
-  padding-right: 12px !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
   min-height: auto !important;
   height: auto !important;
   overflow: visible !important;
@@ -4935,8 +4937,8 @@ body.in-song-mode .main-content {
   opacity: 1 !important;
   padding-top: calc(var(--safe-area-top, 48px) + 150px) !important;
   padding-bottom: calc(var(--safe-area-bottom, 28px) + 100px) !important;
-  padding-left: 12px !important;
-  padding-right: 12px !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
   min-height: auto !important;
   height: auto !important;
   overflow: visible !important;
@@ -5163,7 +5165,7 @@ body.in-song-selection-mode .song-list-container,
   align-items: center;
   gap: 8px;
   background: rgba(255, 255, 255, 0.88);
-  border: none !important;
+  border: 1px solid rgba(100, 116, 139, 0.18) !important;
   border-radius: 999px;
   padding: 0 14px;
   height: 40px;
@@ -5180,7 +5182,7 @@ body.in-song-selection-mode .song-list-container,
 .song-search-wrap:focus-visible,
 .song-search-wrap:active {
   outline: none !important;
-  border: none !important;
+  border: 1px solid rgba(100, 116, 139, 0.35) !important;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
   background: rgba(255, 255, 255, 0.96);
 }
@@ -5293,7 +5295,7 @@ body.in-song-selection-mode .song-list-container,
 
 [data-theme="dark"] .song-search-wrap:focus-within {
   background: rgba(30, 41, 59, 0.94) !important;
-  border: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45) !important;
 }
 
@@ -5322,7 +5324,7 @@ body.in-song-selection-mode .song-list-container,
 
 [data-theme="amoled"] .song-search-wrap:focus-within {
   background: rgba(24, 24, 28, 0.98) !important;
-  border: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.85) !important;
 }
 
@@ -5389,11 +5391,11 @@ body.in-song-selection-mode .song-list-container,
   display: flex;
   flex-direction: column;
   gap: 10px;
-  width: 100%;
-  max-width: 760px;
-  margin: 0 auto;
+  width: 100% !important;
+  max-width: 458px !important;
+  margin: 14px auto 0 auto !important;
   padding-bottom: 24px;
-  margin-top: 14px;
+  box-sizing: border-box !important;
 }
 
 .song-list-item-card {
@@ -5401,6 +5403,7 @@ body.in-song-selection-mode .song-list-container,
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  width: 100% !important;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
@@ -5410,7 +5413,7 @@ body.in-song-selection-mode .song-list-container,
   transition: transform 0.18s cubic-bezier(0.18, 0.89, 0.32, 1.28), border-color 0.18s ease, box-shadow 0.18s ease;
   user-select: none;
   min-height: 52px;
-  box-sizing: border-box;
+  box-sizing: border-box !important;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -5435,18 +5438,21 @@ body.in-song-selection-mode .song-list-container,
 .song-item-num-badge {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  padding: 4px 10px;
-  border-radius: var(--radius-full);
-  background: rgba(73, 151, 208, 0.12);
+  justify-content: flex-start;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
   color: var(--accent-gold);
-  border: 1px solid rgba(73, 151, 208, 0.3);
+  border: none;
+  box-shadow: none;
   font-family: var(--font-display, serif);
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   white-space: nowrap;
   flex-shrink: 0;
+  min-width: 24px;
+  font-variant-numeric: tabular-nums;
 }
 
 .song-item-title {
@@ -5515,14 +5521,15 @@ body.in-song-selection-mode .song-list-container,
    ============================================================================== */
 .song-lyrics-container {
   width: 100% !important;
-  max-width: 480px !important;
-  margin: 0 auto !important;
-  padding: 0 8px 24px 8px !important;
+  max-width: 458px !important;
+  margin: 14px auto 0 auto !important;
+  padding: 0 0 24px 0 !important;
   box-sizing: border-box !important;
   display: block !important;
 }
 
 .song-lyrics-card {
+  width: 100% !important;
   background: var(--bg-surface, #ffffff) !important;
   border: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.08)) !important;
   border-radius: 20px !important;
@@ -5556,9 +5563,104 @@ body.in-song-selection-mode .song-list-container,
 .song-header-top {
   display: flex !important;
   align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  margin-bottom: 8px !important;
+  width: 100% !important;
+  min-height: 38px !important;
+}
+
+.song-header-badges {
+  display: flex !important;
+  align-items: center !important;
   gap: 6px !important;
   flex-wrap: wrap !important;
-  margin-bottom: 6px !important;
+  align-self: center !important;
+}
+
+.song-header-actions {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  align-self: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* User Pinpoint #2: Make YouTube play button glass type (Zero Glow) */
+.btn-song-youtube {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+  margin: 0 !important;
+  gap: 7px !important;
+  font-family: inherit !important;
+  font-size: 0.86rem !important;
+  font-weight: 700 !important;
+  padding: 5px 14px !important;
+  min-height: 33px !important;
+  border-radius: 9999px !important;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.24) 0%, rgba(185, 28, 28, 0.12) 100%) !important;
+  backdrop-filter: blur(20px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  color: #ffffff !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.20) !important;
+  flex-shrink: 0 !important;
+  line-height: 1 !important;
+  letter-spacing: 0.02em !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+[data-theme="light"] .btn-song-youtube {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.14) 0%, rgba(185, 28, 28, 0.06) 100%) !important;
+  border: 1px solid rgba(220, 38, 38, 0.38) !important;
+  color: #DC2626 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.50) !important;
+}
+
+.btn-song-youtube svg {
+  fill: currentColor !important;
+  flex-shrink: 0 !important;
+}
+
+.btn-song-youtube:hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.36) 0%, rgba(185, 28, 28, 0.18) 100%) !important;
+  border-color: rgba(255, 255, 255, 0.50) !important;
+  color: #ffffff !important;
+  transform: translateY(-1px) scale(1.02) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.30) !important;
+}
+
+[data-theme="light"] .btn-song-youtube:hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.22) 0%, rgba(185, 28, 28, 0.10) 100%) !important;
+  border-color: rgba(220, 38, 38, 0.55) !important;
+  color: #B91C1C !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.60) !important;
+}
+
+.btn-song-youtube:active {
+  transform: scale(0.95) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25) !important;
+}
+
+.btn-song-youtube.no-link {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: none !important;
+  color: rgba(255, 255, 255, 0.55) !important;
+  opacity: 0.7 !important;
+}
+
+[data-theme="light"] .btn-song-youtube.no-link {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+  box-shadow: none !important;
+  color: rgba(0, 0, 0, 0.45) !important;
 }
 
 .song-book-badge {
@@ -5669,13 +5771,13 @@ body.in-song-selection-mode .song-list-container,
   margin-bottom: 0 !important;
 }
 
-/* Actions: Clean, Centered, Symmetrical Pills */
+/* Actions: Clean, Centered, Symmetrical Pills in a Single Line */
 .song-lyrics-actions {
   display: flex !important;
-  flex-wrap: wrap !important;
+  flex-wrap: nowrap !important;
   align-items: center !important;
-  justify-content: center !important;
-  gap: 8px !important;
+  justify-content: space-between !important;
+  gap: 6px !important;
   width: 100% !important;
   box-sizing: border-box !important;
   margin-top: 16px !important;
@@ -5688,15 +5790,17 @@ body.in-song-selection-mode .song-list-container,
 }
 
 .song-lyrics-action-btn {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 5px !important;
+  gap: 4px !important;
   height: 32px !important;
-  padding: 0 13px !important;
+  padding: 0 8px !important;
   border-radius: 9999px !important;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif !important;
-  font-size: 0.76rem !important;
+  font-size: 0.72rem !important;
   font-weight: 600 !important;
   letter-spacing: -0.01em !important;
   cursor: pointer !important;
@@ -5706,6 +5810,7 @@ body.in-song-selection-mode .song-list-container,
   transition: all 0.15s ease !important;
   white-space: nowrap !important;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+  box-sizing: border-box !important;
 }
 
 [data-theme="dark"] .song-lyrics-action-btn {
@@ -13407,6 +13512,7 @@ textarea:focus-visible,
 </style>
   <!-- iOS 27 Ultra-Expressive Pure Theme (Zero Positioning/Layout Overrides) -->
   <link rel="stylesheet" href="css/ios27-theme.css?v=20261013_htmlbooks_v2">
+  <link rel="stylesheet" href="css/almanac.css?v=20261028_v9">
 </head>
 <body>
   <!-- 0A. Redesigned App Launch Splash Overlay with Single Cross-Shaped Progress Emblem -->
@@ -13910,16 +14016,134 @@ textarea:focus-visible,
 
       <!-- ================= 3. LITURGICAL ALMANAC TAB ================= -->
       <section id="viewAlmanac" class="view-panel">
-        <div class="page-heading">
-          <h2 class="page-title" id="almanacSectionMainTitle">Liturgical Almanac</h2>
-          <p class="page-subtitle" id="almanacSectionSubtitle">Select a liturgical year to explore lectionary folders</p>
-        </div>
+        <section class="page-screen active-screen" id="screenYear" role="region" aria-label="Year Selection Page">
+          <div class="page-heading">
+            <div class="page-title-row" style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <h2 class="page-title">Liturgical Almanac</h2>
+                <p class="page-subtitle">Select a liturgical year to explore lectionary folders</p>
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button class="btn-squircle-icon" onclick="AlmanacApp.openLegendModal()" title="Liturgical Seasons & Colors" aria-label="Liturgical Seasons & Colors">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
 
-        <div class="almanac-breadcrumbs-wrapper">
-          <nav class="almanac-breadcrumbs" id="almanacBreadcrumbs" aria-label="Almanac hierarchy"></nav>
-        </div>
+          <main class="screen-container">
+            <!-- Selection Mode Floating Bar (Pinpoint: Long-press Deletion Mode) -->
+            <div class="selection-mode-bar" id="selectionModeBar" role="status" aria-live="polite">
+              <span class="selection-mode-title">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                Selection Mode • Tap card to delete
+              </span>
+              <button type="button" class="btn-selection-done" onclick="AlmanacApp.exitSelectionMode()">Done</button>
+            </div>
 
-        <div class="almanac-container" id="almanacContentContainer"></div>
+            <div class="years-grid" id="yearsGrid" role="group" aria-label="Available Liturgical Years">
+              <!-- Dynamically rendered Year Cards -->
+            </div>
+          </main>
+        </section>
+
+  <!-- ==============================================================================
+       SCREEN 2: MONTH SELECTION PAGE (Responsive 2 × 6 Grid)
+       ============================================================================== -->
+  <section class="page-screen" id="screenMonth" role="region" aria-label="Month Selection Page">
+    <header class="screen-header">
+      <nav class="almanac-breadcrumbs" id="monthBreadcrumbsNav" aria-label="Almanac navigation">
+        <button type="button" class="almanac-crumb-btn" onclick="AlmanacApp.goToYearSelection()" title="Liturgical Almanac">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-right:2px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <span>Almanac</span>
+        </button>
+        <span class="almanac-crumb-sep" aria-hidden="true">›</span>
+        <span class="almanac-crumb-btn active" id="monthScreenYearTitle">2026</span>
+      </nav>
+      <div class="header-actions">
+        <button class="btn-squircle-icon" onclick="AlmanacApp.openLegendModal()" aria-label="Liturgical Seasons & Colors" title="Liturgical Seasons & Colors">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="screen-container">
+      <div class="months-grid" id="monthsGrid" role="group" aria-label="12 Months Grid">
+        <!-- Dynamically rendered 2x6 Month Cards -->
+      </div>
+    </main>
+  </section>
+
+  <!-- ==============================================================================
+       SCREEN 3: DAY SELECTION PAGE (Dynamic Calendar Grid)
+       ============================================================================== -->
+  <section class="page-screen" id="screenDay" role="region" aria-label="Day Selection Page">
+    <header class="screen-header">
+      <nav class="almanac-breadcrumbs" id="dayBreadcrumbsNav" aria-label="Almanac navigation">
+        <button type="button" class="almanac-crumb-btn" onclick="AlmanacApp.goToYearSelection()" title="Liturgical Almanac">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-right:2px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <span>Almanac</span>
+        </button>
+        <span class="almanac-crumb-sep" aria-hidden="true">›</span>
+        <button type="button" class="almanac-crumb-btn" onclick="AlmanacApp.goToMonthSelection()" title="Months">
+          <span id="dayBreadcrumbYear">2026</span>
+        </button>
+        <span class="almanac-crumb-sep" aria-hidden="true">›</span>
+        <span class="almanac-crumb-btn active" id="dayScreenTitle">October</span>
+      </nav>
+      <div class="header-actions">
+        <button class="btn-pill-today" onclick="AlmanacApp.jumpToToday()" aria-label="Jump to Today's Lectionary">
+          <span aria-hidden="true">📅</span> Today
+        </button>
+      </div>
+    </header>
+
+    <main class="screen-container">
+      <div class="weekday-header-row" aria-hidden="true">
+        <span class="wd-col sun">Sun</span>
+        <span class="wd-col">Mon</span>
+        <span class="wd-col">Tue</span>
+        <span class="wd-col">Wed</span>
+        <span class="wd-col">Thu</span>
+        <span class="wd-col">Fri</span>
+        <span class="wd-col">Sat</span>
+      </div>
+      <div class="days-calendar-grid" id="daysCalendarGrid" role="group" aria-label="Calendar Days Grid">
+        <!-- Dynamically calculated days -->
+      </div>
+      <div class="calendar-month-summary-card" id="calendarMonthSummaryCard" role="region" aria-label="Month Lectionary Insights">
+        <!-- Dynamically rendered Month Summary -->
+      </div>
+    </main>
+  </section>
+
+  <!-- ==============================================================================
+       SCREEN 4: DAILY ALMANAC DETAILS PAGE
+       ============================================================================== -->
+  <section class="page-screen" id="screenDetails" role="region" aria-label="Daily Almanac Details Page">
+    <header class="screen-header">
+      <nav class="almanac-breadcrumbs" id="detailsBreadcrumbsNav" aria-label="Almanac navigation">
+        <button type="button" class="almanac-crumb-btn" onclick="AlmanacApp.goToYearSelection()" title="Liturgical Almanac">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-right:2px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <span>Almanac</span>
+        </button>
+        <span class="almanac-crumb-sep" aria-hidden="true">›</span>
+        <button type="button" class="almanac-crumb-btn" onclick="AlmanacApp.goToMonthSelection()" title="Months">
+          <span id="detailsBreadcrumbYear">2026</span>
+        </button>
+        <span class="almanac-crumb-sep" aria-hidden="true">›</span>
+        <button type="button" class="almanac-crumb-btn" onclick="AlmanacApp.goToDaySelection()" title="Calendar">
+          <span id="detailsBreadcrumbMonth">October</span>
+        </button>
+        <span class="almanac-crumb-sep" aria-hidden="true">›</span>
+        <span class="almanac-crumb-btn active" id="detailsScreenTitle">27 Oct</span>
+      </nav>
+    </header>
+
+    <main class="screen-container" id="detailsContainer" role="main">
+      <!-- Dynamically rendered: Hero, Lord's Supper, Morning Worship, Evening Worship -->
+    </main>
+  </section>
       </section>
 
       <!-- ================= 4. BOOKMARKS & NOTES TAB ================= -->
@@ -14035,6 +14259,27 @@ textarea:focus-visible,
             </div>
           </div>
 
+        </div>
+
+        <!-- ================= NOTIFICATIONS SETTINGS GROUP (iOS Style Card) ================= -->
+        <div class="settings-group" id="notificationSettingsGroup">
+          <div class="setting-row notification-setting-row" style="padding: 2px 0; border: none;">
+            <div class="setting-icon-info-wrap" style="display: flex; align-items: center; gap: 14px; flex: 1;">
+              <div class="notification-setting-icon-wrap" id="notificationIconWrap">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+              </div>
+              <label class="setting-label" for="settingNotificationToggle" style="font-size: 0.95rem; font-weight: 600; cursor: pointer; color: var(--text-primary); margin: 0;">Notifications</label>
+            </div>
+            <label class="ios-toggle-switch" for="settingNotificationToggle" title="Toggle Notifications">
+              <input type="checkbox" id="settingNotificationToggle" aria-label="Toggle notifications">
+              <span class="ios-toggle-track">
+                <span class="ios-toggle-thumb"></span>
+              </span>
+            </label>
+          </div>
         </div>
 
         <!-- Visual Preferences (Themes) -->
@@ -14153,6 +14398,7 @@ textarea:focus-visible,
             </div>
           </div>
         </div>
+
 
         <!-- About Application -->
         <div class="settings-group" id="aboutSettingsGroup">
@@ -14856,7 +15102,7 @@ textarea:focus-visible,
 
 
         <!-- 3. Almanac Menu -->
-        <button class="dock-item" data-tab="viewAlmanac" id="dockAlmanac" aria-label="Almanac">
+        <button class="dock-item" data-tab="viewAlmanac" id="dockAlmanac" aria-label="Almanac" onclick="if(window.AlmanacApp && typeof window.AlmanacApp.goToYearSelection==='function') window.AlmanacApp.goToYearSelection();">
           <div class="dock-icon-wrap">
             <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -14895,6 +15141,204 @@ textarea:focus-visible,
 
     
     <!-- ================= COMPLETE COMPREHENSIVE MODALS & OVERLAYS ================= -->
+
+    <!-- ================= ALMANAC MODULE MODALS & POPUP WINDOWS ================= -->
+
+    <!-- Scripture Passage Reader Pop Window Modal -->
+    <div class="modal-backdrop" id="scriptureModal" role="dialog" aria-modal="true" aria-labelledby="scripturePassageTitle" onclick="if(event.target===this) AlmanacApp.closeScriptureModal()">
+      <div class="modal-sheet-dialog">
+        <div class="modal-top-bar">
+          <span class="reading-type-tag read" id="scriptureCategoryTag">Scripture Reading</span>
+          <button class="btn-squircle-icon" onclick="AlmanacApp.closeScriptureModal()" aria-label="Close passage modal">✕</button>
+        </div>
+        <div class="scripture-reader-card">
+          <h3 class="scripture-ref-title" id="scripturePassageTitle">Genesis / उत्पत्ति 1:1–10</h3>
+          <p style="font-size:0.86rem; color:var(--text-muted); line-height:1.5;">
+            Click below to open and study the full scripture passage in your preferred Bible reader:
+          </p>
+          <div class="scripture-portal-links">
+            <a class="btn-bible-link" id="linkBibleGateway" href="#" target="_blank" rel="noopener noreferrer">
+              <span>📖 Read in English (NIV)</span>
+              <span aria-hidden="true">↗</span>
+            </a>
+            <a class="btn-bible-link" id="linkYouVersion" href="#" target="_blank" rel="noopener noreferrer">
+              <span>🇮🇳 Read in Hindi (हिंदी बाइबल)</span>
+              <span aria-hidden="true">↗</span>
+            </a>
+            <button type="button" class="btn-action-secondary" onclick="AlmanacApp.copyTextToClipboard(document.getElementById('scripturePassageTitle').textContent)" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:8px;">
+              <span>📋 Copy Passage Reference</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Liturgical Seasons & Colors Pop Window Modal -->
+    <div class="modal-backdrop" id="legendModal" role="dialog" aria-modal="true" aria-labelledby="legendModalTitle" onclick="if(event.target===this) AlmanacApp.closeLegendModal()">
+      <div class="modal-sheet-dialog">
+        <div class="modal-top-bar">
+          <h2 id="legendModalTitle">Liturgical Seasons & Colors</h2>
+          <button class="btn-squircle-icon" onclick="AlmanacApp.closeLegendModal()" aria-label="Close legend">✕</button>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:12px; font-size:0.86rem; line-height:1.5;">
+          <div style="padding:14px; background:var(--jewel-gold-soft); border-left:4px solid var(--jewel-gold); border-radius:var(--radius-item);">
+            <strong style="color:var(--jewel-gold);">White / Gold</strong>: Christmas, Epiphany, Easter, Transfiguration, All Saints, Ascension. Symbolizes divine holiness, purity, and festive celebration.
+          </div>
+          <div style="padding:14px; background:var(--jewel-emerald-soft); border-left:4px solid var(--jewel-emerald); border-radius:var(--radius-item);">
+            <strong style="color:var(--jewel-emerald);">Green</strong>: Epiphany Season & Ordinary Time (Kingdomtide). Symbolizes spiritual growth, hope, mission, and the continuous life of the Church.
+          </div>
+          <div style="padding:14px; background:var(--jewel-violet-soft); border-left:4px solid var(--jewel-violet); border-radius:var(--radius-item);">
+            <strong style="color:var(--jewel-violet);">Violet / Purple</strong>: Advent & Lent Seasons. Symbolizes solemn expectation, preparation, penitence, and contemplative devotion.
+          </div>
+          <div style="padding:14px; background:var(--jewel-ruby-soft); border-left:4px solid var(--jewel-ruby); border-radius:var(--radius-item);">
+            <strong style="color:var(--jewel-ruby);">Red</strong>: Pentecost, Palm Sunday, Maundy Thursday, Martyrs. Symbolizes the Holy Spirit, fire, love, and Christ's sacrificial blood.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Manual Add / Edit Data Pop Window Modal -->
+    <div class="modal-backdrop" id="manualAddModal" role="dialog" aria-modal="true" aria-labelledby="manualAddModalTitle" onclick="if(event.target===this) AlmanacApp.closeManualAddModal()">
+      <div class="modal-sheet-dialog">
+        <div class="modal-top-bar">
+          <h2 id="manualAddModalTitle">Add / Edit Lectionary Date</h2>
+          <button class="btn-squircle-icon" onclick="AlmanacApp.closeManualAddModal()" aria-label="Close manual add modal">✕</button>
+        </div>
+
+        <form id="manualAddForm" onsubmit="event.preventDefault(); AlmanacApp.saveManualDayData(event);" class="modal-form-scroll">
+          <div class="form-row-grid-2">
+            <div class="form-group-block">
+              <label class="form-label" for="manualDateInput">Date *</label>
+              <input type="date" id="manualDateInput" class="form-input-control" required>
+            </div>
+            <div class="form-group-block">
+              <label class="form-label" for="manualColorSelect">Liturgical Color</label>
+              <select id="manualColorSelect" class="form-input-control" style="background:#1e293b; color:#ffffff;">
+                <option value="Green">Green (Ordinary / Kingdomtide)</option>
+                <option value="White">White / Gold (Festival / Festive)</option>
+                <option value="Violet">Violet (Advent / Lent)</option>
+                <option value="Red">Red (Pentecost / Martyrs)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group-block">
+            <label class="form-label" for="manualThemeInput">Festival / Liturgical Theme *</label>
+            <input type="text" id="manualThemeInput" class="form-input-control" placeholder="e.g. 1st Sunday of Advent / All Saints Day" required>
+          </div>
+
+          <label class="form-checkbox-row">
+            <input type="checkbox" id="manualCommunionCheck" onchange="document.getElementById('manualLordsSupperBlock').style.display = this.checked ? 'block' : 'none'">
+            <span>Celebrate Lord's Supper (Sacrament of the Altar • प्रभु भोज)</span>
+          </label>
+
+          <!-- Lord's Supper Readings -->
+          <div class="form-group-block" id="manualLordsSupperBlock" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <label class="form-label">🍷 Lord's Supper Readings</label>
+              <button type="button" class="btn-add-reading-item" onclick="AlmanacApp.addReadingRow('lordsSupperRows')">+ Add Reading</button>
+            </div>
+            <div id="lordsSupperRows"></div>
+          </div>
+
+          <!-- Morning Worship Readings -->
+          <div class="form-group-block">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <label class="form-label">🌅 Morning Worship Readings</label>
+              <button type="button" class="btn-add-reading-item" onclick="AlmanacApp.addReadingRow('morningRows')">+ Add Reading</button>
+            </div>
+            <div id="morningRows"></div>
+          </div>
+
+          <!-- Evening Worship Readings -->
+          <div class="form-group-block">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <label class="form-label">🌆 Evening Worship Readings</label>
+              <button type="button" class="btn-add-reading-item" onclick="AlmanacApp.addReadingRow('eveningRows')">+ Add Reading</button>
+            </div>
+            <div id="eveningRows"></div>
+          </div>
+
+          <div style="display:flex; gap:10px; margin-top:8px;">
+            <button type="submit" class="btn-primary-action">
+              <span>💾 Save Lectionary Day</span>
+            </button>
+            <button type="button" class="btn-squircle-icon" style="height:44px; width:44px; flex-shrink:0;" onclick="AlmanacApp.closeManualAddModal()" title="Cancel">✕</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Add Liturgical Year Pop Window Modal -->
+    <div class="modal-backdrop" id="addYearModal" role="dialog" aria-modal="true" aria-labelledby="addYearModalTitle" onclick="if(event.target===this) AlmanacApp.closeAddYearModal()">
+      <div class="modal-sheet-dialog">
+        <div class="modal-top-bar">
+          <h2 id="addYearModalTitle">Add Liturgical Year</h2>
+          <button class="btn-squircle-icon" onclick="AlmanacApp.closeAddYearModal()" aria-label="Close add year modal">✕</button>
+        </div>
+
+        <div style="padding: 10px 0 20px;">
+          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:18px; line-height:1.5;">
+            Enter any 4-digit calendar year to generate its 12-month lectionary cycle:
+          </p>
+
+          <form id="addYearForm" onsubmit="event.preventDefault(); AlmanacApp.submitAddYear(event);">
+            <div class="form-group-block" style="margin-bottom:16px;">
+              <label class="form-label" for="newYearInput">Calendar Year</label>
+              <input type="number" id="newYearInput" class="form-input-control" min="1900" max="2200" step="1" required style="font-size:1.35rem; font-weight:800; text-align:center; letter-spacing:0.04em;">
+            </div>
+
+            <div style="display:flex; gap:8px; margin-bottom:22px; justify-content:center; flex-wrap:wrap; align-items:center;">
+              <span style="font-size:0.8rem; color:var(--text-dim); margin-right:4px;">Quick Pick:</span>
+              <button type="button" class="btn-chip" onclick="AlmanacApp.setAddYearInput(2027)">2027</button>
+              <button type="button" class="btn-chip" onclick="AlmanacApp.setAddYearInput(2028)">2028</button>
+              <button type="button" class="btn-chip" onclick="AlmanacApp.setAddYearInput(2029)">2029</button>
+              <button type="button" class="btn-chip" onclick="AlmanacApp.setAddYearInput(2030)">2030</button>
+            </div>
+
+            <div style="display:flex; gap:10px;">
+              <button type="button" class="btn-action-secondary" style="flex:1;" onclick="AlmanacApp.closeAddYearModal()">Cancel</button>
+              <button type="submit" class="btn-primary-action" style="flex:1;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Add & Open</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirm Delete Year Pop Window Modal -->
+    <div class="modal-backdrop alert-dialog-backdrop" id="deleteYearModal" role="dialog" aria-modal="true" aria-labelledby="deleteYearModalTitle" onclick="if(event.target===this) AlmanacApp.closeDeleteYearModal()">
+      <div class="modal-alert-box">
+        <div class="alert-icon-circle" aria-hidden="true">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            <line x1="10" y1="11" x2="10" y2="17"></line>
+            <line x1="14" y1="11" x2="14" y2="17"></line>
+          </svg>
+        </div>
+        <h2 class="alert-title" id="deleteYearModalTitle">Delete Liturgical Cycle?</h2>
+        <p class="alert-desc" id="deleteYearModalDesc">
+          Are you sure you want to delete the liturgical year <strong id="deleteYearTargetNumber" style="color:var(--jewel-ruby); font-size:1.1em;">2027</strong> and all its associated lectionary data? This action cannot be undone.
+        </p>
+
+        <div class="alert-actions-row">
+          <button type="button" class="btn-action-secondary" style="flex:1;" onclick="AlmanacApp.closeDeleteYearModal()">
+            Cancel
+          </button>
+          <button type="button" class="btn-destructive-action" id="btnConfirmDeleteYear" onclick="AlmanacApp.confirmDeleteYear()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <span>Delete Year</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Almanac Toast Notification Alert -->
+    <div class="toast-banner" id="almanacToastBanner" role="status" aria-live="polite"></div>
 
     <!-- 0. Import Data Options Choice Modal (Pinpoint #5) -->
     <div id="importOptionsModalOverlay" class="modal-overlay hidden" aria-modal="true" role="dialog" style="z-index: 1050;">
@@ -15187,9 +15631,11 @@ textarea:focus-visible,
             </svg>
             <span id="announcementModalHeaderTitle" class="ann-modal-title" style="font-size: 1.18rem !important; font-weight: 700 !important; color: var(--text-primary) !important; letter-spacing: -0.01em !important; font-family: var(--font-sans) !important;">Announcements</span>
           </div>
-          <button id="closeAnnouncementModalBtn" class="modal-close ann-modal-close-circle" aria-label="Close modal" style="width: 36px !important; height: 36px !important; border-radius: 50% !important; background: var(--bg-subtle) !important; border: 1px solid var(--border-subtle) !important; display: flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important; padding: 0 !important; color: var(--text-secondary) !important; transition: all 0.2s ease !important;">
-            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          </button>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button id="closeAnnouncementModalBtn" class="modal-close ann-modal-close-circle" aria-label="Close modal" style="width: 36px !important; height: 36px !important; border-radius: 50% !important; background: var(--bg-subtle) !important; border: 1px solid var(--border-subtle) !important; display: flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important; padding: 0 !important; color: var(--text-secondary) !important; transition: all 0.2s ease !important;">
+              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
         </div>
 
         <!-- Modal Body Canvas (120 FPS Fluid Kinetic Scrolling • Scrollable After 2 Notices) -->
@@ -15199,13 +15645,13 @@ textarea:focus-visible,
 
         <!-- Footer: Matches Edit Modal Theme & Layout with #34495e Theme -->
         <div class="modal-footer announcement-modal-footer" style="display: flex !important; align-items: center !important; justify-content: flex-end !important; gap: 10px !important; padding: 14px 20px !important; background: var(--surface-secondary, rgba(22, 27, 35, 0.96)) !important; border-top: 1px solid var(--border-subtle) !important; width: 100% !important; box-sizing: border-box !important;">
-          <button type="button" class="btn-secondary ann-pill-btn-close" id="dismissAnnouncementBtn" style="display: inline-flex !important; align-items: center !important; justify-content: center !important; border-radius: 14px !important; background: #34495e !important; border: 1px solid rgba(255, 255, 255, 0.16) !important; color: #ffffff !important; font-size: 0.92rem !important; font-weight: 600 !important; padding: 11px 18px !important; cursor: pointer !important; outline: none !important; box-shadow: 0 4px 12px rgba(52, 73, 94, 0.25) !important;">Close</button>
           <div id="announcementAdminFooterActions" style="display: inline-flex !important; margin: 0 !important; padding: 0 !important;">
             <button type="button" class="btn-primary ann-pill-btn-post" id="announcementModalAddBtn" style="display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; border-radius: 14px !important; background: #34495e !important; border: 1px solid rgba(255, 255, 255, 0.16) !important; color: #ffffff !important; font-size: 0.92rem !important; font-weight: 600 !important; padding: 11px 18px !important; cursor: pointer !important; outline: none !important; box-shadow: 0 4px 12px rgba(52, 73, 94, 0.35) !important;">
               <span class="ann-pill-plus" style="font-size: 1.1rem !important; font-weight: 400 !important; line-height: 1 !important; color: #ffffff !important;">+</span>
               <span>Post Notice</span>
             </button>
           </div>
+          <button type="button" class="btn-secondary ann-pill-btn-close" id="dismissAnnouncementBtn" style="display: inline-flex !important; align-items: center !important; justify-content: center !important; border-radius: 14px !important; background: #34495e !important; border: 1px solid rgba(255, 255, 255, 0.16) !important; color: #ffffff !important; font-size: 0.92rem !important; font-weight: 600 !important; padding: 11px 18px !important; cursor: pointer !important; outline: none !important; box-shadow: 0 4px 12px rgba(52, 73, 94, 0.25) !important;">Close</button>
         </div>
       </div>
     </div>
@@ -16264,6 +16710,13 @@ textarea:focus-visible,
             <input type="text" id="editSongAuthorInput" class="form-control" placeholder="e.g. Masihi Geeton Ka Sangrah">
           </div>
           <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="editSongYoutubeInput" style="font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="#ff0000"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+              <span>YouTube Video / Audio Link:</span>
+            </label>
+            <input type="url" id="editSongYoutubeInput" class="form-control" placeholder="https://www.youtube.com/watch?v=... or youtu.be/...">
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
             <label class="form-label" for="editSongLyricsInput" style="font-weight: 700; margin-bottom: 4px; display: block;">Lyrics / गीत के बोल:</label>
             <textarea id="editSongLyricsInput" class="form-control" rows="8" placeholder="Enter lyrics here..." style="font-family: inherit; font-size: 0.9rem; line-height: 1.6;"></textarea>
           </div>
@@ -16420,14 +16873,50 @@ textarea:focus-visible,
           Select an APK file to upload to the Supabase storage bucket. Once stored, members will be notified that an update is available.
         </p>
 
-        <!-- Upload Status Box (Hidden while idle) -->
-        <div id="uploadApkProgressBox" style="display: none; margin-bottom: 16px;">
-          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
-            <span id="uploadApkStatusText" style="font-size: 0.82rem; font-weight: 600; color: var(--text-primary);">Uploading APK to cloud…</span>
-            <span id="uploadApkPercent" style="font-size: 0.82rem; font-weight: 700; color: #10B981;">0%</span>
+        <!-- APK Inspection & Details Card (Shows while uploading / when file selected) -->
+        <div id="uploadApkDetailsCard" style="display: none; margin-bottom: 16px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 14px 16px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);">
+          <!-- Header with APK Icon & File Name -->
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+            <div style="width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, rgba(61, 220, 132, 0.2) 0%, rgba(16, 185, 129, 0.1) 100%); border: 1px solid rgba(61, 220, 132, 0.35); display: flex; align-items: center; justify-content: center; color: #3DDC84; flex-shrink: 0;">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-1.0003s.4482-1.0003.9993-1.0003c.5516 0 .9998.4486.9998 1.0003s-.4482 1.0003-.9998 1.0003m-11.046 0c-.5511 0-.9993-.4486-.9993-1.0003s.4482-1.0003.9993-1.0003c.5516 0 .9998.4486.9998 1.0003s-.4482 1.0003-.9998 1.0003m11.4045-6.02l1.9973-3.4592a.416.416 0 0 0-.1521-.5676.416.416 0 0 0-.5676.1521l-2.0223 3.503C15.5902 8.4116 13.8533 8.125 12 8.125s-3.5902.2866-5.1368.8247L4.8409 5.4467a.4161.4161 0 0 0-.5677-.1521.4157.4157 0 0 0-.1521.5676l1.9973 3.4592C2.6889 11.1867.3432 14.6589 0 18.775h24c-.3432-4.1161-2.6889-7.5883-6.1185-9.4536"/>
+              </svg>
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <div id="uploadApkMetaName" style="font-weight: 700; font-size: 0.92rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">ChurchCompanion.apk</div>
+              <div style="font-size: 0.72rem; color: #3DDC84; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;">APK Package Inspected</div>
+            </div>
           </div>
-          <div style="width: 100%; height: 6px; background: rgba(255, 255, 255, 0.08); border-radius: 9999px; overflow: hidden; position: relative;">
-            <div id="uploadApkProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #10B981, #059669); border-radius: 9999px; transition: width 0.15s ease-out;"></div>
+
+          <!-- Structured 2x2 Grid of Spec Badges -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+            <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 10px; padding: 7px 10px;">
+              <span style="display: block; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600;">Version</span>
+              <span id="uploadApkMetaVersionName" style="display: block; font-size: 0.88rem; font-weight: 700; color: #fff; margin-top: 2px;">—</span>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 10px; padding: 7px 10px;">
+              <span style="display: block; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600;">Version Code</span>
+              <span id="uploadApkMetaVersionCode" style="display: block; font-size: 0.88rem; font-weight: 700; color: #F59E0B; margin-top: 2px;">—</span>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 10px; padding: 7px 10px;">
+              <span style="display: block; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600;">Application Size</span>
+              <span id="uploadApkMetaSize" style="display: block; font-size: 0.88rem; font-weight: 700; color: #10B981; margin-top: 2px;">—</span>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 10px; padding: 7px 10px;">
+              <span style="display: block; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600;">Build Date</span>
+              <span id="uploadApkMetaBuildDate" style="display: block; font-size: 0.78rem; font-weight: 700; color: #A78BFA; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">—</span>
+            </div>
+          </div>
+
+          <!-- Upload Status & Progress Bar -->
+          <div id="uploadApkProgressBox" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
+              <span id="uploadApkStatusText" style="font-size: 0.80rem; font-weight: 600; color: #fff;">Uploading APK to cloud…</span>
+              <span id="uploadApkPercent" style="font-size: 0.80rem; font-weight: 700; color: #10B981;">0%</span>
+            </div>
+            <div style="width: 100%; height: 6px; background: rgba(255, 255, 255, 0.08); border-radius: 9999px; overflow: hidden; position: relative;">
+              <div id="uploadApkProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #10B981, #059669); border-radius: 9999px; transition: width 0.15s ease-out;"></div>
+            </div>
           </div>
         </div>
 
@@ -16524,6 +17013,7 @@ textarea:focus-visible,
   <script src="js/sync-engine.js?v=20261015_syncengine_v2"></script>
   <script src="js/daily-verses.js?v=20261015_sync_v2"></script>
   <script src="js/app.js?v=20261018_anc_forceful_v3"></script>
+  <script src="js/almanac-app.js?v=20261028_v9"></script>
   <script>
     setTimeout(function() {
       if (typeof window.hideSplashOverlay === 'function') {

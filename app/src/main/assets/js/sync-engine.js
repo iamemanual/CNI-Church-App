@@ -1940,11 +1940,21 @@
   async function handleAlmanacBulkImport(entries, isOnline, client, dbInstance) {
     const nowIso = new Date().toISOString();
     const normalized = entries.map(function (e) {
-      return Object.assign({}, e, {
-        date_key: e.date_key,
-        year: e.year || (e.date_key ? Number(e.date_key.split('-')[0]) : 2026),
+      const dKey = e.date_key || e.dateKey;
+      const yr = e.year || (dKey ? Number(dKey.split('-')[0]) : 2026);
+      const title = e.title || e.theme || 'Daily Liturgical Reading';
+      const color = e.liturgical_color || e.color || 'Green';
+      const details = typeof e.details === 'string' ? e.details : (e.details ? JSON.stringify(e.details) : JSON.stringify(e));
+      return {
+        date_key: dKey,
+        year: yr,
+        title: title,
+        liturgical_color: color,
+        details: details,
+        readings: Array.isArray(e.readings) ? e.readings : [],
+        version: e.version || 1,
         updated_at: e.updated_at || nowIso
-      });
+      };
     });
 
     if (dbInstance && dbInstance.almanac_entries) {

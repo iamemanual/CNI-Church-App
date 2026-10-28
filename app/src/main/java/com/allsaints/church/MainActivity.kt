@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.ConnectivityManager
 import android.net.Network
@@ -43,6 +44,7 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "MainActivity"
         private const val FILE_CHOOSER_REQUEST_CODE = 1001
+        private const val NOTIFICATION_PERMISSION_REQUEST_CODE = 103
     }
 
     private lateinit var webView: WebView
@@ -89,6 +91,8 @@ class MainActivity : AppCompatActivity() {
         setupNetworkMonitoring()
         registerSyncBroadcastReceiver()
         setupBackNavigation()
+
+        handleNotificationIntent(intent)
 
         webView.loadUrl("file:///android_asset/index.html")
     }
@@ -138,18 +142,72 @@ class MainActivity : AppCompatActivity() {
 
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                val url = request?.url?.toString() ?: return false
-                if (url.startsWith("http://") || url.startsWith("https://")) {
-                    if (url.contains("localhost") || url.contains("127.0.0.1") || url.contains("supabase.co")) {
-                        return false
-                    }
+                val uri = request?.url ?: return false
+                val url = uri.toString()
+
+                // Internal app / localhost / Supabase traffic stays in WebView
+                if (url.startsWith("file://") || url.contains("localhost") || url.contains("127.0.0.1") || url.contains("supabase.co")) {
+                    return false
+                }
+
+                // 1. YouTube direct launch (vnd.youtube, youtube.com, youtu.be)
+                if (url.startsWith("vnd.youtube:", ignoreCase = true) ||
+                    url.contains("youtube.com", ignoreCase = true) ||
+                    url.contains("youtu.be", ignoreCase = true)) {
+                    bridge.openYouTube(url)
+                    return true
+                }
+
+                // 2. Intent scheme (e.g. intent://...#Intent;package=com.google.android.youtube;...)
+                if (url.startsWith("intent:", ignoreCase = true)) {
                     try {
-                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                        val parsedIntent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME)
+                        if (parsedIntent != null) {
+                            parsedIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            if (parsedIntent.resolveActivity(packageManager) != null) {
+                                startActivity(parsedIntent)
+                                return true
+                            }
+                            val fallback = parsedIntent.getStringExtra("browser_fallback_url")
+                            if (!fallback.isNullOrEmpty()) {
+                                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(fallback)).apply {
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                })
+                                return true
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error handling intent scheme: $url", e)
+                    }
+                    return true
+                }
+
+                // 3. Action schemes (tel, mailto, sms, whatsapp, geo)
+                val scheme = uri.scheme?.lowercase()
+                if (scheme in listOf("tel", "mailto", "sms", "whatsapp", "geo")) {
+                    try {
+                        startActivity(Intent(Intent.ACTION_VIEW, uri).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        })
                         return true
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error handling custom scheme $scheme: $url", e)
+                        return true
+                    }
+                }
+
+                // 4. External web links
+                if (url.startsWith("http://") || url.startsWith("https://")) {
+                    try {
+                        startActivity(Intent(Intent.ACTION_VIEW, uri).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        })
                     } catch (e: Exception) {
                         Log.e(TAG, "Error launching external browser: $url", e)
                     }
+                    return true
                 }
+
                 return false
             }
 
@@ -423,9 +481,37 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == NOTIFICATION_PERMISSION_REQUEST_CODE) {
+            val granted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
+            bridge.notifyJsNotificationPermissionResult(granted)
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleNotificationIntent(intent)
+    }
+
+    private fun handleNotificationIntent(intent: Intent?) {
+        if (intent?.getStringExtra("action") == "open_announcements") {
+            evaluateJavascript("if (typeof openAnnouncementModal === 'function') { openAnnouncementModal(); }")
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         cleanPendingUpdateApks()
+        try {
+            val hasPermission = bridge.hasNotificationPermission()
+            bridge.notifyJsNotificationPermissionResult(hasPermission)
+        } catch (_: Exception) {}
     }
 
     private fun cleanPendingUpdateApks() {

@@ -1,18 +1,26 @@
 package com.allsaints.church
 
 import android.app.Activity
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.media.MediaPlayer
+import android.net.Uri
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.provider.Settings
 import android.util.Log
 import android.webkit.JavascriptInterface
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.allsaints.church.engine.ChurchApplicationEngine
 import com.allsaints.church.engine.UserProfile
@@ -177,6 +185,131 @@ class WebAppBridgeInterface(
             arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE)
         }
         ActivityCompat.requestPermissions(activity, perms, 102)
+    }
+
+    @JavascriptInterface
+    fun hasNotificationPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                activity,
+                android.Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            NotificationManagerCompat.from(activity).areNotificationsEnabled()
+        }
+    }
+
+    @JavascriptInterface
+    fun requestNotificationPermission() {
+        activity.runOnUiThread {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (!hasNotificationPermission()) {
+                    ActivityCompat.requestPermissions(
+                        activity,
+                        arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                        103
+                    )
+                } else {
+                    notifyJsNotificationPermissionResult(true)
+                }
+            } else {
+                val enabled = NotificationManagerCompat.from(activity).areNotificationsEnabled()
+                if (!enabled) {
+                    openNotificationSettings()
+                }
+                notifyJsNotificationPermissionResult(enabled)
+            }
+        }
+    }
+
+    @JavascriptInterface
+    fun openNotificationSettings() {
+        activity.runOnUiThread {
+            try {
+                val intent = Intent().apply {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        action = Settings.ACTION_APP_NOTIFICATION_SETTINGS
+                        putExtra(Settings.EXTRA_APP_PACKAGE, activity.packageName)
+                    } else {
+                        action = "android.settings.APP_NOTIFICATION_SETTINGS"
+                        putExtra("app_package", activity.packageName)
+                        putExtra("app_uid", activity.applicationInfo.uid)
+                    }
+                }
+                activity.startActivity(intent)
+            } catch (e: Exception) {
+                Log.e(TAG, "Cannot open notification settings", e)
+            }
+        }
+    }
+
+    @JavascriptInterface
+    fun showNotification(title: String, body: String, tag: String = "") {
+        activity.runOnUiThread {
+            try {
+                createNotificationChannel()
+                val channelId = "church_announcements_channel"
+                val intent = Intent(activity, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    putExtra("action", "open_announcements")
+                }
+                val pendingIntent = PendingIntent.getActivity(
+                    activity,
+                    0,
+                    intent,
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    } else {
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                    }
+                )
+
+                val builder = NotificationCompat.Builder(activity, channelId)
+                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setContentTitle(title)
+                    .setContentText(body)
+                    .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setContentIntent(pendingIntent)
+                    .setAutoCancel(true)
+                    .setDefaults(NotificationCompat.DEFAULT_ALL)
+
+                val notificationManager = NotificationManagerCompat.from(activity)
+                if (hasNotificationPermission()) {
+                    val notificationId = if (tag.isNotEmpty()) Math.abs(tag.hashCode()) else 1001
+                    notificationManager.notify(notificationId, builder.build())
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error showing native notification", e)
+            }
+        }
+    }
+
+    fun notifyJsNotificationPermissionResult(granted: Boolean) {
+        activity.runOnUiThread {
+            val script = "if (typeof window.onNativeNotificationPermissionResult === 'function') { window.onNativeNotificationPermissionResult($granted); }"
+            if (activity is MainActivity) {
+                activity.evaluateJavascript(script)
+            }
+        }
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channelId = "church_announcements_channel"
+            val channelName = "Church Announcements & Notices"
+            val channelDesc = "Alerts for church notices, prayer requests, and announcements"
+            val importance = NotificationManager.IMPORTANCE_HIGH
+            val channel = NotificationChannel(channelId, channelName, importance).apply {
+                description = channelDesc
+                enableLights(true)
+                lightColor = Color.parseColor("#4997D0")
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 180, 80, 180)
+            }
+            val notificationManager = activity.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
     }
 
     @JavascriptInterface
@@ -746,6 +879,123 @@ class WebAppBridgeInterface(
             )
         } catch (e: Exception) {
             Log.e(TAG, "Error in native audit log", e)
+        }
+    }
+
+    /**
+     * Directly launches YouTube link or video ID in native YouTube application.
+     * Pinpoint implementation: Opens YouTube app directly without issues.
+     */
+    @JavascriptInterface
+    fun openYouTube(urlOrId: String): Boolean {
+        return try {
+            val input = urlOrId.trim()
+            if (input.isEmpty()) return false
+
+            val videoId = extractYoutubeVideoId(input)
+            val ytPackage = "com.google.android.youtube"
+            val pm = activity.packageManager
+
+            // Canonical web URL as fallback
+            val webUrl = if (!videoId.isNullOrEmpty()) {
+                "https://www.youtube.com/watch?v=$videoId"
+            } else if (input.startsWith("http://", ignoreCase = true) || input.startsWith("https://", ignoreCase = true)) {
+                input
+            } else {
+                "https://$input"
+            }
+
+            activity.runOnUiThread {
+                var launched = false
+
+                // 1. Explicitly launch YouTube app using vnd.youtube scheme
+                if (!videoId.isNullOrEmpty()) {
+                    try {
+                        val appIntent = Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:$videoId")).apply {
+                            setPackage(ytPackage)
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        if (appIntent.resolveActivity(pm) != null) {
+                            activity.startActivity(appIntent)
+                            launched = true
+                        }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "vnd.youtube targeted intent failed: ${e.message}")
+                    }
+                }
+
+                // 2. Explicitly launch YouTube app using canonical web URL
+                if (!launched) {
+                    try {
+                        val webYtIntent = Intent(Intent.ACTION_VIEW, Uri.parse(webUrl)).apply {
+                            setPackage(ytPackage)
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        if (webYtIntent.resolveActivity(pm) != null) {
+                            activity.startActivity(webYtIntent)
+                            launched = true
+                        }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "webUrl targeted intent failed: ${e.message}")
+                    }
+                }
+
+                // 3. Generic vnd.youtube scheme (allows alternative clients like Vanced/NewPipe)
+                if (!launched && !videoId.isNullOrEmpty()) {
+                    try {
+                        val genericYtIntent = Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:$videoId")).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        if (genericYtIntent.resolveActivity(pm) != null) {
+                            activity.startActivity(genericYtIntent)
+                            launched = true
+                        }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Generic vnd.youtube intent failed: ${e.message}")
+                    }
+                }
+
+                // 4. Fallback to system browser
+                if (!launched) {
+                    try {
+                        val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(webUrl)).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        activity.startActivity(browserIntent)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Browser fallback failed for $webUrl", e)
+                    }
+                }
+            }
+            true
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed in openYouTube: $urlOrId", e)
+            false
+        }
+    }
+
+    private fun extractYoutubeVideoId(url: String): String? {
+        val trimmed = url.trim()
+        if (trimmed.isEmpty()) return null
+        if (trimmed.matches(Regex("^[a-zA-Z0-9_-]{11}$"))) return trimmed
+        val regex = Regex("""(?:(?:www\.|m\.|music\.)?youtube\.com\/(?:watch\?(?:.*&)?v=|v\/|embed\/|shorts\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})""", RegexOption.IGNORE_CASE)
+        val match = regex.find(trimmed)
+        if (match != null && match.groupValues.size > 1) {
+            return match.groupValues[1]
+        }
+        return try {
+            val uri = Uri.parse(if (trimmed.startsWith("http://", ignoreCase = true) || trimmed.startsWith("https://", ignoreCase = true)) trimmed else "https://$trimmed")
+            val v = uri.getQueryParameter("v")
+            if (!v.isNullOrEmpty() && v.matches(Regex("^[a-zA-Z0-9_-]{11}$"))) {
+                v
+            } else {
+                val lastSeg = uri.lastPathSegment
+                if (!lastSeg.isNullOrEmpty() && lastSeg.matches(Regex("^[a-zA-Z0-9_-]{11}$"))) {
+                    lastSeg
+                } else null
+            }
+        } catch (_: Exception) {
+            null
         }
     }
 }

@@ -5,18 +5,19 @@
 set -e
 
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
+NOTIFICATIONS_DIR="/storage/emulated/0/Notifications"
 WORKSPACE_DIR="/storage/emulated/0/Workspace"
 GRADLE_BIN="/data/data/com.termux/files/home/.gradle/wrapper/dists/gradle-8.7-bin/bhs2wmbdwecv87pi65oeuq5iu/gradle-8.7/bin/gradle"
 APKSIGNER="/data/data/com.termux/files/home/android-sdk/build-tools/34.0.0/apksigner"
 
-BUILD_TYPE="${1:-debug}"
-TARGET_TASK=":app:assembleDebug"
-SOURCE_APK="${PROJECT_DIR}/app/build/outputs/apk/debug/app-debug.apk"
-OUTPUT_APK="${WORKSPACE_DIR}/ChurchCompanion.apk"
+BUILD_TYPE="${1:-release}"
+TARGET_TASK=":app:assembleRelease"
+SOURCE_APK="${PROJECT_DIR}/app/build/outputs/apk/release/app-release.apk"
+OUTPUT_APK="${NOTIFICATIONS_DIR}/ChurchCompanion.apk"
 
-if [ "$BUILD_TYPE" = "release" ]; then
-    TARGET_TASK=":app:assembleRelease"
-    SOURCE_APK="${PROJECT_DIR}/app/build/outputs/apk/release/app-release.apk"
+if [ "$BUILD_TYPE" = "debug" ]; then
+    TARGET_TASK=":app:assembleDebug"
+    SOURCE_APK="${PROJECT_DIR}/app/build/outputs/apk/debug/app-debug.apk"
 fi
 
 echo "=================================================================="
@@ -38,10 +39,12 @@ if [ ! -f "${SOURCE_APK}" ]; then
     exit 1
 fi
 
-# Clean up any secondary APKs so only one APK exists in Workspace
+# Remove APKs from Workspace so the APK exists ONLY in the Notifications folder
+rm -f "${WORKSPACE_DIR}/ChurchCompanion.apk"
 rm -f "${WORKSPACE_DIR}/ChurchCompanion-debug.apk"
+rm -f "${NOTIFICATIONS_DIR}/ChurchCompanion-debug.apk"
 
-# Save the single APK
+# Save the single APK in the Notifications folder
 cp -f "${SOURCE_APK}" "${OUTPUT_APK}"
 
 echo "=================================================================="

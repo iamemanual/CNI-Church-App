@@ -275,6 +275,12 @@ button:active, .btn:active, .btn-primary:active, .btn-secondary:active, .setting
   -ms-overflow-style: none !important;
 }
 
+/* Universal Native Scroll Margin: Ensures virtual keyboard never obscures focused fields */
+input, textarea, select {
+  scroll-margin-bottom: 14px !important;
+  scroll-margin-top: 14px !important;
+}
+
 @media (min-width: 481px) {
   body {
     background: #090c10 !important;
@@ -4451,6 +4457,8 @@ input:checked + .slider-round:before {
 /* In Song Mode (both Song List and Song Lyrics screens) */
 body.in-song-mode .main-content {
   padding-top: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
 /* Header Island Integrated Back Button */
@@ -4494,8 +4502,8 @@ body.in-song-mode .main-content {
   opacity: 1 !important;
   padding-top: calc(var(--safe-area-top, 48px) + 150px) !important;
   padding-bottom: 32px !important;
-  padding-left: 12px !important;
-  padding-right: 12px !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
   min-height: auto !important;
   height: auto !important;
   overflow: visible !important;
@@ -4509,8 +4517,8 @@ body.in-song-mode .main-content {
   opacity: 1 !important;
   padding-top: calc(var(--safe-area-top, 48px) + 164px) !important;
   padding-bottom: 32px !important;
-  padding-left: 12px !important;
-  padding-right: 12px !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
   min-height: auto !important;
   height: auto !important;
   overflow: visible !important;
@@ -4736,8 +4744,7 @@ body.in-song-selection-mode .song-list-container,
   align-items: center;
   gap: 8px;
   background: var(--bg-dock, rgba(255,255,255,0.94));
-  border: none !important;
-  border-width: 0 !important;
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.14)) !important;
   border-radius: 999px;
   padding: 0 14px;
   height: 40px;
@@ -4748,8 +4755,7 @@ body.in-song-selection-mode .song-list-container,
   outline: none !important;
 }
 .song-search-wrap:focus-within {
-  border: none !important;
-  border-width: 0 !important;
+  border: 1px solid var(--border-strong, rgba(255, 255, 255, 0.28)) !important;
   outline: none !important;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
 }
@@ -4877,11 +4883,11 @@ body.in-song-selection-mode .song-list-container,
   display: flex;
   flex-direction: column;
   gap: 10px;
-  width: 100%;
-  max-width: 760px;
-  margin: 0 auto;
+  width: 100% !important;
+  max-width: 458px !important;
+  margin: 14px auto 0 auto !important;
   padding-bottom: 24px;
-  margin-top: 14px;
+  box-sizing: border-box !important;
 }
 
 .song-list-item-card {
@@ -4889,6 +4895,7 @@ body.in-song-selection-mode .song-list-container,
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  width: 100% !important;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
@@ -4898,7 +4905,7 @@ body.in-song-selection-mode .song-list-container,
   transition: transform 0.18s cubic-bezier(0.18, 0.89, 0.32, 1.28), border-color 0.18s ease, box-shadow 0.18s ease;
   user-select: none;
   min-height: 52px;
-  box-sizing: border-box;
+  box-sizing: border-box !important;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -4923,18 +4930,21 @@ body.in-song-selection-mode .song-list-container,
 .song-item-num-badge {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  padding: 4px 10px;
-  border-radius: var(--radius-full);
-  background: rgba(73, 151, 208, 0.12);
+  justify-content: flex-start;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
   color: var(--accent-gold);
-  border: 1px solid rgba(73, 151, 208, 0.3);
+  border: none;
+  box-shadow: none;
   font-family: var(--font-display, serif);
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   white-space: nowrap;
   flex-shrink: 0;
+  min-width: 24px;
+  font-variant-numeric: tabular-nums;
 }
 
 .song-item-title {
@@ -5003,14 +5013,15 @@ body.in-song-selection-mode .song-list-container,
    ============================================================================== */
 .song-lyrics-container {
   width: 100% !important;
-  max-width: 480px !important;
-  margin: 0 auto !important;
-  padding: 0 8px 24px 8px !important;
+  max-width: 458px !important;
+  margin: 14px auto 0 auto !important;
+  padding: 0 0 24px 0 !important;
   box-sizing: border-box !important;
   display: block !important;
 }
 
 .song-lyrics-card {
+  width: 100% !important;
   background: var(--bg-surface, #ffffff) !important;
   border: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.08)) !important;
   border-radius: 20px !important;
@@ -5044,9 +5055,28 @@ body.in-song-selection-mode .song-list-container,
 .song-header-top {
   display: flex !important;
   align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  margin-bottom: 8px !important;
+  width: 100% !important;
+  min-height: 38px !important;
+}
+
+.song-header-badges {
+  display: flex !important;
+  align-items: center !important;
   gap: 6px !important;
   flex-wrap: wrap !important;
-  margin-bottom: 6px !important;
+  align-self: center !important;
+}
+
+.song-header-actions {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  align-self: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 .song-book-badge {
@@ -5157,13 +5187,13 @@ body.in-song-selection-mode .song-list-container,
   margin-bottom: 0 !important;
 }
 
-/* Actions: Clean, Centered, Symmetrical Pills */
+/* Actions: Clean, Centered, Symmetrical Pills in a Single Line */
 .song-lyrics-actions {
   display: flex !important;
-  flex-wrap: wrap !important;
+  flex-wrap: nowrap !important;
   align-items: center !important;
-  justify-content: center !important;
-  gap: 8px !important;
+  justify-content: space-between !important;
+  gap: 6px !important;
   width: 100% !important;
   box-sizing: border-box !important;
   margin-top: 16px !important;
@@ -5176,15 +5206,17 @@ body.in-song-selection-mode .song-list-container,
 }
 
 .song-lyrics-action-btn {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 5px !important;
+  gap: 4px !important;
   height: 32px !important;
-  padding: 0 13px !important;
+  padding: 0 8px !important;
   border-radius: 9999px !important;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif !important;
-  font-size: 0.76rem !important;
+  font-size: 0.72rem !important;
   font-weight: 600 !important;
   letter-spacing: -0.01em !important;
   cursor: pointer !important;
@@ -5194,6 +5226,7 @@ body.in-song-selection-mode .song-list-container,
   transition: all 0.15s ease !important;
   white-space: nowrap !important;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+  box-sizing: border-box !important;
 }
 
 [data-theme="dark"] .song-lyrics-action-btn {
@@ -7204,6 +7237,7 @@ body.in-song-mode .floating-dock {
   box-shadow: var(--shadow-sm);
 }
 
+
 .settings-group-title {
   font-family: var(--font-display);
   font-size: 0.90rem;
@@ -7542,6 +7576,127 @@ body.in-song-mode .floating-dock {
 
 .toggle-switch input:checked + .toggle-slider:before {
   transform: translateX(20px);
+}
+
+/* ==========================================================================
+   iOS Style Notification Settings Card & Geometrical Toggle Switch
+   ========================================================================== */
+.notification-status-card {
+  background: var(--bg-card, var(--bg-surface));
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md, 14px);
+  padding: 12px 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .notification-status-card {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="amoled"] .notification-status-card {
+  background: #080808;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.notification-setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0;
+  border-top: none;
+}
+
+.setting-icon-info-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-setting-icon-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: rgba(127, 82, 255, 0.12);
+  color: #7F52FF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, background-color 0.25s ease, color 0.25s ease;
+}
+
+.notification-setting-icon-wrap.active {
+  background: rgba(52, 199, 89, 0.14);
+  color: #34C759;
+}
+
+/* Authentic Apple iOS Geometrical Toggle Switch */
+.ios-toggle-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 51px;
+  height: 31px;
+  flex-shrink: 0;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ios-toggle-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+  pointer-events: none;
+}
+
+.ios-toggle-track {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background-color: #E9E9EB;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  transition: background-color 0.28s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.28s ease;
+  box-sizing: border-box;
+}
+
+[data-theme="dark"] .ios-toggle-track,
+[data-theme="amoled"] .ios-toggle-track {
+  background-color: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.ios-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.22), 0 1px 2px rgba(0, 0, 0, 0.12);
+  transition: transform 0.28s cubic-bezier(0.34, 1.36, 0.64, 1);
+}
+
+.ios-toggle-switch input:checked + .ios-toggle-track {
+  background-color: #34C759; /* Apple iOS System Green */
+  border-color: #30B753;
+}
+
+.ios-toggle-switch input:checked + .ios-toggle-track .ios-toggle-thumb {
+  transform: translateX(22px);
+}
+
+.ios-toggle-switch input:focus-visible + .ios-toggle-track {
+  outline: 2px solid var(--accent-gold, #C5A059);
+  outline-offset: 2px;
 }
 
 .setting-actions-column {
@@ -13200,5 +13355,138 @@ html, body, .app-container, .main-content, .scrollable-content, #viewChat .wa-ch
     scroll-behavior: auto !important;
   }
 }
+
+/* ==============================================================================
+   CHURCH ANNOUNCEMENT PUSH NOTIFICATION BANNER (iOS 27 Dynamic Island Style)
+   ============================================================================== */
+.church-push-banner {
+  position: fixed !important;
+  top: calc(var(--safe-area-top, 48px) + 12px) !important;
+  left: 50% !important;
+  transform: translateX(-50%) translateY(-140%) scale(0.95);
+  width: calc(100% - 24px) !important;
+  max-width: 440px !important;
+  z-index: 10005 !important;
+  border-radius: 24px !important;
+  background: rgba(24, 28, 36, 0.95) !important;
+  backdrop-filter: blur(28px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.40), 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+  padding: 12px 14px !important;
+  box-sizing: border-box !important;
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.38s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif !important;
+}
+
+[data-theme="light"] .church-push-banner {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.05) !important;
+}
+
+.church-push-banner.is-visible {
+  transform: translateX(-50%) translateY(0) scale(1) !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+.push-banner-inner {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 12px !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+.push-banner-icon {
+  flex-shrink: 0 !important;
+  margin-top: 1px !important;
+}
+
+.push-banner-icon img {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 9px !important;
+  display: block !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+}
+
+.push-banner-content {
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+.push-banner-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-bottom: 2px !important;
+}
+
+.push-banner-app-name {
+  font-size: 0.65rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  color: var(--accent-gold, #f59e0b) !important;
+}
+
+.push-banner-time {
+  font-size: 0.65rem !important;
+  color: var(--text-muted, #94a3b8) !important;
+  font-weight: 600 !important;
+}
+
+.push-banner-title {
+  font-size: 0.88rem !important;
+  font-weight: 700 !important;
+  color: var(--text-primary, #ffffff) !important;
+  line-height: 1.25 !important;
+  margin-bottom: 3px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+[data-theme="light"] .push-banner-title {
+  color: #0f172a !important;
+}
+
+.push-banner-body {
+  font-size: 0.78rem !important;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.82)) !important;
+  line-height: 1.35 !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+}
+
+[data-theme="light"] .push-banner-body {
+  color: #475569 !important;
+}
+
+.push-banner-close {
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-muted, #94a3b8) !important;
+  font-size: 0.9rem !important;
+  padding: 2px 4px !important;
+  cursor: pointer !important;
+  line-height: 1 !important;
+  border-radius: 6px !important;
+  margin-left: 2px !important;
+  align-self: flex-start !important;
+  transition: color 0.15s ease !important;
+}
+
+.push-banner-close:hover {
+  color: var(--text-primary, #ffffff) !important;
+}
+
 
 

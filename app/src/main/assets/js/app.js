@@ -87,7 +87,6 @@
         syncTasks.push(
           window.ChurchSync.Almanac.list()
             .then(() => {
-              if (typeof hydrateAlmanacStore === 'function') hydrateAlmanacStore();
               if (typeof renderAlmanacModule === 'function') renderAlmanacModule();
               if (typeof updateHomeDailyVerseAndDate === 'function') updateHomeDailyVerseAndDate();
             })
@@ -2823,6 +2822,11 @@
       if (almanacAddBtn) {
         almanacAddBtn.style.setProperty('display', isSuperAdmin ? 'flex' : 'none', 'important');
       }
+
+      // Sync Native Notification Toggle UI (Settings Pinpoint)
+      if (typeof window.syncNotificationToggleUi === 'function') {
+        window.syncNotificationToggleUi();
+      }
     }
 
     // 11. Request Notes Modal Handlers
@@ -3371,8 +3375,7 @@
     updateHomeDailyVerseAndDate();
     renderAnnouncementHomeUI();
     renderTodaySongHomeUI();
-    if (typeof hydrateAlmanacStore === 'function') hydrateAlmanacStore();
-    renderAlmanacModule();
+    if (typeof renderAlmanacModule === 'function') renderAlmanacModule();
     initPdfEngine();
     loadSavedSettings();
     loadBookmarks();
@@ -3940,6 +3943,9 @@
       item.addEventListener('click', (e) => {
         e.preventDefault();
         const targetTab = item.dataset.tab;
+        if (targetTab === 'viewAlmanac' && window.AlmanacApp && typeof window.AlmanacApp.goToYearSelection === 'function') {
+          window.AlmanacApp.goToYearSelection(true);
+        }
         if (targetTab && views[targetTab]) {
           switchTab(targetTab, true);
         }
@@ -4233,6 +4239,28 @@
       return true;
     }
 
+    // 4b. Check Almanac Modals
+    const openAlmanacModal = document.querySelector('.modal-backdrop.is-open');
+    if (openAlmanacModal) {
+      if (openAlmanacModal.id === 'scriptureModal' && window.AlmanacApp?.closeScriptureModal) {
+        window.AlmanacApp.closeScriptureModal();
+      } else if (openAlmanacModal.id === 'searchModal' && window.AlmanacApp?.closeSearchModal) {
+        window.AlmanacApp.closeSearchModal();
+      } else if (openAlmanacModal.id === 'legendModal' && window.AlmanacApp?.closeLegendModal) {
+        window.AlmanacApp.closeLegendModal();
+      } else if (openAlmanacModal.id === 'manualAddModal' && window.AlmanacApp?.closeManualAddModal) {
+        window.AlmanacApp.closeManualAddModal();
+      } else if (openAlmanacModal.id === 'addYearModal' && window.AlmanacApp?.closeAddYearModal) {
+        window.AlmanacApp.closeAddYearModal();
+      } else if (openAlmanacModal.id === 'deleteYearModal' && window.AlmanacApp?.closeDeleteYearModal) {
+        window.AlmanacApp.closeDeleteYearModal();
+      } else {
+        openAlmanacModal.classList.remove('is-open');
+        openAlmanacModal.setAttribute('aria-hidden', 'true');
+      }
+      return true;
+    }
+
     // 5. Check Timeline Detail View
     if (state.activeTab === 'viewTimelineDetail') {
       const detailBackBtn = document.getElementById('timelineDetailBackBtn');
@@ -4289,6 +4317,43 @@
 
     // 10. Check Chat Screen
     if (state.activeTab === 'viewChat') {
+      switchTab('viewHome', true, false);
+      return true;
+    }
+
+    // 10b. Check Liturgical Almanac Multi-Screen Navigation (Details -> Day -> Month -> Year -> Home)
+    if (state.activeTab === 'viewAlmanac') {
+      if (window.AlmanacApp && typeof window.AlmanacApp.handleBackAction === 'function') {
+        const handledByAlmanac = window.AlmanacApp.handleBackAction();
+        if (handledByAlmanac) return true;
+      } else {
+        const selBar = document.getElementById('selectionModeBar');
+        if (selBar && selBar.classList.contains('is-visible')) {
+          selBar.classList.remove('is-visible');
+          return true;
+        }
+        const scrDetails = document.getElementById('screenDetails');
+        if (scrDetails && scrDetails.classList.contains('active-screen')) {
+          if (window.AlmanacApp?.goToDaySelection) {
+            window.AlmanacApp.goToDaySelection(false);
+            return true;
+          }
+        }
+        const scrDay = document.getElementById('screenDay');
+        if (scrDay && scrDay.classList.contains('active-screen')) {
+          if (window.AlmanacApp?.goToMonthSelection) {
+            window.AlmanacApp.goToMonthSelection(false);
+            return true;
+          }
+        }
+        const scrMonth = document.getElementById('screenMonth');
+        if (scrMonth && scrMonth.classList.contains('active-screen')) {
+          if (window.AlmanacApp?.goToYearSelection) {
+            window.AlmanacApp.goToYearSelection(false);
+            return true;
+          }
+        }
+      }
       switchTab('viewHome', true, false);
       return true;
     }
@@ -4541,6 +4606,10 @@
       document.body.classList.remove('in-import-mode');
     }
 
+    if (tabId !== 'viewAlmanac') {
+      document.body.classList.remove('in-almanac-details');
+    }
+
     try {
       localStorage.setItem('sanctuary_active_tab', tabId);
       if (tabId !== 'viewBookReader' && tabId !== 'viewSongList' && tabId !== 'viewSongLyrics') {
@@ -4567,7 +4636,11 @@
       updateAppPermissionsUI();
     }
     if (tabId === 'viewAboutChurch') {
-      if (typeof renderAboutChurch === 'function') renderAboutChurch();
+      if (typeof window.refreshAboutChurchFromCloud === 'function') {
+        window.refreshAboutChurchFromCloud();
+      } else if (typeof renderAboutChurch === 'function') {
+        renderAboutChurch();
+      }
       if (typeof updateAppPermissionsUI === 'function') updateAppPermissionsUI();
     }
 
@@ -4593,8 +4666,12 @@
     if (tabId === 'viewHome') {
       updateHomeDailyVerseAndDate();
     } else if (tabId === 'viewAlmanac') {
-      almanacNavState.level = 'years';
-      renderAlmanacModule();
+      if (typeof window.AlmanacApp !== 'undefined' && typeof window.AlmanacApp.goToYearSelection === 'function') {
+        window.AlmanacApp.goToYearSelection(false);
+      }
+      if (typeof renderAlmanacModule === 'function') {
+        renderAlmanacModule();
+      }
     } else if (tabId === 'viewBookmark') {
       renderBookmarks();
     } else if (tabId === 'viewBulletinManager') {
@@ -6171,1051 +6248,19 @@
   window.nextPdfPage = nextPdfPage;
   window.prevPdfPage = prevPdfPage;
 
-    /* ==========================================================================
-     3. ALMANAC MODULE — FOLDER-BASED NAVIGATION & CALENDAR SYSTEM
+  /* ==========================================================================
+     3. LITURGICAL ALMANAC MODULE
      ========================================================================== */
-  function getLiveLiturgicalDate() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth();
-    const day = now.getDate();
-    const mStr = String(month + 1).padStart(2, '0');
-    const dStr = String(day).padStart(2, '0');
-    return {
-      year,
-      month,
-      day,
-      dateKey: `${year}-${mStr}-${dStr}`
-    };
-  }
-
-  const initialLiveDate = getLiveLiturgicalDate();
-  const almanacNavState = {
-    level: 'years', // 'years' | 'months' | 'calendar' | 'day'
-    selectedYear: initialLiveDate.year,
-    selectedMonth: initialLiveDate.month,
-    expandedDateKey: initialLiveDate.dateKey
-  };
-
-  const monthNamesList = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
-
-  const monthSeasonTags = {
-    0: { season: 'Epiphany & Ordinary Time', tag: 'Epiphany', color: 'Green' },
-    1: { season: 'Transfiguration & Lent', tag: 'Lenten Tide', color: 'Violet' },
-    2: { season: 'Lenten Journey & Passiontide', tag: 'Passiontide', color: 'Violet' },
-    3: { season: 'Holy Week & Eastertide', tag: 'Eastertide', color: 'White' },
-    4: { season: 'Ascension & Pentecost', tag: 'Pentecost', color: 'Red' },
-    5: { season: 'Trinity & Kingdomtide', tag: 'Trinity Tide', color: 'Green' },
-    6: { season: 'Season of Ordinary Time', tag: 'Ordinary Time', color: 'Green' },
-    7: { season: 'Season of Ordinary Time', tag: 'Ordinary Time', color: 'Green' },
-    8: { season: 'Season of Ordinary Time', tag: 'Ordinary Time', color: 'Green' },
-    9: { season: 'Kingdomtide & Reformation', tag: 'Kingdomtide', color: 'Green' },
-    10: { season: 'Christ the King & Advent', tag: 'Advent', color: 'Violet' },
-    11: { season: 'Advent & Nativity of Christ', tag: 'Christmas', color: 'White' }
-  };
-
-  let isAlmanacDiskLoaded = false;
-  function hydrateAlmanacStore() {
-    if (!window.CHURCH_DATA) window.CHURCH_DATA = {};
-    if (!window.CHURCH_DATA.almanacDatabase) window.CHURCH_DATA.almanacDatabase = {};
-
-    // 1. Hydrate from LocalStorage custom edits
-    try {
-      const stored = localStorage.getItem('sanctuary_custom_almanac') || localStorage.getItem('sanctuary_custom_almanac_entries');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed && typeof parsed === 'object') {
-          Object.assign(window.CHURCH_DATA.almanacDatabase, parsed);
-        }
-      }
-    } catch (e) {
-      console.warn('[Almanac] LocalStorage hydration warning:', e);
-    }
-
-    // 2. Hydrate from Dexie IndexedDB
-    try {
-      if (typeof churchDexieDb !== 'undefined' && churchDexieDb?.almanac_entries) {
-        churchDexieDb.almanac_entries.toArray().then(entries => {
-          if (Array.isArray(entries) && entries.length > 0) {
-            let changed = false;
-            entries.forEach(entry => {
-              const k = entry.date_key || entry.dateKey;
-              if (!k) return;
-              let detailsObj = entry;
-              if (entry.details && typeof entry.details === 'string') {
-                try { detailsObj = { ...JSON.parse(entry.details), ...entry }; } catch (_) {}
-              }
-              window.CHURCH_DATA.almanacDatabase[k] = {
-                ...(window.CHURCH_DATA.almanacDatabase[k] || {}),
-                ...detailsObj,
-                dateKey: k
-              };
-              changed = true;
-            });
-            if (changed && almanacNavState.level === 'day') {
-              const container = document.getElementById('almanacContentContainer');
-              if (container && almanacNavState.expandedDateKey) {
-                renderAlmanacDayDetailView(container, almanacNavState.expandedDateKey);
-              }
-            }
-          }
-        }).catch(() => {});
-      }
-    } catch (_) {}
-
-    // 3. Hydrate missing days from full year JSON over HTTP
-    if (!isAlmanacDiskLoaded && typeof window !== 'undefined' && window.location && window.location.protocol.startsWith('http')) {
-      isAlmanacDiskLoaded = true;
-      fetch('data/almanac_full_year_2026.json')
-        .then(res => res.ok ? res.json() : null)
-        .then(json => {
-          if (json && typeof json === 'object') {
-            for (const [k, v] of Object.entries(json)) {
-              if (!window.CHURCH_DATA.almanacDatabase[k]) {
-                window.CHURCH_DATA.almanacDatabase[k] = v;
-              }
-            }
-          }
-        })
-        .catch(() => {});
-    }
-  }
-  window.hydrateAlmanacStore = hydrateAlmanacStore;
-
   function renderAlmanacModule() {
-    window.renderAlmanacModule = renderAlmanacModule;
-    hydrateAlmanacStore();
-    const container = document.getElementById('almanacContentContainer');
-    const breadcrumbs = document.getElementById('almanacBreadcrumbs');
-    const mainTitle = document.getElementById('almanacSectionMainTitle');
-    const subtitle = document.getElementById('almanacSectionSubtitle');
-    if (!container || !breadcrumbs) return;
-
-    // 1. Render Breadcrumbs
-    renderAlmanacBreadcrumbs(breadcrumbs);
-
-    // 2. Render View based on level
-    if (almanacNavState.level === 'years') {
-      if (mainTitle) mainTitle.textContent = 'Liturgical Almanac';
-      if (subtitle) subtitle.textContent = 'Select a liturgical year to explore lectionary folders';
-      renderAlmanacYearView(container);
-    } else if (almanacNavState.level === 'months') {
-      if (mainTitle) mainTitle.textContent = `Liturgical Year ${almanacNavState.selectedYear}`;
-      if (subtitle) subtitle.textContent = 'Select a month folder to open monthly lectionary calendar';
-      renderAlmanacMonthView(container);
-    } else if (almanacNavState.level === 'calendar') {
-      const mName = monthNamesList[almanacNavState.selectedMonth] || '';
-      const seasonInfo = monthSeasonTags[almanacNavState.selectedMonth];
-      if (mainTitle) mainTitle.textContent = `${mName} ${almanacNavState.selectedYear}`;
-      if (subtitle) subtitle.textContent = seasonInfo ? `${seasonInfo.season} • Daily Lectionary` : 'Daily lectionary readings, feast days & worship order';
-      renderAlmanacCalendarView(container);
-    } else if (almanacNavState.level === 'day') {
-      const dayData = CHURCH_DATA.almanacDatabase ? CHURCH_DATA.almanacDatabase[almanacNavState.expandedDateKey] : null;
-      if (dayData) {
-        const [y, m, d] = (dayData.dateKey || almanacNavState.expandedDateKey).split('-').map(Number);
-        const dayDateObj = new Date(y, m - 1, d);
-        const fullWeekday = !isNaN(dayDateObj.getTime()) ? dayDateObj.toLocaleDateString('en-US', { weekday: 'long' }) : (dayData.dayName || '');
-        if (mainTitle) mainTitle.textContent = `${fullWeekday}, ${String(dayData.day).padStart(2, '0')} ${dayData.monthName} ${dayData.year}`;
-        if (subtitle) subtitle.textContent = dayData.theme ? `${dayData.theme} • Liturgical Color: ${dayData.color || 'Green'}` : `${fullWeekday} Lectionary • Liturgical Color: ${dayData.color || 'Green'}`;
-      } else {
-        if (mainTitle) mainTitle.textContent = 'Day Details';
-        if (subtitle) subtitle.textContent = 'Liturgical lectionary and worship readings';
-      }
-      renderAlmanacDayDetailView(container, almanacNavState.expandedDateKey);
-    }
-  }
-
-  function renderAlmanacBreadcrumbs(crumbsContainer) {
-    const chevronSvg = `<svg class="almanac-crumb-chevron" viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>`;
-
-    const isYearsActive = (almanacNavState.level === 'years');
-    const isMonthsActive = (almanacNavState.level === 'months');
-    const isCalendarActive = (almanacNavState.level === 'calendar');
-    const isDayActive = (almanacNavState.level === 'day');
-
-    let html = `
-      <div class="almanac-crumb-indicator" id="almanacCrumbIndicator"></div>
-      <button class="almanac-crumb-btn ${isYearsActive ? 'active' : ''}" id="crumbYearRootBtn" data-level="years" title="All Liturgical Years" ${isYearsActive ? 'aria-current="page"' : ''}>
-        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-        <span>Almanac</span>
-      </button>
-    `;
-
-    if (isMonthsActive || isCalendarActive || isDayActive) {
-      html += `
-        ${chevronSvg}
-        <button class="almanac-crumb-btn ${isMonthsActive ? 'active' : ''}" id="crumbYearBtn" data-level="months" title="Year ${almanacNavState.selectedYear}" ${isMonthsActive ? 'aria-current="page"' : ''}>
-          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-          <span>${almanacNavState.selectedYear}</span>
-        </button>
-      `;
-    }
-
-    if (isCalendarActive || isDayActive) {
-      const mName = monthNamesList[almanacNavState.selectedMonth] || 'Calendar';
-      html += `
-        ${chevronSvg}
-        <button class="almanac-crumb-btn ${isCalendarActive ? 'active' : ''}" id="crumbMonthBtn" data-level="calendar" title="${mName} ${almanacNavState.selectedYear}" ${isCalendarActive ? 'aria-current="page"' : ''}>
-          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
-          <span>${mName}</span>
-        </button>
-      `;
-    }
-
-    if (isDayActive) {
-      const live = getLiveLiturgicalDate();
-      const dateKey = almanacNavState.expandedDateKey || live.dateKey;
-      const [y, m, d] = dateKey.split('-').map(Number);
-      const dayData = CHURCH_DATA.almanacDatabase ? CHURCH_DATA.almanacDatabase[dateKey] : null;
-      const dayColor = dayData?.color || 'Green';
-      const colorInfo = getLiturgicalColorInfo(dayColor);
-      const mName = (monthNamesList && monthNamesList[m - 1]) ? monthNamesList[m - 1] : '';
-      const dayDateObj = new Date(y, m - 1, d);
-      const weekdayShort = !isNaN(dayDateObj.getTime()) ? dayDateObj.toLocaleDateString('en-US', { weekday: 'short' }) : '';
-      const dayLabel = `${String(d).padStart(2, '0')} ${mName.slice(0, 3)}${weekdayShort ? ` • ${weekdayShort}` : ''}`;
-
-      html += `
-        ${chevronSvg}
-        <button class="almanac-crumb-btn active" id="crumbDayBtn" data-level="day" title="Lectionary for ${d} ${mName} ${y}" aria-current="page">
-          <span class="crumb-day-dot ${colorInfo.dotClass}"></span>
-          <span>${dayLabel}</span>
-        </button>
-      `;
-    }
-
-    crumbsContainer.innerHTML = html;
-    setupAlmanacBreadcrumbDraggable(crumbsContainer);
-  }
-
-  function setupAlmanacBreadcrumbDraggable(crumbsContainer) {
-    const indicator = document.getElementById('almanacCrumbIndicator');
-    if (!indicator || !crumbsContainer) return;
-
-    const crumbBtns = Array.from(crumbsContainer.querySelectorAll('.almanac-crumb-btn'));
-    if (crumbBtns.length === 0) return;
-
-    const activeBtn = crumbsContainer.querySelector('.almanac-crumb-btn.active') || crumbBtns[crumbBtns.length - 1];
-
-    function positionIndicator(targetBtn, animate = true) {
-      if (!targetBtn || !indicator || !crumbsContainer) return;
-      const left = targetBtn.offsetLeft;
-      const top = targetBtn.offsetTop;
-      const width = targetBtn.offsetWidth;
-      const height = targetBtn.offsetHeight;
-
-      if (width === 0 || height === 0) return;
-
-      indicator.style.transition = animate 
-        ? 'transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1), width 0.24s cubic-bezier(0.2, 0.9, 0.3, 1), height 0.24s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.2s ease' 
-        : 'none';
-      indicator.style.transform = `translate3d(${left}px, ${top}px, 0)`;
-      indicator.style.width = `${width}px`;
-      indicator.style.height = `${height}px`;
-      indicator.style.opacity = '1';
-
-      if (crumbsContainer.scrollWidth > crumbsContainer.clientWidth) {
-        const targetScroll = left - (crumbsContainer.clientWidth / 2) + (width / 2);
-        crumbsContainer.scrollTo({ left: Math.max(0, targetScroll), behavior: 'smooth' });
+    if (typeof window.AlmanacApp !== 'undefined') {
+      if (typeof window.AlmanacApp.refreshCurrentScreen === 'function') {
+        window.AlmanacApp.refreshCurrentScreen();
+      } else if (typeof window.AlmanacApp.goToYearSelection === 'function') {
+        window.AlmanacApp.goToYearSelection(false);
       }
     }
-
-    // Immediate placement without post-render jitter
-    positionIndicator(activeBtn, false);
-    requestAnimationFrame(() => positionIndicator(activeBtn, false));
-
-    // Watch for resize / font loading adjustments
-    if (window.ResizeObserver && !crumbsContainer._almanacResizeObserver) {
-      crumbsContainer._almanacResizeObserver = new ResizeObserver(() => {
-        const currentActive = crumbsContainer.querySelector('.almanac-crumb-btn.active');
-        if (currentActive) positionIndicator(currentActive, false);
-      });
-      crumbsContainer._almanacResizeObserver.observe(crumbsContainer);
-    }
-
-    let suppressClickUntil = 0;
-
-    function navigateToCrumbLevel(targetLevel) {
-      if (!targetLevel || almanacNavState.level === targetLevel) {
-        positionIndicator(activeBtn, true);
-        return;
-      }
-      if (almanacNavState.expandedDateKey) {
-        const parts = almanacNavState.expandedDateKey.split('-').map(Number);
-        if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1])) {
-          almanacNavState.selectedYear = parts[0];
-          almanacNavState.selectedMonth = parts[1] - 1;
-        }
-      }
-      almanacNavState.level = targetLevel;
-      renderAlmanacModule();
-    }
-
-    // Direct click handler for each crumb button to jump to any address
-    crumbBtns.forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (Date.now() < suppressClickUntil) return;
-        const lvl = btn.getAttribute('data-level');
-        if (lvl) {
-          if (lvl !== almanacNavState.level) {
-            positionIndicator(btn, true);
-            navigateToCrumbLevel(lvl);
-          } else {
-            positionIndicator(btn, true);
-          }
-        }
-      });
-    });
-
-    let isDragging = false;
-    let dragStartX = 0;
-    let lastValidClientX = 0;
-    let hasDraggedBeyondThreshold = false;
-
-    // Viewport-based closest crumb finder (100% accurate across scroll and device scales)
-    function getClosestCrumbFromClientX(clientX) {
-      let closest = null;
-      let minDiff = Infinity;
-      crumbBtns.forEach(btn => {
-        const rect = btn.getBoundingClientRect();
-        if (clientX >= rect.left && clientX <= rect.right) {
-          closest = btn;
-          minDiff = 0;
-          return;
-        }
-        const btnCenterX = rect.left + (rect.width / 2);
-        const diff = Math.abs(clientX - btnCenterX);
-        if (diff < minDiff) {
-          minDiff = diff;
-          closest = btn;
-        }
-      });
-      return closest || activeBtn;
-    }
-
-    function handleDragStart(clientX) {
-      isDragging = true;
-      dragStartX = clientX;
-      lastValidClientX = clientX;
-      hasDraggedBeyondThreshold = false;
-      indicator.classList.add('dragging');
-    }
-
-    function handleDragMove(clientX) {
-      if (!isDragging) return;
-      if (typeof clientX === 'number' && clientX > 0) {
-        lastValidClientX = clientX;
-      }
-      const currentX = (typeof clientX === 'number' && clientX > 0) ? clientX : lastValidClientX;
-      const deltaX = currentX - dragStartX;
-      if (Math.abs(deltaX) > 6) {
-        hasDraggedBeyondThreshold = true;
-      }
-
-      const targetBtn = getClosestCrumbFromClientX(currentX);
-      if (!targetBtn) return;
-
-      const left = targetBtn.offsetLeft;
-      const top = targetBtn.offsetTop;
-      const width = targetBtn.offsetWidth;
-      const height = targetBtn.offsetHeight;
-
-      indicator.style.transition = 'transform 0.12s ease, width 0.12s ease';
-      indicator.style.transform = `translate3d(${left}px, ${top}px, 0)`;
-      indicator.style.width = `${width}px`;
-      indicator.style.height = `${height}px`;
-
-      crumbBtns.forEach(btn => {
-        if (btn === targetBtn) {
-          btn.style.color = 'var(--accent-gold)';
-        } else if (!btn.classList.contains('active')) {
-          btn.style.color = 'var(--text-muted)';
-        }
-      });
-    }
-
-    function handleDragEnd(clientX) {
-      if (!isDragging) return;
-      isDragging = false;
-      indicator.classList.remove('dragging');
-
-      crumbBtns.forEach(btn => {
-        btn.style.color = '';
-      });
-
-      const finalX = (typeof clientX === 'number' && clientX > 0) ? clientX : lastValidClientX;
-
-      if (hasDraggedBeyondThreshold) {
-        suppressClickUntil = Date.now() + 400;
-        const targetBtn = getClosestCrumbFromClientX(finalX);
-        if (targetBtn) {
-          const targetLevel = targetBtn.getAttribute('data-level');
-          if (targetLevel) {
-            if (targetLevel !== almanacNavState.level) {
-              navigateToCrumbLevel(targetLevel);
-              return;
-            }
-          }
-        }
-      }
-
-      positionIndicator(activeBtn, true);
-    }
-
-    crumbsContainer.addEventListener('pointerdown', (e) => {
-      const clickedCrumb = e.target.closest('.almanac-crumb-btn');
-      if (!clickedCrumb && e.target !== indicator) return;
-
-      handleDragStart(e.clientX);
-
-      const onPointerMove = (ev) => {
-        if (ev.cancelable) ev.preventDefault();
-        handleDragMove(ev.clientX);
-      };
-      const onPointerUp = (ev) => {
-        const finalCoord = (typeof ev.clientX === 'number' && ev.clientX > 0) ? ev.clientX : lastValidClientX;
-        handleDragEnd(finalCoord);
-        window.removeEventListener('pointermove', onPointerMove);
-        window.removeEventListener('pointerup', onPointerUp);
-        window.removeEventListener('pointercancel', onPointerCancel);
-      };
-      const onPointerCancel = () => {
-        handleDragEnd(lastValidClientX);
-        window.removeEventListener('pointermove', onPointerMove);
-        window.removeEventListener('pointerup', onPointerUp);
-        window.removeEventListener('pointercancel', onPointerCancel);
-      };
-
-      window.addEventListener('pointermove', onPointerMove, { passive: false });
-      window.addEventListener('pointerup', onPointerUp, { once: true });
-      window.addEventListener('pointercancel', onPointerCancel, { once: true });
-    });
   }
-
-  function renderAlmanacYearView(container) {
-    const db = CHURCH_DATA.almanacDatabase || {};
-    const yearsSet = new Set();
-    Object.keys(db).forEach(k => {
-      const yr = parseInt(k.split('-')[0], 10);
-      if (!isNaN(yr)) yearsSet.add(yr);
-    });
-    const availableYears = Array.from(yearsSet).sort((a, b) => a - b);
-
-    if (availableYears.length === 0) {
-      container.innerHTML = `
-        <div class="empty-state-card" style="text-align:center; padding:32px 20px; background:var(--bg-surface); border-radius:var(--radius-lg); border:1px solid var(--border-subtle);">
-          <p style="color:var(--text-muted);">No liturgical lectionary years available.</p>
-        </div>
-      `;
-      return;
-    }
-
-    const live = getLiveLiturgicalDate();
-    let cardsHtml = '<div class="almanac-folder-grid">';
-    availableYears.forEach(yearNum => {
-      const prefix = `${yearNum}-`;
-      const yearEntriesCount = Object.keys(db).filter(k => k.startsWith(prefix)).length;
-      const isCurrentYear = (yearNum === live.year);
-
-      cardsHtml += `
-        <div class="almanac-folder-card ${isCurrentYear ? 'current-month' : ''}" data-year="${yearNum}" role="button" tabindex="0" title="Open ${yearNum} Lectionary ${isCurrentYear ? '(Current Year)' : ''}">
-          ${isCurrentYear ? '<div class="almanac-live-beacon" title="Live Year"><span class="almanac-beacon-radar"></span><span class="almanac-beacon-core"></span></div>' : ''}
-          <div class="almanac-folder-title">${yearNum}</div>
-          <div class="almanac-folder-entries">${yearEntriesCount > 0 ? `${yearEntriesCount} Entries` : 'Liturgical Year'}</div>
-        </div>
-      `;
-    });
-
-    // Beside the year card add an iOS-styled plus import card (Pinpoint: Super Admin Only)
-    const perms = (typeof useAppPermissions === 'function') ? useAppPermissions() : null;
-    const isSuperAdminUser = Boolean(
-      perms?.isSuperAdmin ||
-      perms?.role === 'superadmin' ||
-      (typeof currentAuthSession !== 'undefined' && currentAuthSession && (
-        currentAuthSession.email === SUPER_ADMIN_EMAIL ||
-        currentAuthSession.role === 'superadmin'
-      ))
-    );
-
-    if (isSuperAdminUser) {
-      cardsHtml += `
-        <div class="almanac-folder-card almanac-add-year-card" id="almanacAddImportYearBtn" role="button" tabindex="0" title="Import / Add Almanac Records">
-          <div class="almanac-folder-add-icon">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-          </div>
-          <div class="almanac-folder-title">+ Import</div>
-          <div class="almanac-folder-entries">New Records</div>
-        </div>
-      `;
-    }
-
-    cardsHtml += '</div>';
-
-    container.innerHTML = cardsHtml;
-
-    container.querySelectorAll('.almanac-folder-card[data-year]').forEach(card => {
-      card.addEventListener('click', () => {
-        const yr = parseInt(card.getAttribute('data-year'), 10);
-        almanacNavState.selectedYear = yr;
-        almanacNavState.level = 'months';
-        renderAlmanacModule();
-      });
-    });
-
-    const addAlmanacYearBtn = container.querySelector('#almanacAddImportYearBtn');
-    if (addAlmanacYearBtn) {
-      addAlmanacYearBtn.addEventListener('click', () => {
-        const p = (typeof useAppPermissions === 'function') ? useAppPermissions() : null;
-        const canImport = Boolean(
-          p?.isSuperAdmin ||
-          p?.role === 'superadmin' ||
-          (typeof currentAuthSession !== 'undefined' && currentAuthSession && (
-            currentAuthSession.email === SUPER_ADMIN_EMAIL ||
-            currentAuthSession.role === 'superadmin'
-          ))
-        );
-        if (!canImport) return;
-        if (typeof window.navigateToImportManager === 'function') {
-          window.navigateToImportManager('almanac');
-        } else {
-          switchTab('viewImportManager');
-        }
-      });
-    }
-  }
-
-  function renderAlmanacMonthView(container) {
-    const db = CHURCH_DATA.almanacDatabase || {};
-    const live = getLiveLiturgicalDate();
-    let gridHtml = '<div class="almanac-month-grid">';
-    monthNamesList.forEach((mName, idx) => {
-      const mStr = String(idx + 1).padStart(2, '0');
-      const prefix = `${almanacNavState.selectedYear}-${mStr}-`;
-      const entriesCount = Object.keys(db).filter(k => k.startsWith(prefix)).length;
-      const isCurrentMonth = (almanacNavState.selectedYear === live.year && idx === live.month);
-
-      gridHtml += `
-        <div class="almanac-month-card ${isCurrentMonth ? 'current-month' : ''}" data-month-idx="${idx}" role="button" tabindex="0" title="Open ${mName} Calendar ${isCurrentMonth ? '(Current Month)' : ''}">
-          ${isCurrentMonth ? '<div class="almanac-live-beacon" title="Live Month"><span class="almanac-beacon-radar"></span><span class="almanac-beacon-core"></span></div>' : ''}
-          <div class="almanac-month-name">${mName}</div>
-          <div class="almanac-month-entries">${entriesCount} Entries</div>
-        </div>
-      `;
-    });
-    gridHtml += '</div>';
-
-    container.innerHTML = gridHtml;
-
-    container.querySelectorAll('.almanac-month-card').forEach(card => {
-      card.addEventListener('click', () => {
-        const mIdx = parseInt(card.getAttribute('data-month-idx'), 10);
-        almanacNavState.selectedMonth = mIdx;
-        almanacNavState.level = 'calendar';
-        renderAlmanacModule();
-      });
-    });
-  }
-
-  function getLiturgicalColorInfo(colorStr) {
-    const c = (colorStr || 'Green').toLowerCase().trim();
-    if (c === 'gold' || (c.includes('gold') && !c.includes('white'))) {
-      return { badgeClass: 'color-gold', dotClass: 'dot-gold', name: 'Gold' };
-    }
-    if (c === 'white' || (c.includes('white') && !c.includes('gold'))) {
-      return { badgeClass: 'color-white', dotClass: 'dot-white', name: 'White' };
-    }
-    if (c === 'red' || c.includes('red')) {
-      return { badgeClass: 'color-red', dotClass: 'dot-red', name: 'Red' };
-    }
-    if (c === 'purple') {
-      return { badgeClass: 'color-purple', dotClass: 'dot-purple', name: 'Purple' };
-    }
-    if (c === 'violet' || c.includes('violet')) {
-      return { badgeClass: 'color-violet', dotClass: 'dot-violet', name: 'Violet' };
-    }
-    return { badgeClass: 'color-green', dotClass: 'dot-green', name: 'Green' };
-  }
-
-  function renderAlmanacCalendarView(container) {
-    const y = almanacNavState.selectedYear;
-    const m = almanacNavState.selectedMonth;
-    const mName = monthNamesList[m];
-    const live = getLiveLiturgicalDate();
-
-    const firstDayIndex = new Date(y, m, 1).getDay();
-    const daysInMonth = new Date(y, m + 1, 0).getDate();
-
-    let calHtml = `
-      <div class="almanac-calendar-card">
-        <div class="almanac-calendar-header">
-          <button class="almanac-cal-btn" id="calPrevMonthBtn" title="Previous Month">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-          </button>
-          <div class="almanac-cal-month-title">${mName} ${y}</div>
-          <button class="almanac-cal-btn" id="calNextMonthBtn" title="Next Month">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
-        </div>
-
-        <div class="almanac-weekdays-row">
-          <div class="almanac-weekday-label sunday">Sun</div>
-          <div class="almanac-weekday-label">Mon</div>
-          <div class="almanac-weekday-label">Tue</div>
-          <div class="almanac-weekday-label">Wed</div>
-          <div class="almanac-weekday-label">Thu</div>
-          <div class="almanac-weekday-label">Fri</div>
-          <div class="almanac-weekday-label">Sat</div>
-        </div>
-
-        <div class="almanac-days-grid">
-    `;
-
-    for (let p = 0; p < firstDayIndex; p++) {
-      calHtml += '<div class="almanac-day-cell empty"></div>';
-    }
-
-    for (let d = 1; d <= daysInMonth; d++) {
-      const dStr = String(d).padStart(2, '0');
-      const mStr = String(m + 1).padStart(2, '0');
-      const dateKey = `${y}-${mStr}-${dStr}`;
-
-      const dayData = CHURCH_DATA.almanacDatabase ? CHURCH_DATA.almanacDatabase[dateKey] : null;
-      const isToday = (y === live.year && m === live.month && d === live.day);
-      const isExpanded = (almanacNavState.expandedDateKey === dateKey);
-
-      let colorClass = 'dot-green';
-      if (dayData && dayData.color) {
-        const cInfo = getLiturgicalColorInfo(dayData.color);
-        colorClass = cInfo.dotClass;
-      }
-
-      calHtml += `
-        <div class="almanac-day-cell ${dayData ? 'has-data' : 'no-entry'} ${isToday ? 'is-today' : ''} ${isExpanded ? 'active-expanded' : ''}" data-date-key="${dateKey}" role="button" tabindex="0" title="${d} ${mName} ${y}${isToday ? ' (Today - Live Date)' : ''}">
-          <span class="day-cell-number">${d}</span>
-          ${dayData ? `<span class="day-cell-dot ${colorClass}"></span>` : ''}
-        </div>
-      `;
-    }
-
-    calHtml += `
-        </div>
-      </div>
-    `;
-
-    container.innerHTML = calHtml;
-
-    const prevBtn = document.getElementById('calPrevMonthBtn');
-    const nextBtn = document.getElementById('calNextMonthBtn');
-    if (prevBtn) {
-      prevBtn.addEventListener('click', () => {
-        if (almanacNavState.selectedMonth > 0) {
-          almanacNavState.selectedMonth--;
-        } else {
-          almanacNavState.selectedYear--;
-          almanacNavState.selectedMonth = 11;
-        }
-        renderAlmanacModule();
-      });
-    }
-    if (nextBtn) {
-      nextBtn.addEventListener('click', () => {
-        if (almanacNavState.selectedMonth < 11) {
-          almanacNavState.selectedMonth++;
-        } else {
-          almanacNavState.selectedYear++;
-          almanacNavState.selectedMonth = 0;
-        }
-        renderAlmanacModule();
-      });
-    }
-
-    const daysGrid = container.querySelector('.almanac-days-grid');
-    if (daysGrid) {
-      daysGrid.addEventListener('click', (e) => {
-        const cell = e.target.closest('.almanac-day-cell:not(.empty)');
-        if (!cell) return;
-        const key = cell.getAttribute('data-date-key');
-        if (!key) return;
-        almanacNavState.expandedDateKey = key;
-        almanacNavState.level = 'day';
-        renderAlmanacModule();
-        window.scrollTo(0, 0);
-        document.querySelector('.app-container')?.scrollTo?.(0, 0);
-      });
-    }
-  }
-
-  let activeEditingDateKey = null;
-
-  function openAlmanacEditModal(dateKey) {
-    if (!dateKey) return;
-    activeEditingDateKey = dateKey;
-
-    const data = CHURCH_DATA.almanacDatabase ? CHURCH_DATA.almanacDatabase[dateKey] : null;
-    const modal = document.getElementById('almanacEditModalOverlay');
-    const titleEl = document.getElementById('almanacEditModalTitle');
-    const themeInput = document.getElementById('editDayThemeInput');
-    const colorSelect = document.getElementById('editDayColorSelect');
-    const morningInput = document.getElementById('editDayMorningInput');
-    const eveningInput = document.getElementById('editDayEveningInput');
-    const lordsSupperInput = document.getElementById('editDayLordsSupperInput');
-
-    const [y, m, d] = dateKey.split('-').map(Number);
-    const mName = (monthNamesList && monthNamesList[m - 1]) ? monthNamesList[m - 1] : '';
-
-    if (titleEl) {
-      titleEl.textContent = `Edit Day: ${d} ${mName} ${y}`;
-    }
-
-    if (data) {
-      if (themeInput) themeInput.value = data.theme || '';
-      if (colorSelect) colorSelect.value = data.color || 'Green';
-      if (morningInput) morningInput.value = (data.morningWorship || []).join('\n');
-      if (eveningInput) eveningInput.value = (data.eveningWorship || []).join('\n');
-      if (lordsSupperInput) lordsSupperInput.value = (data.lordsSupper || []).join('\n');
-    } else {
-      if (themeInput) themeInput.value = '';
-      if (colorSelect) colorSelect.value = 'Green';
-      if (morningInput) morningInput.value = '';
-      if (eveningInput) eveningInput.value = '';
-      if (lordsSupperInput) lordsSupperInput.value = '';
-    }
-
-    showModal(modal);
-  }
-
-  function closeAlmanacEditModal() {
-    const modal = document.getElementById('almanacEditModalOverlay');
-    hideModal(modal);
-    activeEditingDateKey = null;
-  }
-
-  async function saveAlmanacEdit() {
-    if (!activeEditingDateKey) {
-      closeAlmanacEditModal();
-      return;
-    }
-
-    const confirmed = await window.showConfirmDialog({
-      title: 'Save Almanac Entry?',
-      message: `Save updated liturgical readings for ${activeEditingDateKey}?`,
-      icon: '📖',
-      confirmText: 'Save Lectionary'
-    });
-    if (!confirmed) return;
-
-    if (!CHURCH_DATA.almanacDatabase) {
-      CHURCH_DATA.almanacDatabase = {};
-    }
-
-    const themeInput = document.getElementById('editDayThemeInput');
-    const colorSelect = document.getElementById('editDayColorSelect');
-    const morningInput = document.getElementById('editDayMorningInput');
-    const eveningInput = document.getElementById('editDayEveningInput');
-    const lordsSupperInput = document.getElementById('editDayLordsSupperInput');
-
-    const parseLines = (val) => (val || '').split('\n').map(s => s.trim()).filter(Boolean);
-
-    const [y, m, d] = activeEditingDateKey.split('-').map(Number);
-    const mName = (monthNamesList && monthNamesList[m - 1]) ? monthNamesList[m - 1] : '';
-
-    const existing = CHURCH_DATA.almanacDatabase[activeEditingDateKey] || {
-      dateKey: activeEditingDateKey,
-      day: d,
-      monthName: mName,
-      year: y,
-      dayName: new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'long' })
-    };
-
-    existing.theme = themeInput ? themeInput.value.trim() : (existing.theme || '');
-    existing.color = colorSelect ? colorSelect.value : (existing.color || 'Green');
-    existing.morningWorship = morningInput ? parseLines(morningInput.value) : (existing.morningWorship || []);
-    existing.eveningWorship = eveningInput ? parseLines(eveningInput.value) : (existing.eveningWorship || []);
-    existing.lordsSupper = lordsSupperInput ? parseLines(lordsSupperInput.value) : (existing.lordsSupper || []);
-
-    CHURCH_DATA.almanacDatabase[activeEditingDateKey] = existing;
-
-    try {
-      localStorage.setItem('sanctuary_custom_almanac', JSON.stringify(CHURCH_DATA.almanacDatabase));
-      localStorage.setItem('sanctuary_custom_almanac_entries', JSON.stringify(CHURCH_DATA.almanacDatabase));
-    } catch (e) {}
-
-    // Save to Dexie IndexedDB
-    try {
-      if (typeof churchDexieDb !== 'undefined' && churchDexieDb?.almanac_entries) {
-        churchDexieDb.almanac_entries.put({
-          date_key: activeEditingDateKey,
-          year: y,
-          title: existing.theme || 'Lectionary',
-          details: JSON.stringify(existing),
-          liturgical_color: existing.color,
-          updated_at: new Date().toISOString()
-        }).catch(() => {});
-      }
-    } catch (_) {}
-
-    // Save directly to disk via Local Server if on HTTP
-    try {
-      if (typeof window !== 'undefined' && window.location && window.location.protocol.startsWith('http')) {
-        fetch('/api/almanac/save', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ dateKey: activeEditingDateKey, entry: existing })
-        }).catch(() => {});
-      }
-    } catch (_) {}
-
-    if (window.ChurchSync && window.ChurchSync.Almanac && typeof window.ChurchSync.Almanac.upsert === 'function') {
-      window.ChurchSync.Almanac.upsert({
-        date_key: activeEditingDateKey,
-        year: y,
-        title: existing.theme || 'Lectionary',
-        details: JSON.stringify(existing),
-        liturgical_color: existing.color
-      }).catch(err => console.warn('[Sync] Almanac cloud sync error:', err));
-    }
-
-    addAuditLogEntry({
-      action: 'almanac_update',
-      entity_type: 'almanac',
-      entity_id: activeEditingDateKey,
-      details: `Updated liturgical readings for ${activeEditingDateKey}${existing.theme ? ` ("${existing.theme}")` : ''} • Color: ${existing.color}`
-    });
-
-    closeAlmanacEditModal();
-    const container = document.getElementById('almanacContentContainer');
-    if (container && almanacNavState.level === 'day') {
-      renderAlmanacDayDetailView(container, activeEditingDateKey);
-    } else {
-      renderAlmanacModule();
-    }
-    showToast(`Saved lectionary for ${existing.day} ${existing.monthName} ${existing.year} ✨`);
-  }
-
-  function renderAlmanacDayDetailView(container, dateKey) {
-    const data = CHURCH_DATA.almanacDatabase ? CHURCH_DATA.almanacDatabase[dateKey] : null;
-    const perms = (typeof computeAppPermissions === 'function' && typeof currentAuthSession !== 'undefined')
-      ? computeAppPermissions(currentAuthSession)
-      : null;
-    const isSuperAdmin = Boolean(
-      perms?.isSuperAdmin ||
-      (typeof currentAuthSession !== 'undefined' && (
-        currentAuthSession?.role === 'superadmin' ||
-        currentAuthSession?.email === SUPER_ADMIN_EMAIL ||
-        (currentAuthSession?.email && currentAuthSession.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()) ||
-        (currentAuthSession?.display_name && currentAuthSession.display_name.toLowerCase().includes('emanual'))
-      ))
-    );
-    if (!data) {
-      const [y, m, d] = dateKey.split('-').map(Number);
-      const mName = monthNamesList[m - 1] || '';
-      container.innerHTML = `
-        <div class="almanac-day-screen">
-          <div class="almanac-day-screen-card" id="activeDateAccordionCard">
-            <div class="almanac-detail-header">
-              <h2 class="almanac-detail-date-title">${d} ${mName} ${y}</h2>
-              <div class="almanac-detail-theme" style="color:var(--text-muted); font-style:italic;">No liturgical entry recorded yet for this date.</div>
-            </div>
-            <div class="almanac-detail-actions">
-              <button class="almanac-action-btn primary" id="almanacEditDayBtn" title="Add Liturgical Entry">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-                <span>Add / Edit Entry</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
-      const editBtn = document.getElementById('almanacEditDayBtn');
-      if (editBtn) {
-        editBtn.addEventListener('click', () => {
-          openAlmanacEditModal(dateKey);
-        });
-      }
-      return;
-    }
-
-    const colorInfo = getLiturgicalColorInfo(data.color);
-    const colorBadgeClass = colorInfo.badgeClass;
-    const colorName = colorInfo.name;
-
-    let html = `
-      <div class="almanac-day-screen">
-        <div class="almanac-day-screen-card" id="activeDateAccordionCard">
-          <div class="almanac-detail-header">
-            <div class="almanac-header-top-row">
-              <div class="almanac-header-date-col">
-                <h2 class="almanac-detail-date-title">${String(data.day).padStart(2, '0')} ${data.monthName} ${data.year}</h2>
-                ${data.theme ? `<div class="almanac-detail-theme">${data.theme}</div>` : ''}
-              </div>
-              <div class="almanac-header-meta-col">
-                <div class="almanac-color-badge ${colorBadgeClass}">
-                  <span class="color-badge-dot"></span>
-                  <span>${colorName}</span>
-                </div>
-                <span class="almanac-weekday-tag">${data.dayName}</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="almanac-worship-section">
-    `;
-
-    // 1. Lord's Supper (if present)
-    if (data.lordsSupper && data.lordsSupper.length > 0) {
-      html += `
-        <div class="almanac-worship-card lords-supper">
-          <div class="almanac-worship-title">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v4a6 6 0 0 1-12 0V3z"/><path d="M12 13v7"/><path d="M8 20h8"/><path d="M12 6v3"/><path d="M10.5 7.5h3"/></svg>
-            <span>Lord's Supper (Sacrament of the Altar)</span>
-          </div>
-          <div class="almanac-reading-list">
-      `;
-      data.lordsSupper.forEach((rd, i) => {
-        html += `
-          <div class="almanac-reading-item">
-            <div class="reading-number-badge">${i + 1}</div>
-            <div class="reading-text-citation">${rd.replace(/\*([^\*]+)\*\*/g, '<strong>$1</strong>')}</div>
-          </div>
-        `;
-      });
-      html += '</div></div>';
-    }
-
-    // 2. Morning Worship
-    if (data.morningWorship && data.morningWorship.length > 0) {
-      html += `
-        <div class="almanac-worship-card morning">
-          <div class="almanac-worship-title">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-            <span>Morning Worship</span>
-          </div>
-          <div class="almanac-reading-list">
-      `;
-      data.morningWorship.forEach((rd, i) => {
-        html += `
-          <div class="almanac-reading-item">
-            <div class="reading-number-badge">${i + 1}</div>
-            <div class="reading-text-citation">${rd.replace(/\*([^\*]+)\*\*/g, '<strong>$1</strong>')}</div>
-          </div>
-        `;
-      });
-      html += '</div></div>';
-    }
-
-    // 3. Evening Worship
-    if (data.eveningWorship && data.eveningWorship.length > 0) {
-      html += `
-        <div class="almanac-worship-card evening">
-          <div class="almanac-worship-title">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-            <span>Evening Worship</span>
-          </div>
-          <div class="almanac-reading-list">
-      `;
-      data.eveningWorship.forEach((rd, i) => {
-        html += `
-          <div class="almanac-reading-item">
-            <div class="reading-number-badge">${i + 1}</div>
-            <div class="reading-text-citation">${rd.replace(/\*([^\*]+)\*\*/g, '<strong>$1</strong>')}</div>
-          </div>
-        `;
-      });
-      html += '</div></div>';
-    }
-
-    // Actions Row
-    html += `
-          </div>
-
-          <div class="almanac-detail-actions">
-            <button class="almanac-action-btn primary" id="almanacBookmarkDayBtn">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-              <span>Bookmark Day</span>
-            </button>
-            <button class="almanac-action-btn" id="almanacCopyDayBtn">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              <span>Copy Lectionary</span>
-            </button>
-            <button class="almanac-action-btn" id="almanacEditDayBtn" title="Edit Day Lectionary">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              <span>Edit Day</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
-
-    container.innerHTML = html;
-
-    // Attach bookmark & copy & edit
-    const bkmBtn = document.getElementById('almanacBookmarkDayBtn');
-    if (bkmBtn) {
-      bkmBtn.addEventListener('click', () => {
-        const title = `Lectionary: ${data.day} ${data.monthName} ${data.year} (${data.dayName})`;
-        const content = [
-          data.theme ? `Theme: ${data.theme}` : '',
-          data.morningWorship ? `Morning: ${data.morningWorship.join(', ')}` : '',
-          data.eveningWorship ? `Evening: ${data.eveningWorship.join(', ')}` : '',
-          data.lordsSupper ? `Lord's Supper: ${data.lordsSupper.join(', ')}` : ''
-        ].filter(Boolean).join('\n');
-
-        addBookmark({
-          title: title,
-          category: 'lectionary',
-          reference: `${data.day} ${data.monthName} ${data.year}`,
-          excerpt: content,
-          dateAdded: new Date().toISOString()
-        });
-      });
-    }
-
-    const copyBtn = document.getElementById('almanacCopyDayBtn');
-    if (copyBtn) {
-      copyBtn.addEventListener('click', () => {
-        let text = `=== ${data.day} ${data.monthName} ${data.year} (${data.dayName}) ===\n`;
-        if (data.theme) text += `Theme: ${data.theme}\n`;
-        text += `Liturgical Color: ${data.color}\n\n`;
-
-        if (data.morningWorship && data.morningWorship.length) {
-          text += `-- Morning Worship --\n` + data.morningWorship.map((r, i) => `${i+1}. ${r}`).join('\n') + '\n\n';
-        }
-        if (data.eveningWorship && data.eveningWorship.length) {
-          text += `-- Evening Worship --\n` + data.eveningWorship.map((r, i) => `${i+1}. ${r}`).join('\n') + '\n\n';
-        }
-        if (data.lordsSupper && data.lordsSupper.length) {
-          text += `-- Lord's Supper --\n` + data.lordsSupper.map((r, i) => `${i+1}. ${r}`).join('\n') + '\n\n';
-        }
-
-        copyTextToClipboard(text, () => {
-          showToast(`Copied ${data.day} ${data.monthName} lectionary to clipboard`);
-        });
-      });
-    }
-
-    const editBtn = document.getElementById('almanacEditDayBtn');
-    if (editBtn) {
-      editBtn.addEventListener('click', () => {
-        openAlmanacEditModal(dateKey);
-      });
-    }
-  }
-
-  function escapeHtml(str) {
-    if (!str) return '';
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  }
+  window.renderAlmanacModule = renderAlmanacModule;
 
   function copyTextToClipboard(text, onSuccess, onError) {
     if (!text) return;
@@ -9808,6 +8853,7 @@
             details: `Created new announcement: "${(detailsVal || '').slice(0, 60)}${detailsVal.length > 60 ? '...' : ''}"${prayerByVal ? ` (Prayer: ${prayerByVal})` : ''}`
           });
           closeAnnouncementFormModal();
+          triggerNativeAnnouncementNotification(newItem, list.length);
           showToast('Announcement Added ✨');
         }
       });
@@ -10011,6 +9057,170 @@
   function closeAnnouncementModal() {
     if (announcementModalOverlay) {
       hideModal(announcementModalOverlay);
+    }
+  }
+
+  /* Native Android OS Announcement Notification Service (Zero In-App UI Clutter) */
+  function triggerNativeAnnouncementNotification(item, totalCount = 1) {
+    if (localStorage.getItem('church_notifications_enabled') === 'false') return;
+
+    const bridge = window.AndroidBridge || window.AndroidApp || window.bridge;
+    if (!bridge || typeof bridge.showNotification !== 'function') return;
+
+    if (typeof bridge.hasNotificationPermission === 'function' && !bridge.hasNotificationPermission()) {
+      return;
+    }
+
+    const title = item && item.date 
+      ? `Church Announcement • ${item.date}` 
+      : (totalCount > 1 ? `Church Announcement (${totalCount} Notices)` : 'Church Announcement');
+    
+    const body = (item && (item.details || item.prayer_request_by)) 
+      ? (item.details || `Notice from ${item.prayer_request_by}`)
+      : 'A new announcement has been published in Church Companion.';
+
+    const tag = item && item.id ? `announcement_${item.id}` : `announcement_${Date.now()}`;
+    try {
+      bridge.showNotification(title, body, tag);
+    } catch (e) {
+      console.warn('[NativeNotif] Failed to dispatch native notification:', e);
+    }
+  }
+
+  // =========================================================================
+  // Settings Tab: Native Notification Toggle Controller (Pinpoint Architecture)
+  // =========================================================================
+  function initNotificationToggle() {
+    const toggle = document.getElementById('settingNotificationToggle');
+    const desc = document.getElementById('notificationPermissionDesc');
+    const iconWrap = document.getElementById('notificationIconWrap');
+    if (!toggle) return;
+
+    function getBridge() {
+      return window.AndroidBridge || window.AndroidApp || window.bridge;
+    }
+
+    function checkDevicePermission() {
+      const b = getBridge();
+      if (b && typeof b.hasNotificationPermission === 'function') {
+        try {
+          return b.hasNotificationPermission();
+        } catch (_) {}
+      }
+      if ('Notification' in window) {
+        return Notification.permission === 'granted';
+      }
+      return false;
+    }
+
+    function syncUI(active) {
+      if (toggle) toggle.checked = active;
+      if (iconWrap) {
+        if (active) iconWrap.classList.add('active');
+        else iconWrap.classList.remove('active');
+      }
+      if (desc) {
+        desc.textContent = active 
+          ? 'Native push notifications are active' 
+          : 'Tap toggle to allow native push notifications';
+      }
+    }
+
+    // Set initial toggle state based on OS permission + user preference
+    const userPref = localStorage.getItem('church_notifications_enabled');
+    const hasPerm = checkDevicePermission();
+    const shouldBeActive = hasPerm && userPref !== 'false';
+    syncUI(shouldBeActive);
+
+    // Global callback from Android native onRequestPermissionsResult
+    window.onNativeNotificationPermissionResult = function(granted) {
+      if (granted) {
+        localStorage.setItem('church_notifications_enabled', 'true');
+        syncUI(true);
+        showToast('Notifications enabled 🔔');
+      } else {
+        localStorage.setItem('church_notifications_enabled', 'false');
+        syncUI(false);
+        showToast('Notification permission not allowed');
+      }
+    };
+
+    // Toggle click/change event: ask mobile for permission
+    toggle.addEventListener('change', () => {
+      const wantEnabled = toggle.checked;
+      const b = getBridge();
+
+      if (wantEnabled) {
+        if (b) {
+          const alreadyGranted = checkDevicePermission();
+          if (alreadyGranted) {
+            localStorage.setItem('church_notifications_enabled', 'true');
+            syncUI(true);
+            showToast('Notifications enabled 🔔');
+          } else {
+            // Ask mobile device for permission!
+            toggle.checked = false;
+            showToast('Requesting permission from mobile device...');
+            if (typeof b.requestNotificationPermission === 'function') {
+              b.requestNotificationPermission();
+            }
+          }
+          return;
+        }
+
+        // Web browser fallback
+        if ('Notification' in window) {
+          if (Notification.permission === 'granted') {
+            localStorage.setItem('church_notifications_enabled', 'true');
+            syncUI(true);
+            showToast('Notifications enabled 🔔');
+          } else if (Notification.permission !== 'denied') {
+            toggle.checked = false;
+            Notification.requestPermission().then((permission) => {
+              if (permission === 'granted') {
+                localStorage.setItem('church_notifications_enabled', 'true');
+                syncUI(true);
+                showToast('Notifications enabled 🔔');
+              } else {
+                syncUI(false);
+                showToast('Notification permission denied');
+              }
+            });
+          } else {
+            toggle.checked = false;
+            syncUI(false);
+            showToast('Please enable notifications in device/browser settings 🔔');
+          }
+        } else {
+          localStorage.setItem('church_notifications_enabled', 'true');
+          syncUI(true);
+        }
+      } else {
+        localStorage.setItem('church_notifications_enabled', 'false');
+        syncUI(false);
+        showToast('Notifications silenced 🔕');
+      }
+    });
+
+    window.syncNotificationToggleUi = function() {
+      const currentPerm = checkDevicePermission();
+      const currentPref = localStorage.getItem('church_notifications_enabled');
+      syncUI(currentPerm && currentPref !== 'false');
+    };
+  }
+  window.initNotificationToggle = initNotificationToggle;
+
+  function checkAndNotifyNativeAnnouncements() {
+    const stored = getStoredAnnouncements();
+    if (!stored || stored.length === 0) return;
+    
+    const latest = stored[0];
+    const lastNotifiedId = localStorage.getItem('church_last_notified_native_announcement_id');
+
+    if (latest && latest.id && String(latest.id) !== lastNotifiedId) {
+      localStorage.setItem('church_last_notified_native_announcement_id', String(latest.id));
+      if (!lastNotifiedId) return; // Baseline recorded on initial install/load
+      triggerNativeAnnouncementNotification(latest, stored.length);
     }
   }
 
@@ -10359,6 +9569,18 @@
     return cleanRef === cleanKey;
   }
 
+  // ── formatSongItemNumber: format song number as 2-digit padded string without '#' (e.g. 01, 02... 10) ──
+  function formatSongItemNumber(num, fallbackIdx) {
+    let raw = (num !== undefined && num !== null && num !== '') ? num : (fallbackIdx !== undefined ? (fallbackIdx + 1) : '');
+    let s = String(raw).replace(/^#+/, '').trim();
+    const parsed = parseInt(s, 10);
+    if (!isNaN(parsed)) {
+      return parsed < 10 && parsed >= 0 ? `0${parsed}` : String(parsed);
+    }
+    return s || (fallbackIdx !== undefined ? (fallbackIdx < 9 ? `0${fallbackIdx + 1}` : `${fallbackIdx + 1}`) : '01');
+  }
+  window.formatSongItemNumber = formatSongItemNumber;
+
   // ── getSongsForBook: unified song source (static + Dexie + localStorage) ──
   async function getSongsForBook(bookKey) {
     if (!bookKey) bookKey = 'masihiGeet';
@@ -10397,8 +9619,8 @@
         if (sec && (sec.rubric || sec.title || sec.text || sec.lyrics)) {
           const title = sec.title || (sec.rubric ? sec.rubric.replace(/^गीत\s*\d+:\s*|^Song\s*\d+:\s*|^Hymn\s*#?\d+:\s*/i, '').split('(')[0].trim() : `Hymn #${idx + 1}`);
           const numMatch = sec.rubric ? sec.rubric.match(/^(?:गीत|Song|Hymn)\s*#?\s*(\d+)/i) : null;
-          const formattedNum = sec.formattedNum || (numMatch ? `#${numMatch[1]}` : `#${idx + 1}`);
           const songNum = numMatch ? parseInt(numMatch[1], 10) : (idx + 1);
+          const formattedNum = sec.formattedNum ? formatSongItemNumber(sec.formattedNum, idx) : (numMatch ? formatSongItemNumber(numMatch[1], idx) : formatSongItemNumber(idx + 1, idx));
           const songId = `static-${resolvedBookKey}-${idx}`;
 
           if (!isBlacklisted(songId, title, sec.rubric) && !isBlacklisted(null, sec.title, null)) {
@@ -10408,8 +9630,13 @@
               songNumber: songNum,
               title: title,
               lyrics: sec.text || sec.lyrics || '',
+              composer: sec.composer || sec.author || '',
+              author: sec.author || sec.composer || '',
               meta: sec.dialogue || (book ? book.title : 'Sacred Hymnal'),
-              category: sec.category || 'hymn'
+              category: sec.category || 'hymn',
+              bookKey: resolvedBookKey,
+              book_reference: resolvedBookKey,
+              youtube_url: sec.youtube_url || sec.youtubeUrl || ''
             });
           }
         }
@@ -10431,12 +9658,17 @@
             if (!alreadyExists) {
               songs.push({
                 id: songId,
-                formattedNum: `#${songNum}`,
+                formattedNum: formatSongItemNumber(songNum, idx),
                 songNumber: songNum,
                 title: title,
                 lyrics: s.lyrics || '',
+                composer: s.composer || s.author || '',
+                author: s.author || s.composer || '',
                 meta: s.category || (book ? book.title : 'Sacred Hymnal'),
-                category: s.category || 'hymn'
+                category: s.category || 'hymn',
+                bookKey: resolvedBookKey,
+                book_reference: resolvedBookKey,
+                youtube_url: s.youtube_url || s.youtubeUrl || ''
               });
             }
           }
@@ -10521,22 +9753,37 @@
             const songId = s.id || `custom-${resolvedBookKey}-${s.song_number || s.serialNumber || ''}`;
             if (!isBlacklisted(songId, s.title, null)) {
               // Deduplicate only exact same id or exact same title AND song number (avoid collision false positives)
-              const alreadyExists = songs.some(existing =>
+              const existingIdx = songs.findIndex(existing =>
                 (existing.id && songId && existing.id === songId) ||
                 (existing.title && s.title &&
                  existing.title.toLowerCase().trim() === s.title.toLowerCase().trim() &&
                  String(existing.songNumber) === String(s.song_number || s.serialNumber))
               );
-              if (!alreadyExists) {
+              const ytUrl = s.youtube_url || s.youtubeUrl || s.video_url || '';
+              if (existingIdx >= 0) {
+                // Overlay DB edits onto static or existing song
+                if (ytUrl) songs[existingIdx].youtube_url = ytUrl;
+                if (s.lyrics) songs[existingIdx].lyrics = s.lyrics;
+                if (s.title) songs[existingIdx].title = s.title;
+                if (s.composer || s.author) {
+                  songs[existingIdx].composer = s.composer || s.author;
+                  songs[existingIdx].author = s.author || s.composer;
+                }
+              } else {
                 const songNum = s.song_number || s.serialNumber || (songs.length + 1);
                 songs.push({
                   id: songId,
-                  formattedNum: `#${songNum}`,
+                  formattedNum: formatSongItemNumber(songNum, songs.length),
                   songNumber: songNum,
                   title: s.title || `Hymn #${songNum}`,
                   lyrics: s.lyrics || '',
+                  composer: s.composer || s.author || '',
+                  author: s.author || s.composer || '',
                   meta: s.author || (book ? book.title : 'Sacred Hymnal'),
-                  category: s.category || 'hymn'
+                  category: s.category || 'hymn',
+                  bookKey: resolvedBookKey,
+                  book_reference: s.book_reference || resolvedBookKey,
+                  youtube_url: ytUrl
                 });
               }
             }
@@ -10591,7 +9838,7 @@
               </span>
             </div>
             <div class="song-list-left">
-              <span class="song-item-num-badge">${escapeHtml(song.formattedNum || `#${idx + 1}`)}</span>
+              <span class="song-item-num-badge">${escapeHtml(formatSongItemNumber(song.formattedNum || song.songNumber, idx))}</span>
               <h4 class="song-item-title">${escapeHtml(song.title)}</h4>
             </div>
             <svg class="song-item-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -10945,7 +10192,7 @@
               </span>
             </div>
             <div class="song-list-left">
-              <span class="song-item-num-badge">${escapeHtml(song.formattedNum || `#${idx + 1}`)}</span>
+              <span class="song-item-num-badge">${escapeHtml(formatSongItemNumber(song.formattedNum || song.songNumber, idx))}</span>
               <h4 class="song-item-title">${escapeHtml(song.title)}</h4>
             </div>
             <svg class="song-item-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -11088,6 +10335,89 @@
     }
   }
 
+  function extractYoutubeVideoId(url) {
+    if (!url) return null;
+    const str = String(url).trim();
+    if (/^[a-zA-Z0-9_-]{11}$/.test(str)) return str;
+    const m = str.match(/(?:(?:www\.|m\.|music\.)?youtube\.com\/(?:watch\?(?:.*&)?v=|v\/|embed\/|shorts\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
+    if (m && m[1]) return m[1];
+    try {
+      const parsed = new URL(str.startsWith('http') ? str : 'https://' + str);
+      const v = parsed.searchParams.get('v');
+      if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return v;
+      const parts = parsed.pathname.split('/').filter(Boolean);
+      const last = parts[parts.length - 1];
+      if (last && /^[a-zA-Z0-9_-]{11}$/.test(last)) return last;
+    } catch (_) {}
+    return null;
+  }
+
+  function openInYoutubeApp(rawUrl) {
+    if (!rawUrl) return;
+    const str = String(rawUrl).trim();
+    if (!str) return;
+
+    // 1. Direct jump to native YouTube app via Android Bridge
+    if (window.AndroidBridge && typeof window.AndroidBridge.openYouTube === 'function') {
+      try {
+        window.AndroidBridge.openYouTube(str);
+        return;
+      } catch (e) {
+        console.warn('[YouTube] AndroidBridge.openYouTube error:', e);
+      }
+    }
+    if (window.AndroidApp && typeof window.AndroidApp.openYouTube === 'function') {
+      try {
+        window.AndroidApp.openYouTube(str);
+        return;
+      } catch (e) {
+        console.warn('[YouTube] AndroidApp.openYouTube error:', e);
+      }
+    }
+
+    // 2. Direct jump on Android browser / mobile web
+    const videoId = extractYoutubeVideoId(str);
+    const isAndroid = /Android/i.test(navigator.userAgent || '');
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+
+    if (videoId) {
+      if (isAndroid) {
+        // Direct intent jump to YouTube app on Android
+        window.location.href = `intent://www.youtube.com/watch?v=${videoId}#Intent;package=com.google.android.youtube;scheme=https;end`;
+        setTimeout(() => {
+          window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
+        }, 1200);
+        return;
+      }
+      if (isIOS) {
+        // Direct jump to YouTube app on iOS
+        window.location.href = `youtube://${videoId}`;
+        setTimeout(() => {
+          window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
+        }, 1200);
+        return;
+      }
+      // Desktop / other
+      window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    let finalUrl = str;
+    if (!/^https?:\/\//i.test(finalUrl)) {
+      finalUrl = 'https://' + finalUrl;
+    }
+    if (isAndroid) {
+      window.location.href = `intent://${finalUrl.replace(/^https?:\/\//i, '')}#Intent;package=com.google.android.youtube;scheme=https;end`;
+      setTimeout(() => {
+        window.open(finalUrl, '_blank', 'noopener,noreferrer');
+      }, 1200);
+      return;
+    }
+    window.open(finalUrl, '_blank', 'noopener,noreferrer');
+  }
+  window.extractYoutubeVideoId = extractYoutubeVideoId;
+  window.openInYoutubeApp = openInYoutubeApp;
+
   function openSongLyricsScreen(song, bookKey, songIdx = 0) {
     window.openSongLyricsScreen = openSongLyricsScreen;
     if (!song || !views.viewSongLyrics) return;
@@ -11096,8 +10426,27 @@
     window.currentOpenSong = song;
     currentActiveSongObj = song;
     window._activeEditingSong = song;
-    currentOpenSongBookKey = bookKey || song.bookKey || 'masihiGeet';
-    window.currentOpenSongBookKey = currentOpenSongBookKey;
+    let resolvedBook = bookKey || song.bookKey || song.book_reference || currentOpenSongBookKey;
+    if (resolvedBook) {
+      const cleanB = String(resolvedBook).toLowerCase().replace(/[\s_\-]+/g, '');
+      if (cleanB.includes('additional')) {
+        resolvedBook = 'additionalSongs';
+      } else if (cleanB.includes('masihi') || cleanB.includes('sangrah') || cleanB.includes('hymnal')) {
+        resolvedBook = 'masihiGeet';
+      }
+    }
+    if (!resolvedBook) {
+      resolvedBook = (song.bookName?.includes('Additional') || song.bookTitle?.includes('Additional')) 
+        ? 'additionalSongs' 
+        : 'masihiGeet';
+    }
+
+    currentOpenSongBookKey = resolvedBook;
+    window.currentOpenSongBookKey = resolvedBook;
+    song.bookKey = resolvedBook;
+    if (!song.book_reference) {
+      song.book_reference = resolvedBook === 'additionalSongs' ? 'Additional Songs of Church' : 'Masihi Geeton Ka Sangrah';
+    }
 
     try {
       localStorage.setItem('sanctuary_active_song_idx', String(songIdx));
@@ -11187,12 +10536,36 @@
         formattedLyricsHtml = '<p class="lyric-line" style="color:var(--text-muted); font-style:italic; text-align:center; padding: 24px 0;">No lyrics available for this sacred hymn.</p>';
       }
 
+      const rawYtUrl = (song.youtube_url || song.youtubeUrl || song.video_url || '').trim();
+      const videoId = extractYoutubeVideoId(rawYtUrl);
+      let finalYtUrl = rawYtUrl;
+      if (videoId && !/^https?:\/\//i.test(finalYtUrl)) {
+        finalYtUrl = `https://www.youtube.com/watch?v=${videoId}`;
+      } else if (finalYtUrl && !/^https?:\/\//i.test(finalYtUrl)) {
+        finalYtUrl = 'https://' + finalYtUrl;
+      }
+      const isAndroid = /Android/i.test(navigator.userAgent || '');
+      const nativeAppHref = (isAndroid && videoId) ? `vnd.youtube:${videoId}` : (finalYtUrl || '#');
+
       songLyricsContainer.innerHTML = `
         <div class="song-lyrics-card">
           <header class="song-lyrics-header">
             <div class="song-header-top">
-              <span class="song-book-badge">${escapeHtml(bookDisplayName)}</span>
-              ${songNum ? `<span class="song-num-badge">Hymn #${escapeHtml(String(songNum))}</span>` : ''}
+              <div class="song-header-badges">
+                <span class="song-book-badge">${escapeHtml(bookDisplayName)}</span>
+                ${songNum ? `<span class="song-num-badge">Hymn #${escapeHtml(String(songNum))}</span>` : ''}
+              </div>
+              <div class="song-header-actions">
+                ${finalYtUrl ? `
+                  <a href="${escapeHtml(nativeAppHref)}" data-yt-url="${escapeHtml(finalYtUrl)}" class="btn-song-youtube" id="songPlayYoutubeBtn" title="Play on YouTube App (${escapeHtml(song.title)})" aria-label="Play on YouTube App">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                    <span>Play</span>
+                  </a>` : `
+                  <button type="button" class="btn-song-youtube no-link" id="songPlayYoutubeBtn" title="${canEditSong ? 'Add YouTube link (Super Admin)' : 'No YouTube video linked yet'}" aria-label="Play on YouTube">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                    <span>Play</span>
+                  </button>`}
+              </div>
             </div>
             <h1 class="song-lyrics-title">${escapeHtml(song.title)}</h1>
             <hr class="song-header-divider" />
@@ -11204,7 +10577,7 @@
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
               </svg>
-              <span id="copyCurrentSongText">Copy Lyrics</span>
+              <span id="copyCurrentSongText">Copy</span>
             </button>
             <button class="song-lyrics-action-btn secondary ${isBookmarked ? 'saved' : ''}" id="bookmarkCurrentSongLyricsBtn" type="button" title="Save to Bookmarks">
               <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="${isBookmarked ? 'currentColor' : 'none'}" stroke-linecap="round" stroke-linejoin="round">
@@ -11232,6 +10605,31 @@
         </div>
       `;
 
+      // Bind YouTube Play button: jumps directly to native YouTube app
+      const ytPlayBtn = document.getElementById('songPlayYoutubeBtn');
+      if (ytPlayBtn) {
+        ytPlayBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const targetUrl = ytPlayBtn.getAttribute('data-yt-url') || finalYtUrl;
+          if (targetUrl) {
+            openInYoutubeApp(targetUrl);
+          } else {
+            if (canEditSong) {
+              showToast('Please add YouTube video link for this hymn 🎵');
+              const editBtn = document.getElementById('editCurrentSongLyricsBtn');
+              if (editBtn) editBtn.click();
+              setTimeout(() => {
+                const ytIn = document.getElementById('editSongYoutubeInput');
+                if (ytIn) ytIn.focus();
+              }, 180);
+            } else {
+              showToast('YouTube video not linked yet for this hymn 🎵');
+            }
+          }
+        });
+      }
+
       // Bind edit hymn button
       const editBtn = document.getElementById('editCurrentSongLyricsBtn');
       if (editBtn) {
@@ -11242,10 +10640,12 @@
           const authorIn = document.getElementById('editSongAuthorInput');
           const numIn = document.getElementById('editSongNumberInput');
           const lyricsIn = document.getElementById('editSongLyricsInput');
+          const youtubeIn = document.getElementById('editSongYoutubeInput');
           if (titleIn) titleIn.value = song.title || '';
           if (authorIn) authorIn.value = song.composer || song.author || '';
           if (numIn) numIn.value = song.songNumber || '';
           if (lyricsIn) lyricsIn.value = song.lyrics || '';
+          if (youtubeIn) youtubeIn.value = song.youtube_url || song.youtubeUrl || song.video_url || '';
           if (overlay) overlay.classList.remove('hidden');
         });
       }
@@ -11334,7 +10734,7 @@
             if (copyText) copyText.textContent = '✓ Copied!';
             showToast(`"${song.title}" lyrics copied to clipboard`);
             setTimeout(() => {
-              if (copyText) copyText.textContent = 'Copy Lyrics';
+              if (copyText) copyText.textContent = 'Copy';
             }, 2000);
           });
         });
@@ -11353,7 +10753,7 @@
             bookmarkBtn.classList.remove('saved');
             const svg = bookmarkBtn.querySelector('svg');
             if (svg) svg.setAttribute('fill', 'none');
-            if (bookmarkText) bookmarkText.textContent = 'Save to Bookmarks';
+            if (bookmarkText) bookmarkText.textContent = 'Bookmark';
             showToast(`"${song.title}" removed from bookmarks`);
           } else {
             addBookmark({
@@ -11365,7 +10765,7 @@
             bookmarkBtn.classList.add('saved');
             const svg = bookmarkBtn.querySelector('svg');
             if (svg) svg.setAttribute('fill', 'currentColor');
-            if (bookmarkText) bookmarkText.textContent = '✓ Saved in Bookmarks';
+            if (bookmarkText) bookmarkText.textContent = '✓ Bookmarked';
             showToast(`"${song.title}" saved to bookmarks ✨`);
           }
         });
@@ -11414,39 +10814,6 @@
   }
 
   function attachEventListeners() {
-    // Almanac Edit Day Modal Event Listeners
-    const closeAlmanacEditModalBtn = document.getElementById('closeAlmanacEditModalBtn');
-    if (closeAlmanacEditModalBtn) {
-      closeAlmanacEditModalBtn.onclick = function(e) {
-        if (e) e.preventDefault();
-        closeAlmanacEditModal();
-      };
-    }
-    const cancelAlmanacEditBtn = document.getElementById('cancelAlmanacEditBtn');
-    if (cancelAlmanacEditBtn) {
-      cancelAlmanacEditBtn.onclick = function(e) {
-        if (e) e.preventDefault();
-        closeAlmanacEditModal();
-      };
-    }
-    const saveAlmanacEditBtn = document.getElementById('saveAlmanacEditBtn');
-    if (saveAlmanacEditBtn) {
-      saveAlmanacEditBtn.onclick = function(e) {
-        if (e) e.preventDefault();
-        saveAlmanacEdit();
-      };
-    }
-    const almanacEditModalOverlay = document.getElementById('almanacEditModalOverlay');
-    if (almanacEditModalOverlay) {
-      almanacEditModalOverlay.addEventListener('click', function(e) {
-        if (e.target === almanacEditModalOverlay) {
-          closeAlmanacEditModal();
-        }
-      });
-    }
-
-
-
     // 1. Verse of the Day Pop-out Modal
     if (verseOfTheDayPillBtn) {
       verseOfTheDayPillBtn.addEventListener('click', openVerseModal);
@@ -12060,6 +11427,9 @@
     const openAboutChurchCard = document.getElementById('openAboutChurchCard');
     if (openAboutChurchCard) {
       openAboutChurchCard.addEventListener('click', () => {
+        if (typeof window.refreshAboutChurchFromCloud === 'function') {
+          window.refreshAboutChurchFromCloud();
+        }
         switchTab('viewAboutChurch');
         window.scrollTo({ top: 0, behavior: 'smooth' });
         document.querySelector('.app-container')?.scrollTo({ top: 0, behavior: 'smooth' });
@@ -12168,8 +11538,8 @@
       });
     }
 
-    function loadAboutChurchData() {
-      if (cachedAboutChurchData) {
+    function loadAboutChurchData(forceFresh = false) {
+      if (cachedAboutChurchData && !forceFresh) {
         return JSON.parse(JSON.stringify(cachedAboutChurchData));
       }
       try {
@@ -12365,8 +11735,27 @@
       renderFullscreenPhotoView();
     }
 
-    function renderAboutChurch() {
-      const data = loadAboutChurchData();
+    async function refreshAboutChurchFromCloud() {
+      cachedAboutChurchData = null;
+      if (typeof renderAboutChurch === 'function') renderAboutChurch(true);
+      if (typeof renderAboutChurchPhotoSlider === 'function') renderAboutChurchPhotoSlider();
+
+      if (window.ChurchSync && window.ChurchSync.AboutChurch && typeof window.ChurchSync.AboutChurch.get === 'function') {
+        try {
+          await window.ChurchSync.AboutChurch.get();
+          cachedAboutChurchData = null;
+          if (typeof renderAboutChurch === 'function') renderAboutChurch(true);
+          if (typeof renderAboutChurchPhotoSlider === 'function') renderAboutChurchPhotoSlider();
+        } catch (err) {
+          console.warn('[AboutChurch] Auto refresh from cloud error:', err);
+        }
+      }
+    }
+    window.refreshAboutChurchFromCloud = refreshAboutChurchFromCloud;
+
+    function renderAboutChurch(forceFresh = false) {
+      if (forceFresh) cachedAboutChurchData = null;
+      const data = loadAboutChurchData(forceFresh);
 
       // 1. Church Identity & Header
       const heroNameEl = document.getElementById('aboutChurchHeroName');
@@ -16902,6 +16291,7 @@
           console.log('[Sync] Realtime announcements change received — refreshing announcements UI');
           if (typeof renderAnnouncementHomeUI === 'function') renderAnnouncementHomeUI();
           if (typeof renderAdminAnnouncementsList === 'function') renderAdminAnnouncementsList();
+          checkAndNotifyNativeAnnouncements();
         });
       }
 
@@ -17436,6 +16826,11 @@
       });
     });
 
+    // Native Push Notification Toggle (Settings Pinpoint)
+    if (typeof initNotificationToggle === 'function') {
+      initNotificationToggle();
+    }
+
     // About: Creator details modal
     const openCreatorDetailsBtn = document.getElementById('openCreatorDetailsBtn');
     const creatorDetailsModalOverlay = document.getElementById('creatorDetailsModalOverlay');
@@ -17827,13 +17222,34 @@
     const superAdminApkFileInput = document.getElementById('superAdminApkFileInput');
     const btnSelectApkFromDevice = document.getElementById('btnSelectApkFromDevice');
     const btnUploadWorkspaceApk = document.getElementById('btnUploadWorkspaceApk');
+    const uploadApkDetailsCard = document.getElementById('uploadApkDetailsCard');
     const uploadApkProgressBox = document.getElementById('uploadApkProgressBox');
     const uploadApkStatusText = document.getElementById('uploadApkStatusText');
     const uploadApkPercent = document.getElementById('uploadApkPercent');
     const uploadApkProgressBar = document.getElementById('uploadApkProgressBar');
 
+    function displayApkUploadDetails({ name, versionName, versionCode, sizeMb, buildDate }) {
+      const detailsCard = document.getElementById('uploadApkDetailsCard');
+      const nameEl = document.getElementById('uploadApkMetaName');
+      const verNameEl = document.getElementById('uploadApkMetaVersionName');
+      const verCodeEl = document.getElementById('uploadApkMetaVersionCode');
+      const sizeEl = document.getElementById('uploadApkMetaSize');
+      const dateEl = document.getElementById('uploadApkMetaBuildDate');
+      const progressBox = document.getElementById('uploadApkProgressBox');
+
+      if (nameEl) nameEl.textContent = name || 'ChurchCompanion.apk';
+      if (verNameEl) verNameEl.textContent = versionName ? (versionName.startsWith('v') ? versionName : 'v' + versionName) : 'v2.1.12';
+      if (verCodeEl) verCodeEl.textContent = versionCode || '—';
+      if (sizeEl) sizeEl.textContent = sizeMb ? `${sizeMb} MB` : '44.0 MB';
+      if (dateEl) dateEl.textContent = buildDate || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+      if (detailsCard) detailsCard.style.display = 'block';
+      if (progressBox) progressBox.style.display = 'block';
+    }
+
     function openSuperAdminUploadModal() {
       if (superAdminUploadUpdateModalOverlay) {
+        if (uploadApkDetailsCard) uploadApkDetailsCard.style.display = 'none';
         if (uploadApkProgressBox) uploadApkProgressBox.style.display = 'none';
         superAdminUploadUpdateModalOverlay.classList.remove('hidden');
       }
@@ -17875,17 +17291,26 @@
           return;
         }
 
-        if (uploadApkProgressBox) uploadApkProgressBox.style.display = 'block';
-        if (uploadApkStatusText) uploadApkStatusText.textContent = `Analyzing & uploading ${file.name} to cloud…`;
+        // Extract metadata (versionCode, versionName, size, build date) from selected APK
+        const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+        const apkMeta = await extractApkMetadata(file);
+        const { versionCode: installedCode, versionName: installedName } = getInstalledAppInfo();
+        const apkVersionCode = (apkMeta && apkMeta.versionCode) ? parseInt(apkMeta.versionCode, 10) : installedCode;
+        const apkVersionName = (apkMeta && apkMeta.versionName) || installedName || file.name.replace(/\.apk$/i, '');
+        const buildDateStr = new Date(file.lastModified || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+        // Show structured, well-designed APK details card (Pinpoint)
+        displayApkUploadDetails({
+          name: file.name,
+          versionName: apkVersionName,
+          versionCode: apkVersionCode,
+          sizeMb: sizeMb,
+          buildDate: buildDateStr
+        });
+
+        if (uploadApkStatusText) uploadApkStatusText.textContent = `Uploading ${file.name} to cloud…`;
         if (uploadApkProgressBar) uploadApkProgressBar.style.width = '0%';
         if (uploadApkPercent) uploadApkPercent.textContent = '0%';
-
-        // Extract metadata (versionCode, versionName) from the selected APK
-        const apkMeta = await extractApkMetadata(file);
-        const { versionCode: installedCode } = getInstalledAppInfo();
-        const apkVersionCode = (apkMeta && apkMeta.versionCode) ? parseInt(apkMeta.versionCode, 10) : null;
-        const apkVersionName = (apkMeta && apkMeta.versionName) || file.name.replace(/\.apk$/i, '');
-        const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
 
         const xhr = new XMLHttpRequest();
         xhr.open('POST', `${sbUrl}/storage/v1/object/app-updates/${encodeURIComponent(file.name)}`, true);
@@ -17929,8 +17354,6 @@
               body: manifestPayload
             }).catch(() => {});
 
-            // CHECK VERSION CODE BEHAVIOR:
-            // "when i push the updates in the update, app will check if the apk version code is same as installed then its in the latest version also. show that toast notification. if its version code is different then it means its a new update. one more thing if version code is same then dont display update available."
             const updateAvailablePill = document.getElementById('appUpdateAvailablePill');
             if (apkVersionCode !== null && apkVersionCode === installedCode) {
               if (updateAvailablePill) updateAvailablePill.style.display = 'none';
@@ -17952,7 +17375,7 @@
               closeSuperAdminUploadModal();
               superAdminApkFileInput.value = '';
               await refreshAddUpdateButtonState();
-            }, 600);
+            }, 800);
           } else {
             showToast('Upload failed: ' + (xhr.responseText || xhr.statusText));
             if (uploadApkProgressBox) uploadApkProgressBox.style.display = 'none';
@@ -17970,25 +17393,40 @@
 
     if (btnUploadWorkspaceApk) {
       btnUploadWorkspaceApk.addEventListener('click', async () => {
-        if (uploadApkProgressBox) uploadApkProgressBox.style.display = 'block';
+        const { versionCode: installedCode, versionName: installedName } = getInstalledAppInfo();
+        const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+        displayApkUploadDetails({
+          name: 'ChurchCompanion.apk',
+          versionName: installedName || 'v2.1.12',
+          versionCode: installedCode || 4092046,
+          sizeMb: '44.0',
+          buildDate: dateStr
+        });
+
         if (uploadApkStatusText) uploadApkStatusText.textContent = 'Uploading ChurchCompanion.apk to Supabase…';
-        if (uploadApkProgressBar) uploadApkProgressBar.style.width = '30%';
-        if (uploadApkPercent) uploadApkPercent.textContent = '30%';
+        if (uploadApkProgressBar) uploadApkProgressBar.style.width = '35%';
+        if (uploadApkPercent) uploadApkPercent.textContent = '35%';
 
         try {
           const res = await fetch('/api/app/update/upload-workspace', { method: 'POST' });
           const data = await res.json().catch(() => null);
           if (data && data.success) {
+            displayApkUploadDetails({
+              name: data.fileName || 'ChurchCompanion.apk',
+              versionName: data.versionName || installedName,
+              versionCode: data.versionCode || installedCode,
+              sizeMb: data.fileSizeMb || '44.0',
+              buildDate: dateStr
+            });
+
             if (uploadApkProgressBar) uploadApkProgressBar.style.width = '100%';
             if (uploadApkPercent) uploadApkPercent.textContent = '100%';
             if (uploadApkStatusText) uploadApkStatusText.textContent = 'Upload complete!';
 
-            const { versionCode: installedCode } = getInstalledAppInfo();
             const apkVersionCode = (data && data.versionCode) ? parseInt(data.versionCode, 10) : null;
             const updateAvailablePill = document.getElementById('appUpdateAvailablePill');
 
-            // USER REQUIREMENT:
-            // "when i push the updates in the update, app will check if the apk version code is same as installed then its in the latest version also. show that toast notification. if its version code is different then it means its a new update. one more thing if version code is same then dont display update available."
             if (apkVersionCode !== null && apkVersionCode === installedCode) {
               if (updateAvailablePill) updateAvailablePill.style.display = 'none';
               showToast(`Update pushed. Version code (${apkVersionCode}) matches installed version — you are on the latest version.`);
@@ -18008,7 +17446,7 @@
             setTimeout(async () => {
               closeSuperAdminUploadModal();
               await refreshAddUpdateButtonState();
-            }, 600);
+            }, 800);
           } else {
             showToast('Upload failed: ' + ((data && data.error) || 'Failed to upload'));
             if (uploadApkProgressBox) uploadApkProgressBox.style.display = 'none';
@@ -18643,7 +18081,46 @@
 
     window.showAuthSuccessAnimation = showAuthSuccessAnimation;
 
+    async function checkInternetConnection() {
+      if (!navigator.onLine) return false;
+      if (window.AndroidBridge && typeof window.AndroidBridge.isDeviceOnline === 'function') {
+        try {
+          if (!window.AndroidBridge.isDeviceOnline()) return false;
+        } catch (_) {}
+      }
+      if (window.bridge && typeof window.bridge.isDeviceOnline === 'function') {
+        try {
+          if (!window.bridge.isDeviceOnline()) return false;
+        } catch (_) {}
+      }
+      try {
+        const cfg = window.SUPABASE_CONFIG || window.CHURCH_CONFIG || {};
+        const url = cfg.supabaseUrl || cfg.SUPABASE_URL;
+        const key = cfg.supabaseKey || cfg.supabaseAnonKey || cfg.legacyAnonKey;
+        if (url) {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 4000);
+          const res = await fetch(`${url}/rest/v1/`, {
+            method: 'HEAD',
+            headers: { 'apikey': key },
+            signal: controller.signal
+          }).catch(() => null);
+          clearTimeout(timer);
+          if (res && res.status < 500) return true;
+        }
+      } catch (_) {}
+      return navigator.onLine;
+    }
+    window.checkInternetConnection = checkInternetConnection;
+
     async function handleAuthSignOut() {
+      // 1. Check internet connection first (Required by Parish Security policy)
+      const online = await checkInternetConnection();
+      if (!online) {
+        showToast('⚠️ Internet connection required. You cannot sign out without an active internet connection to synchronize with Church Cloud.');
+        return;
+      }
+
       const confirmed = await window.showConfirmDialog({
         title: 'Sign Out?',
         message: 'Are you sure you want to sign out and return to standard fellowship?',
@@ -18652,6 +18129,13 @@
         isDanger: true
       });
       if (!confirmed) return;
+
+      // Re-verify network connectivity before committing sign-out
+      const recheckOnline = await checkInternetConnection();
+      if (!recheckOnline) {
+        showToast('⚠️ Network connection lost. Sign out aborted.');
+        return;
+      }
 
       // Reset to default anonymous session
       currentAuthSession = {
@@ -19017,7 +18501,7 @@
     window.closeAuthLoginModal = closeAuthLoginModal;
 
     if (authToggleLoginBtn) {
-      authToggleLoginBtn.addEventListener('click', (e) => {
+      authToggleLoginBtn.addEventListener('click', async (e) => {
         e.preventDefault();
         e.stopPropagation();
 
@@ -19026,6 +18510,12 @@
         if (isCurrentlySignedIn) {
           handleAuthSignOut();
         } else {
+          // Verify internet before opening login modal
+          const online = await checkInternetConnection();
+          if (!online) {
+            showToast('⚠️ Internet connection required to log in. Please check your connection.');
+            return;
+          }
           openAuthLoginModal();
         }
       });
@@ -19123,94 +18613,185 @@
         return;
       }
 
-      // 1. Super Admin Check
-      const isSuper = (
-        email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase() || 
-        email.toLowerCase() === 'emanual' || 
-        email.toLowerCase() === 'superadmin'
-      );
-      if (isSuper) {
-        if (password !== SUPER_ADMIN_PASSWORD && password !== '123456' && password !== 'emanual123') {
-          showLoginError('Incorrect Super Admin PIN or Password ❌');
+      // 1. Strict Internet Connection Check
+      const online = await checkInternetConnection();
+      if (!online) {
+        showLoginError('⚠️ Internet connection required. You cannot sign in without an active internet connection to check your ID in Supabase.');
+        return;
+      }
+
+      const submitBtn = document.getElementById('authSignInBtn') || document.getElementById('submitAuthLoginBtn');
+      let origBtnText = '';
+      if (submitBtn) {
+        origBtnText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Verifying ID with Supabase…';
+      }
+
+      try {
+        const cfg = window.SUPABASE_CONFIG || window.CHURCH_CONFIG || {};
+        const url = cfg.supabaseUrl || cfg.SUPABASE_URL;
+        const key = cfg.supabaseKey || cfg.supabaseAnonKey || cfg.legacyAnonKey;
+        const headers = {
+          'apikey': key,
+          'Authorization': `Bearer ${key}`,
+          'Accept': 'application/json'
+        };
+
+        // 2. Super Admin Check
+        const isSuper = (
+          email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase() || 
+          email.toLowerCase() === 'emanual' || 
+          email.toLowerCase() === 'superadmin'
+        );
+        if (isSuper) {
+          if (password !== SUPER_ADMIN_PASSWORD && password !== '123456' && password !== 'emanual123') {
+            showLoginError('Incorrect Super Admin PIN or Password ❌');
+            return;
+          }
+
+          // Check Super Admin ID in Supabase
+          let supabaseVerified = false;
+          if (url) {
+            try {
+              const res = await fetch(`${url}/rest/v1/profiles?email=eq.${encodeURIComponent(SUPER_ADMIN_EMAIL)}`, { headers });
+              if (res.ok) {
+                const data = await res.json();
+                if (Array.isArray(data) && data.length > 0) {
+                  supabaseVerified = true;
+                }
+              }
+            } catch (e) {
+              console.warn('[Supabase Auth] Super Admin verify error:', e);
+            }
+          }
+
+          if (!supabaseVerified) {
+            showLoginError('Super Admin ID not found in Supabase Church Cloud. Login denied.');
+            return;
+          }
+
+          const savedSuperPost = localStorage.getItem('sanctuary_superadmin_post') || currentAuthSession.congregational_post || 'post-pastor';
+          currentAuthSession = {
+            id: DEXIE_SESSION_KEY,
+            uid: 'superadmin-emanual',
+            email: SUPER_ADMIN_EMAIL,
+            display_name: 'Emanual Mridha',
+            congregational_post: savedSuperPost,
+            role: 'superadmin',
+            is_youth: true,
+            is_anonymous: false
+          };
+          await playInModalLoginSuccess('Successfully Logged In', 'Welcome back, Super Admin! 👑', 'Super Admin 👑');
+          closeAuthLoginModal();
+          await persistAuthSession(currentAuthSession);
+          updateAppPermissionsUI();
+          if (typeof window.renderActiveCniChat === 'function') {
+            window.renderActiveCniChat(true);
+          }
+          showToast('Welcome back, Emanual Mridha! 👑');
           return;
         }
-        const savedSuperPost = localStorage.getItem('sanctuary_superadmin_post') || currentAuthSession.congregational_post || 'post-pastor';
-        currentAuthSession = {
-          id: DEXIE_SESSION_KEY,
-          uid: 'superadmin-emanual',
-          email: SUPER_ADMIN_EMAIL,
-          display_name: 'Emanual Mridha',
-          congregational_post: savedSuperPost,
-          role: 'superadmin',
-          is_youth: true,
-          is_anonymous: false
-        };
-        await playInModalLoginSuccess('Successfully Logged In', 'Welcome back, Super Admin! 👑', 'Super Admin 👑');
-        closeAuthLoginModal();
-        await persistAuthSession(currentAuthSession);
-        updateAppPermissionsUI();
-        if (typeof window.renderActiveCniChat === 'function') {
-          window.renderActiveCniChat(true);
-        }
-        showToast('Welcome back, Emanual Mridha! 👑');
-        return;
-      }
 
-      // 2. Approved Admin Check
-      const approvedAccount = await findApprovedAdmin(email, password);
-      if (approvedAccount) {
-        currentAuthSession = {
-          id: DEXIE_SESSION_KEY,
-          uid: approvedAccount.user_id || `admin-${Math.random().toString(36).slice(2, 9)}`,
-          email: approvedAccount.email,
-          display_name: cleanDisplayName(approvedAccount.display_name || approvedAccount.email.split('@')[0]),
-          congregational_post: approvedAccount.congregational_post || 'post-member',
-          role: 'admin',
-          is_youth: true,
-          is_anonymous: false,
-          admin_request_status: 'approved'
-        };
-        await playInModalLoginSuccess('Successfully Logged In', 'Signed in as Parish Admin 🛡️', 'Parish Admin 🛡️');
-        closeAuthLoginModal();
-        await persistAuthSession(currentAuthSession);
-        updateAppPermissionsUI();
-        if (typeof window.renderActiveCniChat === 'function') {
-          window.renderActiveCniChat(true);
-        }
-        showToast(`Welcome back, ${currentAuthSession.display_name}! 🛡️`);
-        return;
-      }
+        // 3. Query Supabase for Account ID (admin_requests & profiles)
+        let matchedCloudAdmin = null;
+        let matchedCloudProfile = null;
+        const encQ = encodeURIComponent(email);
 
-      // 3. Registered Profile Check (Registered Congregation Member)
-      const registeredProfile = await findRegisteredProfile(email, password);
-      if (registeredProfile) {
-        currentAuthSession = {
-          id: DEXIE_SESSION_KEY,
-          uid: registeredProfile.id || `user-${Math.random().toString(36).slice(2, 9)}`,
-          email: registeredProfile.email || email,
-          display_name: cleanDisplayName(registeredProfile.display_name || registeredProfile.name || 'Believer'),
-          congregational_post: registeredProfile.congregational_post || 'post-member',
-          role: registeredProfile.role || 'member',
-          is_youth: Boolean(registeredProfile.is_youth),
-          is_anonymous: false,
-          admin_request_status: registeredProfile.admin_request_status || null
-        };
-        const userRoleTag = currentAuthSession.role === 'superadmin' ? 'Super Admin 👑' : 
-                            currentAuthSession.role === 'admin' ? 'Parish Admin 🛡️' : 
-                            (currentAuthSession.is_youth ? 'Youth Member 🌿' : 'Parish Member ✨');
-        await playInModalLoginSuccess('Successfully Logged In', `Welcome back, ${currentAuthSession.display_name}! ✨`, userRoleTag);
-        closeAuthLoginModal();
-        await persistAuthSession(currentAuthSession);
-        updateAppPermissionsUI();
-        if (typeof window.renderActiveCniChat === 'function') {
-          window.renderActiveCniChat(true);
-        }
-        showToast(`Welcome back, ${currentAuthSession.display_name}! ✨`);
-        return;
-      }
+        if (url) {
+          try {
+            const [adminRes, profileRes] = await Promise.all([
+              fetch(`${url}/rest/v1/admin_requests?select=*&or=(email.ilike.${encQ},user_id.eq.${encQ},display_name.ilike.${encQ})`, { headers }).catch(() => null),
+              fetch(`${url}/rest/v1/profiles?select=*&or=(email.ilike.${encQ},id.eq.${encQ},display_name.ilike.${encQ})`, { headers }).catch(() => null)
+            ]);
 
-      // 4. Not recognized
-      showLoginError('Account not found with provided PIN / Password. Please check details or Request Admin access.');
+            if (adminRes && adminRes.ok) {
+              const adminList = await adminRes.json();
+              if (Array.isArray(adminList) && adminList.length > 0) {
+                matchedCloudAdmin = adminList.find(r => r.status === 'approved');
+              }
+            }
+
+            if (profileRes && profileRes.ok) {
+              const profileList = await profileRes.json();
+              if (Array.isArray(profileList) && profileList.length > 0) {
+                matchedCloudProfile = profileList[0];
+              }
+            }
+          } catch (netErr) {
+            console.warn('[Supabase Auth] Query error:', netErr);
+          }
+        }
+
+        // Check if ID is available in Supabase
+        if (!matchedCloudAdmin && !matchedCloudProfile) {
+          showLoginError(`ID "${email}" not found in Supabase. Login requires a registered account in Church Cloud.`);
+          return;
+        }
+
+        // 4. Approved Admin Sign-in
+        const approvedAccount = await findApprovedAdmin(email, password);
+        if (approvedAccount || (matchedCloudAdmin && (String(matchedCloudAdmin.login_password || matchedCloudAdmin.pin || '') === password))) {
+          const act = approvedAccount || matchedCloudAdmin;
+          currentAuthSession = {
+            id: DEXIE_SESSION_KEY,
+            uid: act.user_id || `admin-${Math.random().toString(36).slice(2, 9)}`,
+            email: act.email,
+            display_name: cleanDisplayName(act.display_name || act.email.split('@')[0]),
+            congregational_post: act.congregational_post || 'post-member',
+            role: 'admin',
+            is_youth: true,
+            is_anonymous: false,
+            admin_request_status: 'approved'
+          };
+          await playInModalLoginSuccess('Successfully Logged In', 'Signed in as Parish Admin 🛡️', 'Parish Admin 🛡️');
+          closeAuthLoginModal();
+          await persistAuthSession(currentAuthSession);
+          updateAppPermissionsUI();
+          if (typeof window.renderActiveCniChat === 'function') {
+            window.renderActiveCniChat(true);
+          }
+          showToast(`Welcome back, ${currentAuthSession.display_name}! 🛡️`);
+          return;
+        }
+
+        // 5. Registered Profile Sign-in
+        const registeredProfile = await findRegisteredProfile(email, password);
+        if (registeredProfile || matchedCloudProfile) {
+          const prof = registeredProfile || matchedCloudProfile;
+          currentAuthSession = {
+            id: DEXIE_SESSION_KEY,
+            uid: prof.id || `user-${Math.random().toString(36).slice(2, 9)}`,
+            email: prof.email || email,
+            display_name: cleanDisplayName(prof.display_name || prof.name || 'Believer'),
+            congregational_post: prof.congregational_post || 'post-member',
+            role: prof.role || 'member',
+            is_youth: Boolean(prof.is_youth),
+            is_anonymous: false,
+            admin_request_status: prof.admin_request_status || null
+          };
+          const userRoleTag = currentAuthSession.role === 'superadmin' ? 'Super Admin 👑' : 
+                              currentAuthSession.role === 'admin' ? 'Parish Admin 🛡️' : 
+                              (currentAuthSession.is_youth ? 'Youth Member 🌿' : 'Parish Member ✨');
+          await playInModalLoginSuccess('Successfully Logged In', `Welcome back, ${currentAuthSession.display_name}! ✨`, userRoleTag);
+          closeAuthLoginModal();
+          await persistAuthSession(currentAuthSession);
+          updateAppPermissionsUI();
+          if (typeof window.renderActiveCniChat === 'function') {
+            window.renderActiveCniChat(true);
+          }
+          showToast(`Welcome back, ${currentAuthSession.display_name}! ✨`);
+          return;
+        }
+
+        // 6. Account exists in Supabase, but PIN/Password failed
+        showLoginError('Account found in Supabase, but Security PIN / Password is incorrect ❌');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          if (origBtnText) submitBtn.textContent = origBtnText;
+        }
+      }
     }
 
     // Sign In Action Buttons
@@ -20456,6 +20037,11 @@
         if (authorIn) authorIn.value = '';
         const lyricsIn = document.getElementById('editSongLyricsInput');
         if (lyricsIn) lyricsIn.value = '';
+        const numIn = document.getElementById('editSongNumberInput');
+        if (numIn) numIn.value = '';
+        const youtubeIn = document.getElementById('editSongYoutubeInput');
+        if (youtubeIn) youtubeIn.value = '';
+        window._activeEditingSong = null;
         if (songEditModalOverlay) songEditModalOverlay.classList.remove('hidden');
       });
     }
@@ -20478,6 +20064,8 @@
         if (authorIn) authorIn.value = active?.composer || active?.author || '';
         const lyricsIn = document.getElementById('editSongLyricsInput');
         if (lyricsIn) lyricsIn.value = active?.lyrics || '';
+        const youtubeIn = document.getElementById('editSongYoutubeInput');
+        if (youtubeIn) youtubeIn.value = active?.youtube_url || active?.youtubeUrl || active?.video_url || '';
         closeSongModal();
         if (songEditModalOverlay) songEditModalOverlay.classList.remove('hidden');
       });
@@ -20568,6 +20156,7 @@
         const numVal = document.getElementById('editSongNumberInput')?.value.trim();
         const author = document.getElementById('editSongAuthorInput')?.value.trim();
         const lyrics = document.getElementById('editSongLyricsInput')?.value.trim();
+        const youtubeUrl = document.getElementById('editSongYoutubeInput')?.value.trim() || '';
         if (!title || !lyrics) {
           showToast('Please provide hymn title and lyrics');
           return;
@@ -20586,45 +20175,115 @@
         const active = window._activeEditingSong || currentOpenSong || currentActiveSongObj;
         const songId = active?.id || crypto.randomUUID();
 
+        // 1. Accurately resolve target book key so it NEVER jumps to another song book
+        let targetBookKey = active?.bookKey || currentOpenSongBookKey;
+        if (targetBookKey) {
+          const cleanT = String(targetBookKey).toLowerCase().replace(/[\s_\-]+/g, '');
+          if (cleanT.includes('additional')) {
+            targetBookKey = 'additionalSongs';
+          } else if (cleanT.includes('masihi') || cleanT.includes('sangrah') || cleanT.includes('hymnal')) {
+            targetBookKey = 'masihiGeet';
+          }
+        }
+        if (!targetBookKey) {
+          targetBookKey = (active?.bookName?.includes('Additional') || active?.bookTitle?.includes('Additional')) 
+            ? 'additionalSongs' 
+            : 'masihiGeet';
+        }
+        currentOpenSongBookKey = targetBookKey;
+        window.currentOpenSongBookKey = targetBookKey;
+
+        const targetBookRef = targetBookKey === 'additionalSongs'
+          ? (active?.book_reference && String(active.book_reference).toLowerCase().includes('additional') ? active.book_reference : 'Additional Songs of Church')
+          : (active?.book_reference && !String(active.book_reference).toLowerCase().includes('additional') ? active.book_reference : 'Masihi Geeton Ka Sangrah');
+
         // ── Supabase Sync: persist song to cloud (with matching ID so it updates the row!)
+        const songData = {
+          id: songId,
+          song_number: numVal || active?.songNumber || null,
+          title,
+          composer: author || 'Church Hymnal',
+          author: author || 'Church Hymnal',
+          lyrics,
+          category: 'hymn',
+          youtube_url: youtubeUrl || null,
+          deleted_at: null,
+          book_reference: targetBookRef
+        };
+        // Clear from local blacklist if previously blacklisted
+        try {
+          const blKey = 'sanctuary_deleted_songs_blacklist';
+          let bl = JSON.parse(localStorage.getItem(blKey) || '[]');
+          if (Array.isArray(bl) && bl.length > 0) {
+            const lowerId = String(songId).toLowerCase().trim();
+            const lowerTitle = String(title).toLowerCase().trim();
+            const filtered = bl.filter(x => {
+              const lx = String(x).toLowerCase().trim();
+              return lx !== lowerId && lx !== lowerTitle;
+            });
+            localStorage.setItem(blKey, JSON.stringify(filtered));
+          }
+        } catch (_) {}
+
         if (window.ChurchSync && window.ChurchSync.Songs) {
-          const songData = {
+          try {
+            const result = await window.ChurchSync.Songs.upsert(songData);
+            if (result && result.error) {
+              console.warn('[Sync] Song save to Supabase returned error:', result.error);
+            } else {
+              console.log('[Sync] Song saved to Supabase ✓', songData.title);
+            }
+          } catch (err) {
+            console.warn('[Sync] Song save exception:', err);
+          }
+        } else if (typeof window.syncWrite === 'function') {
+          try {
+            const op = active ? 'update' : 'insert';
+            await window.syncWrite('songbook', op, songData);
+            console.log('[Sync] Song syncWrite to Supabase ✓', songData.title);
+          } catch (err) {
+            console.warn('[Sync] Song syncWrite exception:', err);
+          }
+        }
+
+        // Persist into local Dexie & backups
+        try {
+          const dexieSong = {
             id: songId,
-            song_number: numVal || active?.songNumber || null,
             title,
             composer: author || 'Church Hymnal',
             author: author || 'Church Hymnal',
             lyrics,
+            song_number: numVal || active?.songNumber || null,
+            songNumber: numVal || active?.songNumber || null,
             category: 'hymn',
-            deleted_at: null,
-            book_reference: currentOpenSongBookKey || 'masihiGeet'
+            youtube_url: youtubeUrl || null,
+            youtubeUrl: youtubeUrl || null,
+            book_reference: targetBookRef,
+            bookKey: targetBookKey
           };
-          // Clear from local blacklist if previously blacklisted
-          try {
-            const blKey = 'sanctuary_deleted_songs_blacklist';
-            let bl = JSON.parse(localStorage.getItem(blKey) || '[]');
-            if (Array.isArray(bl) && bl.length > 0) {
-              const lowerId = String(songId).toLowerCase().trim();
-              const lowerTitle = String(title).toLowerCase().trim();
-              const filtered = bl.filter(x => {
-                const lx = String(x).toLowerCase().trim();
-                return lx !== lowerId && lx !== lowerTitle;
-              });
-              localStorage.setItem(blKey, JSON.stringify(filtered));
-            }
-          } catch (_) {}
-
-          window.ChurchSync.Songs.upsert(songData).then(result => {
-            if (result.error) console.warn('[Sync] Song save failed:', result.error);
-            else console.log('[Sync] Song saved to Supabase ✓');
-          });
-        }
+          if (typeof churchDexieDb !== 'undefined' && churchDexieDb && churchDexieDb.songs) {
+            churchDexieDb.songs.put(dexieSong).catch(() => {});
+          }
+          if (typeof window !== 'undefined' && window.ChurchSync && window.ChurchSync.db && window.ChurchSync.db.songs) {
+            window.ChurchSync.db.songs.put(dexieSong).catch(() => {});
+          }
+          const bk = JSON.parse(localStorage.getItem('sanctuary_custom_songs_backup') || '[]');
+          const idx = bk.findIndex(s => s && s.id === songId);
+          if (idx >= 0) bk[idx] = { ...bk[idx], ...dexieSong };
+          else bk.push(dexieSong);
+          localStorage.setItem('sanctuary_custom_songs_backup', JSON.stringify(bk));
+        } catch (_) {}
 
         if (active) {
           active.title = title;
           active.composer = author;
           active.author = author;
           active.lyrics = lyrics;
+          active.youtube_url = youtubeUrl;
+          active.youtubeUrl = youtubeUrl;
+          active.bookKey = targetBookKey;
+          active.book_reference = targetBookRef;
           if (numVal) active.songNumber = numVal;
         }
 
@@ -20632,13 +20291,29 @@
           action: active ? 'song_update' : 'song_create',
           entity_type: 'song',
           entity_id: songId,
-          details: `${active ? 'Updated' : 'Added'} hymn "${title}"${author ? ` (${author})` : ''}${numVal ? ` • Hymn #${numVal}` : ''}`
+          details: `${active ? 'Updated' : 'Added'} hymn "${title}"${author ? ` (${author})` : ''}${numVal ? ` • Hymn #${numVal}` : ''}${youtubeUrl ? ' (with YouTube link)' : ''}`
         });
 
         showToast(`Hymn "${title}" saved! 🎵`);
-        if (typeof renderAdditionalSongsFromDexie === 'function') renderAdditionalSongsFromDexie();
-        if (currentOpenSongBookKey && typeof openSongBookScreen === 'function') {
-          openSongBookScreen(currentOpenSongBookKey);
+
+        // Refresh song cache in background
+        if (typeof refreshSongBookCards === 'function') {
+          refreshSongBookCards(targetBookKey);
+        } else if (typeof renderAdditionalSongsFromDexie === 'function') {
+          renderAdditionalSongsFromDexie();
+        }
+
+        // Check if currently on song lyrics view: STAY on lyrics screen without jumping
+        const isLyricsActive = state.activeTab === 'viewSongLyrics' || (views.viewSongLyrics && views.viewSongLyrics.classList.contains('active'));
+        if (isLyricsActive) {
+          if (active && typeof openSongLyricsScreen === 'function') {
+            openSongLyricsScreen(active, targetBookKey);
+          }
+        } else {
+          // If on list view, re-render the SAME song book
+          if (typeof openSongBookScreen === 'function') {
+            openSongBookScreen(targetBookKey);
+          }
         }
       });
     }
@@ -21330,16 +21005,27 @@
         }
 
         previewTableBody.innerHTML = '';
+        const fmtPreviewReading = (r) => {
+          if (!r) return '';
+          if (typeof r === 'string') return r;
+          const b = r.book || '';
+          const c = r.chapter ? (r.chapter.toLowerCase().startsWith('ch') ? r.chapter : `Ch. ${r.chapter}`) : '';
+          const v = r.verse ? (r.verse.toLowerCase().startsWith('v') ? r.verse : `v. ${r.verse}`) : '';
+          return [b, c, v].filter(Boolean).join(' ');
+        };
+
         entries.slice(0, 100).forEach((item, idx) => {
           const tr = document.createElement('tr');
           const colorDot = `<span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:${getLiturgicalHex(item.color)}; margin-right:4px;"></span>${item.color}`;
+          const mw = (item.morningWorship || []).slice(0, 2).map(fmtPreviewReading).join(', ');
+          const ew = (item.eveningWorship || []).slice(0, 2).map(fmtPreviewReading).join(', ');
           tr.innerHTML = `
             <td><strong>${idx + 1}</strong></td>
             <td><span style="font-weight:700; font-family:monospace;">${item.dateKey}</span></td>
             <td><strong>${escapeHtml(item.theme || 'Daily Liturgy')}</strong></td>
             <td>${colorDot}</td>
-            <td style="font-size:0.76rem;">${escapeHtml(item.morningWorship.slice(0, 2).join(', ')) || '—'}</td>
-            <td style="font-size:0.76rem;">${escapeHtml(item.eveningWorship.slice(0, 2).join(', ')) || '—'}</td>
+            <td style="font-size:0.76rem;">${escapeHtml(mw) || '—'}</td>
+            <td style="font-size:0.76rem;">${escapeHtml(ew) || '—'}</td>
           `;
           previewTableBody.appendChild(tr);
         });
@@ -21638,18 +21324,23 @@
           }
 
           // Format for Supabase
-          supabaseSyncList.push({
+          const supaEntry = {
             date_key: entry.dateKey,
-            day: entry.day,
-            month_name: entry.monthName,
-            year: entry.year,
-            day_name: entry.dayName,
-            theme: entry.theme,
-            liturgical_color: entry.color,
-            morning_worship: entry.morningWorship,
-            evening_worship: entry.eveningWorship,
-            lords_supper: entry.lordsSupper
-          });
+            year: entry.year || (entry.dateKey ? parseInt(entry.dateKey.split('-')[0], 10) : 2026),
+            title: entry.theme || 'Daily Liturgical Reading',
+            liturgical_color: entry.color || 'Green',
+            details: JSON.stringify(entry),
+            readings: [],
+            version: 1,
+            updated_at: new Date().toISOString()
+          };
+          supabaseSyncList.push(supaEntry);
+
+          try {
+            if (churchDexieDb && churchDexieDb.almanac_entries) {
+              churchDexieDb.almanac_entries.put(supaEntry);
+            }
+          } catch (_) {}
         }
 
         // Bulk upsert to Supabase
@@ -22671,15 +22362,13 @@
 
               const entryRecord = {
                 date_key:        entry.dateKey,
-                day:             entry.day,
-                month_name:      entry.monthName,
-                year:            entry.year,
-                day_name:        entry.dayName,
-                theme:           entry.theme,
-                liturgical_color: entry.color,
-                morning_worship: entry.morningWorship,
-                evening_worship: entry.eveningWorship,
-                lords_supper:    entry.lordsSupper
+                year:            entry.year || (entry.dateKey ? parseInt(entry.dateKey.split('-')[0], 10) : 2026),
+                title:           entry.theme || 'Daily Liturgical Reading',
+                liturgical_color: entry.color || 'Green',
+                details:         JSON.stringify(entry),
+                readings:        [],
+                version:         1,
+                updated_at:      new Date().toISOString()
               };
 
               try {
@@ -22872,6 +22561,7 @@
       }
 
       setupSettingsImportHandlers();
+      setTimeout(checkAndNotifyNativeAnnouncements, 2000);
     }
 
 
@@ -22895,6 +22585,91 @@
     console.log('[Launch Sync] Network connectivity restored, syncing cloud stores...');
     triggerLaunchSync(true);
   });
+
+  // Universal Virtual Keyboard Overlap Guard: Zero Text Fields Obscured Behind Keyboard
+  (function initUniversalKeyboardGuard() {
+    function getVpBounds() {
+      if (window.visualViewport) {
+        return {
+          top: window.visualViewport.offsetTop,
+          height: window.visualViewport.height,
+          bottom: window.visualViewport.offsetTop + window.visualViewport.height
+        };
+      }
+      return {
+        top: 0,
+        height: window.innerHeight,
+        bottom: window.innerHeight
+      };
+    }
+
+    function ensureInputAboveKeyboard(el) {
+      if (!el || !el.matches('input, textarea, select')) return;
+      if (el.closest('#manualAddForm')) return; // Managed by dedicated almanac controller
+
+      const vp = getVpBounds();
+      const rect = el.getBoundingClientRect();
+      const safeBuffer = 10;
+      const keyboardTop = vp.bottom - safeBuffer;
+      const overlap = rect.bottom - keyboardTop;
+
+      if (overlap > 0) {
+        let parent = el.parentElement;
+        while (parent && parent !== document.body) {
+          const overflowY = window.getComputedStyle(parent).overflowY;
+          if (overflowY === 'auto' || overflowY === 'scroll') break;
+          parent = parent.parentElement;
+        }
+        if (parent && parent !== document.body) {
+          parent.scrollBy({ top: overlap, behavior: 'smooth' });
+        } else {
+          window.scrollBy({ top: overlap, behavior: 'smooth' });
+        }
+      } else if (rect.top < 56) {
+        let parent = el.parentElement;
+        while (parent && parent !== document.body) {
+          const overflowY = window.getComputedStyle(parent).overflowY;
+          if (overflowY === 'auto' || overflowY === 'scroll') break;
+          parent = parent.parentElement;
+        }
+        if (parent && parent !== document.body) {
+          parent.scrollBy({ top: rect.top - 56, behavior: 'smooth' });
+        }
+      }
+    }
+
+    document.addEventListener('focusin', e => {
+      const target = e.target;
+      if (!target || !target.matches('input, textarea, select')) return;
+      document.body.classList.add('keyboard-is-open');
+
+      [80, 260, 480].forEach(delay => {
+        setTimeout(() => {
+          if (document.activeElement === target) {
+            ensureInputAboveKeyboard(target);
+          }
+        }, delay);
+      });
+    });
+
+    document.addEventListener('focusout', () => {
+      setTimeout(() => {
+        const active = document.activeElement;
+        if (!active || !active.matches('input, textarea, select')) {
+          document.body.classList.remove('keyboard-is-open');
+        }
+      }, 160);
+    });
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', () => {
+        const active = document.activeElement;
+        if (active && active.matches('input, textarea, select')) {
+          ensureInputAboveKeyboard(active);
+        }
+      });
+    }
+  })();
 
   if (typeof window.ChurchSync !== 'undefined' && window.ChurchSync && typeof window.ChurchSync.on === 'function') {
     window.ChurchSync.on('ready', () => {
