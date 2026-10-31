@@ -742,8 +742,8 @@ const server = http.createServer((req, res) => {
     if (!fs.existsSync(apkPath)) return { versionCode, versionName };
 
     try {
-      const { execSync } = require('child_process');
-      const out = execSync(`aapt dump badging "${apkPath}" 2>/dev/null`, { timeout: 3000 }).toString();
+      const { execFileSync } = require('child_process');
+      const out = execFileSync('aapt', ['dump', 'badging', apkPath], { timeout: 3000, stdio: ['pipe', 'pipe', 'ignore'] }).toString();
       const vcMatch = out.match(/versionCode='(\d+)'/);
       if (vcMatch) versionCode = parseInt(vcMatch[1], 10);
       const vnMatch = out.match(/versionName='([^']+)'/);

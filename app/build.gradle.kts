@@ -60,12 +60,23 @@ android {
 
     signingConfigs {
         create("release") {
-            val defaultKeystore = file("${System.getProperty("user.home")}/.android/debug.keystore")
-            if (defaultKeystore.exists()) {
-                storeFile = defaultKeystore
-                storePassword = "android"
-                keyAlias = "androiddebugkey"
-                keyPassword = "android"
+            val keystorePropsFile = rootProject.file("keystore.properties")
+            if (keystorePropsFile.exists()) {
+                val keystoreProps = Properties()
+                FileInputStream(keystorePropsFile).use { keystoreProps.load(it) }
+                val relStoreFile = keystoreProps.getProperty("storeFile") ?: "release.jks"
+                storeFile = rootProject.file(relStoreFile)
+                storePassword = keystoreProps.getProperty("storePassword")
+                keyAlias = keystoreProps.getProperty("keyAlias")
+                keyPassword = keystoreProps.getProperty("keyPassword")
+            } else {
+                val defaultKeystore = file("${System.getProperty("user.home")}/.android/debug.keystore")
+                if (defaultKeystore.exists()) {
+                    storeFile = defaultKeystore
+                    storePassword = "android"
+                    keyAlias = "androiddebugkey"
+                    keyPassword = "android"
+                }
             }
         }
     }

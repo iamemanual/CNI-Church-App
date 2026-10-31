@@ -122,8 +122,8 @@ class MainActivity : AppCompatActivity() {
         settings.databaseEnabled = true
         settings.allowFileAccess = true
         settings.allowContentAccess = true
-        settings.allowFileAccessFromFileURLs = true
-        settings.allowUniversalAccessFromFileURLs = true
+        settings.allowFileAccessFromFileURLs = false
+        settings.allowUniversalAccessFromFileURLs = false
         settings.loadWithOverviewMode = true
         settings.useWideViewPort = true
         settings.displayZoomControls = false
@@ -132,7 +132,7 @@ class MainActivity : AppCompatActivity() {
         settings.mediaPlaybackRequiresUserGesture = false
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            settings.safeBrowsingEnabled = false
+            settings.safeBrowsingEnabled = true
         }
 
         // Add native bridge bindings
@@ -144,9 +144,15 @@ class MainActivity : AppCompatActivity() {
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                 val uri = request?.url ?: return false
                 val url = uri.toString()
+                val scheme = uri.scheme?.lowercase() ?: ""
+                val host = uri.host?.lowercase() ?: ""
 
                 // Internal app / localhost / Supabase traffic stays in WebView
-                if (url.startsWith("file://") || url.contains("localhost") || url.contains("127.0.0.1") || url.contains("supabase.co")) {
+                val isInternal = scheme == "file" ||
+                        host == "localhost" ||
+                        host == "127.0.0.1" ||
+                        (scheme == "https" && (host == "eqwgrxcitwoyickthfpd.supabase.co" || host.endsWith(".supabase.co")))
+                if (isInternal) {
                     return false
                 }
 
@@ -163,13 +169,16 @@ class MainActivity : AppCompatActivity() {
                     try {
                         val parsedIntent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME)
                         if (parsedIntent != null) {
+                            parsedIntent.addCategory(Intent.CATEGORY_BROWSABLE)
+                            parsedIntent.component = null
+                            parsedIntent.selector = null
                             parsedIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             if (parsedIntent.resolveActivity(packageManager) != null) {
                                 startActivity(parsedIntent)
                                 return true
                             }
                             val fallback = parsedIntent.getStringExtra("browser_fallback_url")
-                            if (!fallback.isNullOrEmpty()) {
+                            if (!fallback.isNullOrEmpty() && (fallback.startsWith("https://") || fallback.startsWith("http://"))) {
                                 startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(fallback)).apply {
                                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                 })
@@ -183,7 +192,6 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 // 3. Action schemes (tel, mailto, sms, whatsapp, geo)
-                val scheme = uri.scheme?.lowercase()
                 if (scheme in listOf("tel", "mailto", "sms", "whatsapp", "geo")) {
                     try {
                         startActivity(Intent(Intent.ACTION_VIEW, uri).apply {
@@ -232,12 +240,23 @@ class MainActivity : AppCompatActivity() {
 
             override fun onPermissionRequest(request: PermissionRequest?) {
                 pendingPermissionRequest = request
-                request?.resources?.forEach { res ->
-                    if (res == PermissionRequest.RESOURCE_VIDEO_CAPTURE) {
-                        bridge.requestCameraPermission()
+                val origin = request?.origin?.toString()?.lowercase() ?: ""
+                val isTrustedOrigin = origin.startsWith("file://") ||
+                        origin.contains("://localhost") ||
+                        origin.contains("://127.0.0.1") ||
+                        origin.startsWith("https://eqwgrxcitwoyickthfpd.supabase.co")
+
+                if (isTrustedOrigin) {
+                    request?.resources?.forEach { res ->
+                        if (res == PermissionRequest.RESOURCE_VIDEO_CAPTURE) {
+                            bridge.requestCameraPermission()
+                        }
                     }
+                    request?.grant(request.resources)
+                } else {
+                    Log.w(TAG, "Blocked unauthorized WebChromeClient permission request from origin: $origin")
+                    request?.deny()
                 }
-                request?.grant(request.resources)
             }
         }
     }

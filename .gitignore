@@ -17,6 +17,11 @@ pending_edits.json
 .server.pid
 .update_published.json
 
+# Keystores and private signing credentials
+*.jks
+*.keystore
+keystore.properties
+
 # Local AI agent files
 .agents/
 .claude/

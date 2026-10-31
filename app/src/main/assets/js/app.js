@@ -1443,7 +1443,7 @@
 
         // 1. Check SuperAdmin Credentials (Emanual Mridha)
         const isSuperAdminName = lowerName.includes('emanual') || lowerName.includes('mridha');
-        const isSuperAdminPin = (trimmedPin === SUPER_ADMIN_PASSWORD || trimmedPin === '552367' || trimmedPin === '123456' || trimmedPin === 'emanual123');
+        const isSuperAdminPin = (trimmedPin === SUPER_ADMIN_PASSWORD);
 
         if (isSuperAdminName && isSuperAdminPin) {
           const savedSuperPost = localStorage.getItem('sanctuary_superadmin_post') || currentAuthSession.congregational_post || 'post-pastor';
@@ -18264,27 +18264,6 @@
       if (btnText) btnText.classList.add('hidden');
 
       try {
-        // Special Super Admin check
-        const isEmanual = targetFullName.includes('emanual') || targetFullName.includes('mridha');
-        if (isEmanual) {
-          const savedSuperPost = localStorage.getItem('sanctuary_superadmin_post') || currentAuthSession.congregational_post || 'post-pastor';
-          currentAuthSession = {
-            id: DEXIE_SESSION_KEY,
-            uid: 'superadmin-emanual',
-            email: SUPER_ADMIN_EMAIL,
-            display_name: 'Emanual Mridha',
-            congregational_post: savedSuperPost,
-            role: 'superadmin',
-            is_youth: true,
-            is_anonymous: false
-          };
-          await persistAuthSession(currentAuthSession);
-          updateAppPermissionsUI();
-          closeAuthLoginModal();
-          showToast('Welcome back, Emanual Mridha! 👑');
-          return;
-        }
-
         // Query profiles with case-insensitive exact matching
         let matched = null;
 
@@ -18645,7 +18624,7 @@
           email.toLowerCase() === 'superadmin'
         );
         if (isSuper) {
-          if (password !== SUPER_ADMIN_PASSWORD && password !== '123456' && password !== 'emanual123') {
+          if (password !== SUPER_ADMIN_PASSWORD) {
             showLoginError('Incorrect Super Admin PIN or Password ❌');
             return;
           }

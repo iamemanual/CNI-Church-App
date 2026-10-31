@@ -676,10 +676,24 @@ class WebAppBridgeInterface(
                 }
             }
 
-            val file = if (filePath.isNotEmpty() && java.io.File(filePath).exists()) {
-                java.io.File(filePath)
+            val defaultUpdateFile = java.io.File(activity.filesDir, "updates/ChurchCompanion_update.apk")
+            val file = if (filePath.isNotEmpty()) {
+                try {
+                    val candidate = java.io.File(filePath).canonicalFile
+                    val allowedParent1 = java.io.File(activity.filesDir, "updates").canonicalFile
+                    val allowedParent2 = activity.cacheDir.canonicalFile
+                    if ((candidate.path.startsWith(allowedParent1.path) || candidate.path.startsWith(allowedParent2.path)) &&
+                        candidate.name.endsWith(".apk", ignoreCase = true) && candidate.exists()) {
+                        candidate
+                    } else {
+                        Log.w(TAG, "installApk: Untrusted or non-APK file path rejected: $filePath")
+                        defaultUpdateFile
+                    }
+                } catch (e: Exception) {
+                    defaultUpdateFile
+                }
             } else {
-                java.io.File(activity.filesDir, "updates/ChurchCompanion_update.apk")
+                defaultUpdateFile
             }
             if (!file.exists()) {
                 activity.runOnUiThread {

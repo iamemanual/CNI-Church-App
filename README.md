@@ -5,7 +5,7 @@
   # ⛪ Church Companion
   ### *Church Companion & Liturgical Guide for the All Saints' Church - Church of North India (CNI)*
 
-  [![Latest Release](https://img.shields.io/github/v/release/iamemanual/CNI-Church-App?label=Release&color=7F52FF&style=for-the-badge&logo=github)](https://github.com/iamemanual/CNI-Church-App/releases/tag/v2.1.13)
+  [![Latest Release](https://img.shields.io/github/v/release/iamemanual/CNI-Church-App?label=Release&color=7F52FF&style=for-the-badge&logo=github)](https://github.com/iamemanual/CNI-Church-App/releases/tag/v2.1.16)
   [![Platform](https://img.shields.io/badge/Platform-Android%208.0%2B%20(API%2026%2B)-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com)
   [![Language](https://img.shields.io/badge/Kotlin%202.0-Hybrid%20Bridge-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)](https://kotlinlang.org)
   [![Backend](https://img.shields.io/badge/Supabase-Realtime%20Cloud-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
@@ -20,7 +20,7 @@
 
   <p align="center">
     <a href="https://github.com/iamemanual/CNI-Church-App/releases/latest/download/ChurchCompanion.apk">
-      <img src="https://img.shields.io/badge/⬇️%20Download%20APK-v2.1.13%20(43.67%20MB)-7F52FF?style=for-the-badge&logo=android" alt="Download APK" />
+      <img src="https://img.shields.io/badge/⬇️%20Download%20APK-v2.1.16%20(43.68%20MB)-7F52FF?style=for-the-badge&logo=android" alt="Download APK" />
     </a>
     &nbsp;
     <a href="https://github.com/iamemanual/CNI-Church-App/releases">
@@ -40,13 +40,13 @@
 
 | Specification | Information |
 | :--- | :--- |
-| **Latest Release** | **`v2.1.13`** (Automated Build `4092047`) |
+| **Latest Release** | **`v2.1.16`** (Automated Build `4092050`) |
 | **Package ID** | `com.allsaints.church` |
-| **Direct APK Download** | [⬇️ **Download ChurchCompanion.apk** (43.67 MB)](https://github.com/iamemanual/CNI-Church-App/releases/download/v2.1.13/ChurchCompanion.apk) |
+| **Direct APK Download** | [⬇️ **Download ChurchCompanion.apk** (43.68 MB)](https://github.com/iamemanual/CNI-Church-App/releases/download/v2.1.16/ChurchCompanion.apk) |
 | **Always-Current Download** | [⬇️ **Download Latest Release**](https://github.com/iamemanual/CNI-Church-App/releases/latest/download/ChurchCompanion.apk) |
 | **Target Android OS** | Android 14.0 (API Level 34) |
 | **Minimum Android OS** | Android 8.0 Oreo (API Level 26) |
-| **SHA-256 Checksum** | `16972bbc8ef6f58073c87018a5f7b26ea44e5a77492df0386d1d985bc0d85c53` |
+| **SHA-256 Checksum** | `e5eb125b0fdfce2600e08731529718f34cff174557c905d7bb534b0731799c1b` |
 
 > [!TIP]
 > **One-Tap In-App Updates**: If Church Companion is already installed on your device, you can update without manual browser downloads. Simply navigate to **Settings > App Update** to check for and install the latest build instantly.

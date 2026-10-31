@@ -5,7 +5,7 @@
 
 PORT=8181
 SERVER_URL="http://localhost:${PORT}"
-PROJECT_DIR="/data/data/com.termux/files/home/ChurchCompanion"
+PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SERVER_SCRIPT="${PROJECT_DIR}/server.js"
 PID_FILE="${PROJECT_DIR}/.server.pid"
 LOG_FILE="${PROJECT_DIR}/.server.log"
