@@ -181,10 +181,10 @@ flowchart TD
 CNI-Church-App/
 ├── app/
 │   ├── version.properties                  # Automated version controller (versionCode & versionName)
-│   ├── build.gradle.kts                    # Android build config (SDK 34, Min 26, auto-increment)
+│   ├── build.gradle.kts                    # Android build config (SDK 34, Min 26, auto-increment & release signing)
 │   ├── proguard-rules.pro                  # R8 / ProGuard optimization rules
 │   └── src/main/
-│       ├── AndroidManifest.xml             # Android manifest & FileProvider configuration
+│       ├── AndroidManifest.xml             # Android manifest & security attributes (allowBackup=false)
 │       ├── assets/                         # Sanctuary Web App assets
 │       │   ├── index.html                  # Primary Edge-to-Edge sanctuary interface
 │       │   ├── app_icon.png                # High-resolution application emblem
@@ -199,17 +199,26 @@ CNI-Church-App/
 │       │   └── libs/                       # dexie.min.js, pdf.min.js, supabase.js
 │       ├── java/com/allsaints/church/
 │       │   ├── ChurchApplication.kt        # Application lifecycle & installer cleanup
-│       │   ├── MainActivity.kt             # Edge-to-Edge WebView container
-│       │   ├── WebAppBridgeInterface.kt    # Android-to-JS native bridge & APK installer
+│       │   ├── MainActivity.kt             # Hardened Edge-to-Edge WebView container
+│       │   ├── WebAppBridgeInterface.kt    # Sandboxed Android-to-JS bridge & APK installer
 │       │   ├── ChurchOfflineStore.kt       # Native SQLite persistence layer
 │       │   ├── ChurchSyncManager.kt        # Background sync orchestrator
 │       │   ├── NetworkSyncReceiver.kt      # Broadcast network state receiver
 │       │   └── engine/                     # Liturgical calendar & lectionary computation
-│       └── res/                            # Android XML drawables, colors, & mipmap launcher icons
-├── build.sh                                # Automated build, optimization & signing script
+│       └── res/
+│           ├── xml/
+│           │   ├── file_paths.xml          # Scoped FileProvider sharing definitions
+│           │   └── network_security_config.xml # Strict HTTPS & localhost TLS policy
+│           └── ...                         # Drawables, mipmaps, and colors
+├── supabase/
+│   └── SECURITY_HARDENING.sql              # Production PostgreSQL RLS & RPC hardening migration
+├── keystore.properties                     # Private release keystore credentials (git-ignored)
+├── release.jks                             # Production release signing certificate (git-ignored)
+├── build.sh                                # Automated build, optimization & signing pipeline
+├── edit.sh                                 # Live Pinpoint dev server & CLI management tool
+├── server.js                               # Localhost & Wi-Fi dev server with secure execFileSync
 ├── settings.gradle.kts                     # Gradle multi-project settings
 ├── build.gradle.kts                        # Root project build configuration
-├── supabase_sync_engine_v1.sql             # Supabase schema, RLS policies, tables & triggers
 └── README.md                               # Project documentation
 ```
 
@@ -261,7 +270,7 @@ app/build/outputs/apk/release/app-release.apk
 
 When downloading or updating the APK package manually:
 
-1. Download [`ChurchCompanion.apk`](https://github.com/iamemanual/CNI-Church-App/releases/download/v2.1.9/ChurchCompanion.apk) from the [Latest Release Page](https://github.com/iamemanual/CNI-Church-App/releases/latest).
+1. Download [`ChurchCompanion.apk`](https://github.com/iamemanual/CNI-Church-App/releases/download/v2.1.16/ChurchCompanion.apk) from the [Latest Release Page](https://github.com/iamemanual/CNI-Church-App/releases/latest).
 2. Tap the download notification or locate the APK in your device's **Files / Downloads** folder.
 3. If prompted by Android, grant **Allow from this source** under *Install unknown apps*.
 4. Select **Install** (or **Update** if updating an existing installation).
@@ -271,10 +280,18 @@ When downloading or updating the APK package manually:
 
 ## 🛡️ Security, Privacy & Integrity
 
-- **Row Level Security (RLS)**: PostgreSQL tables on Supabase are protected with granular RLS policies, guaranteeing that parishioners only update their own profile records while retaining church-wide read access.
-- **Offline Sandbox Isolation**: User preferences, personal bookmarks, and offline drafts are stored within isolated application sandbox storage.
-- **Cross-Site Scripting (XSS) Sanitization**: All user inputs in fellowship channels are strictly sanitized via escaping engines before DOM injection.
-- **Secure FileProvider Installation**: APK updates are verified and executed via scoped Android `content://` URIs, never exposing raw file paths to external applications.
+Church Companion v2.1.16 incorporates comprehensive, multi-layer security hardening across the native Android runtime, web container, local server, and cloud database:
+
+- **Official Production Keystore & APK Signature Scheme v2**: Built and signed with a dedicated 2048-bit RSA release key (`CN=Emanual Mridha, OU=Faith Dev, O=Church of North India`). Verified via `apksigner` with full block tamper protection.
+- **Sandboxed WebView Security**: Universal cross-origin file access (`allowUniversalAccessFromFileURLs`) and file-URL access are strictly disabled to prevent Same-Origin Policy (SOP) bypasses. Google SafeBrowsing is actively enforced (`safeBrowsingEnabled = true`).
+- **Strict Origin Filtering & Intent Sanitization**: Deep-link navigation enforces strict host validation (`localhost`, `127.0.0.1`, and `*.supabase.co`). External intent schemes (`intent://`) strip explicit component targets and mandate `CATEGORY_BROWSABLE` to block intent hijacking.
+- **Hardware Permission Origin Verification**: WebChromeClient hardware requests (camera, video capture) are granted exclusively to verified internal application assets.
+- **Scoped FileProvider & Sandboxed APK Installer**: Package installation is strictly sandboxed to canonical file paths within internal app update directories (`filesDir/updates/`). Storage-wide `<external-path path="."/>` exposures are removed.
+- **Network Security Configuration**: Android `network_security_config.xml` mandates HTTPS/TLS across all public endpoints and restricts cleartext HTTP exclusively to local development loops.
+- **ADB Data Backup Protection**: `allowBackup="false"` prevents unauthorized physical extraction of private SQLite offline databases (`ChurchOfflineStore.db`) or cached session tokens via USB debugging.
+- **Local Dev Server Hardening**: Command execution in `server.js` uses argument-array `execFileSync` to eliminate shell string interpolation and command injection risks.
+- **Client-Side Auth Hardening**: Eliminated all static fallback PIN backdoors (`123456`, `emanual123`) and removed unauthenticated name-based privilege escalation.
+- **PostgreSQL Row Level Security (RLS) & RPC Lockdown**: Hardened migration script (`supabase/SECURITY_HARDENING.sql`) re-enables RLS on all 15 tables, revokes unauthenticated write/delete grants from `anon`, and restricts administrative RPC procedures (`approve_admin_request`) strictly to verified Super Admins.
 
 ---
 
