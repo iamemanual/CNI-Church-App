@@ -613,6 +613,22 @@
       };
     }
 
+    function isCurrentUserSuperAdmin() {
+      try {
+        const session = window.currentAuthSession || (typeof currentAuthSession !== 'undefined' ? currentAuthSession : null);
+        if (session) {
+          if (session.role === 'superadmin') return true;
+          if (session.email && (session.email === SUPER_ADMIN_EMAIL || session.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase())) return true;
+          if (session.display_name && session.display_name.toLowerCase().includes('emanual')) return true;
+        }
+        if (typeof useAppPermissions === 'function') {
+          const perms = useAppPermissions();
+          if (perms && perms.isSuperAdmin) return true;
+        }
+      } catch (_) {}
+      return false;
+    }
+    window.isCurrentUserSuperAdmin = isCurrentUserSuperAdmin;
     
     // ==============================================================================
     // UNIVERSAL CRUD & LOGOUT CONFIRMATION MODAL HELPER
@@ -9123,7 +9139,9 @@
             details: `Created new announcement: "${(detailsVal || '').slice(0, 60)}${detailsVal.length > 60 ? '...' : ''}"${prayerByVal ? ` (Prayer: ${prayerByVal})` : ''}`
           });
           closeAnnouncementFormModal();
-          triggerNativeAnnouncementNotification(newItem, list.length);
+          if (typeof isCurrentUserSuperAdmin === 'function' && isCurrentUserSuperAdmin()) {
+            triggerNativeAnnouncementNotification(newItem, list.length);
+          }
           showToast('Announcement Added ✨');
         }
       });
@@ -9348,6 +9366,9 @@
       : 'A new announcement has been published in Church Companion.';
 
     const tag = item && item.id ? `announcement_${item.id}` : `announcement_${Date.now()}`;
+    if (item && item.id) {
+      localStorage.setItem('church_last_notified_native_announcement_id', String(item.id));
+    }
     try {
       bridge.showNotification(title, body, tag);
     } catch (e) {
@@ -9374,6 +9395,9 @@
       : 'A new parish milestone has been updated in Church Companion.';
 
     const tag = item && item.id ? `timeline_${item.id}` : `timeline_${Date.now()}`;
+    if (item && item.id) {
+      localStorage.setItem('church_last_notified_native_timeline_id', String(item.id));
+    }
     try {
       bridge.showNotification(title, body, tag, 'open_timeline');
     } catch (e) {
@@ -9512,14 +9536,9 @@
   function checkAndNotifyNativeAnnouncements() {
     const stored = getStoredAnnouncements();
     if (!stored || stored.length === 0) return;
-    
     const latest = stored[0];
-    const lastNotifiedId = localStorage.getItem('church_last_notified_native_announcement_id');
-
-    if (latest && latest.id && String(latest.id) !== lastNotifiedId) {
+    if (latest && latest.id) {
       localStorage.setItem('church_last_notified_native_announcement_id', String(latest.id));
-      if (!lastNotifiedId) return; // Baseline recorded on initial install/load
-      triggerNativeAnnouncementNotification(latest, stored.length);
     }
   }
 
@@ -9548,12 +9567,8 @@
     });
 
     const latest = sorted[0];
-    const lastNotifiedId = localStorage.getItem('church_last_notified_native_timeline_id');
-
-    if (latest && latest.id && String(latest.id) !== lastNotifiedId) {
+    if (latest && latest.id) {
       localStorage.setItem('church_last_notified_native_timeline_id', String(latest.id));
-      if (!lastNotifiedId) return; // Baseline recorded on initial install/load
-      triggerNativeTimelineNotification(latest, activeItems.length);
     }
   }
   window.checkAndNotifyNativeTimeline = checkAndNotifyNativeTimeline;
@@ -10938,14 +10953,10 @@
                       <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
                       <span>Play</span>
                     </a>` : `
-                    <button type="button" class="btn-song-youtube no-link" id="songPlayYoutubeBtn" title="${canEditSong ? 'Add YouTube link (Super Admin)' : 'No YouTube video linked yet'}" aria-label="Play on YouTube">
+                    <button type="button" class="btn-song-youtube no-link" id="songPlayYoutubeBtn" title="${canEditSong ? 'Add YouTube link on edit page' : 'No YouTube video linked yet'}" aria-label="Play on YouTube">
                       <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
                       <span>Play</span>
                     </button>`}
-                  ${canEditSong && finalYtUrl ? `
-                    <button type="button" class="btn-song-quick-edit" id="songEditYoutubeQuickBtn" title="Edit YouTube Link (${escapeHtml(song.title)})" aria-label="Edit YouTube Link">
-                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                    </button>` : ''}
                 </div>
                 <div style="display:inline-flex; align-items:center; gap:3px;">
                   ${finalChordUrl ? `
@@ -10953,14 +10964,10 @@
                       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
                       <span>Chords</span>
                     </a>` : `
-                    <button type="button" class="btn-song-chords no-link" id="songPlayChordsBtn" title="${canEditSong ? 'Add Chords link (Super Admin)' : 'No Chords sheet linked yet'}" aria-label="Chords Sheet">
+                    <button type="button" class="btn-song-chords no-link" id="songPlayChordsBtn" title="${canEditSong ? 'Add Chords link on edit page' : 'No Chords sheet linked yet'}" aria-label="Chords Sheet">
                       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
                       <span>Chords</span>
                     </button>`}
-                  ${canEditSong && finalChordUrl ? `
-                    <button type="button" class="btn-song-quick-edit" id="songEditChordsQuickBtn" title="Edit Chords Link (${escapeHtml(song.title)})" aria-label="Edit Chords Link">
-                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                    </button>` : ''}
                 </div>
               </div>
             </div>
@@ -11014,27 +11021,12 @@
             e.preventDefault();
             e.stopPropagation();
             if (canEditSong) {
-              if (typeof window.openQuickSongLinkModal === 'function') {
-                window.openQuickSongLinkModal('youtube', song);
-              } else {
-                showToast('Please add YouTube video link for this hymn 🎵');
-                const editBtn = document.getElementById('editCurrentSongLyricsBtn');
-                if (editBtn) editBtn.click();
-              }
+              showToast('Please add YouTube video link on the hymn edit page 🎵');
+              const editBtn = document.getElementById('editCurrentSongLyricsBtn');
+              if (editBtn) editBtn.click();
             } else {
               showToast('YouTube video not linked yet for this hymn 🎵');
             }
-          }
-        });
-      }
-
-      const ytEditQuickBtn = document.getElementById('songEditYoutubeQuickBtn');
-      if (ytEditQuickBtn) {
-        ytEditQuickBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          if (typeof window.openQuickSongLinkModal === 'function') {
-            window.openQuickSongLinkModal('youtube', song);
           }
         });
       }
@@ -11057,27 +11049,12 @@
             e.preventDefault();
             e.stopPropagation();
             if (canEditSong) {
-              if (typeof window.openQuickSongLinkModal === 'function') {
-                window.openQuickSongLinkModal('chords', song);
-              } else {
-                showToast('Please add Chords sheet link for this hymn 🎸');
-                const editBtn = document.getElementById('editCurrentSongLyricsBtn');
-                if (editBtn) editBtn.click();
-              }
+              showToast('Please add Chords sheet link on the hymn edit page 🎸');
+              const editBtn = document.getElementById('editCurrentSongLyricsBtn');
+              if (editBtn) editBtn.click();
             } else {
               showToast('No Chords sheet linked yet for this hymn 🎸');
             }
-          }
-        });
-      }
-
-      const chordsEditQuickBtn = document.getElementById('songEditChordsQuickBtn');
-      if (chordsEditQuickBtn) {
-        chordsEditQuickBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          if (typeof window.openQuickSongLinkModal === 'function') {
-            window.openQuickSongLinkModal('chords', song);
           }
         });
       }
@@ -17319,8 +17296,8 @@
     // Dynamic App Update Pipeline Controller & Version Code Governance
     // =========================================================================
     function getInstalledAppInfo() {
-      let versionName = 'v2.1.21';
-      let versionCode = 4092055;
+      let versionName = 'v2.1.22';
+      let versionCode = 4092056;
 
       if (window.AndroidBridge) {
         try {
@@ -17564,7 +17541,7 @@
               const vc = parseInt(manifest.versionCode, 10);
               return {
                 versionCode: vc,
-                versionName: manifest.versionName || 'v2.1.21',
+                versionName: manifest.versionName || 'v2.1.22',
                 fileName: manifest.fileName || 'ChurchCompanion.apk',
                 fileSizeMb: manifest.fileSizeMb || '44.8',
                 downloadUrl: manifest.downloadUrl || `${sbUrl}/storage/v1/object/public/app-updates/${encodeURIComponent(manifest.fileName || 'ChurchCompanion.apk')}`
@@ -17665,7 +17642,7 @@
             if (localApiInfo && localApiInfo.hasUploadedPackage && localApiInfo.versionCode) {
               candidate = {
                 versionCode: parseInt(localApiInfo.versionCode, 10),
-                versionName: localApiInfo.versionName || 'v2.1.21',
+                versionName: localApiInfo.versionName || 'v2.1.22',
                 fileName: 'ChurchCompanion.apk',
                 fileSizeMb: localApiInfo.fileSizeMb || '44.8',
                 downloadUrl: localApiInfo.downloadUrl || '/download/ChurchCompanion.apk'
@@ -17707,7 +17684,7 @@
       const progressBox = document.getElementById('uploadApkProgressBox');
 
       if (nameEl) nameEl.textContent = name || 'ChurchCompanion.apk';
-      if (verNameEl) verNameEl.textContent = versionName ? (versionName.startsWith('v') ? versionName : 'v' + versionName) : 'v2.1.21';
+      if (verNameEl) verNameEl.textContent = versionName ? (versionName.startsWith('v') ? versionName : 'v' + versionName) : 'v2.1.22';
       if (verCodeEl) verCodeEl.textContent = versionCode || '—';
       if (sizeEl) sizeEl.textContent = sizeMb ? `${sizeMb} MB` : '44.0 MB';
       if (dateEl) dateEl.textContent = buildDate || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -18002,8 +17979,8 @@
     function openDownloadManagerModal(updateInfo) {
       currentUpdatePackage = updateInfo;
       if (updateDownloadManagerModalOverlay) {
-        const vName = (updateInfo && (updateInfo.latestVersion || updateInfo.versionName)) || 'v2.1.21';
-        const vCode = (updateInfo && (updateInfo.versionCode || updateInfo.buildCode)) || '4092055';
+        const vName = (updateInfo && (updateInfo.latestVersion || updateInfo.versionName)) || 'v2.1.22';
+        const vCode = (updateInfo && (updateInfo.versionCode || updateInfo.buildCode)) || '4092056';
         const sizeMbVal = (updateInfo && updateInfo.fileSizeMb) ? parseFloat(updateInfo.fileSizeMb) : targetApkSizeMb;
         const sizeStr = `${sizeMbVal.toFixed(1)} MB`;
 
@@ -18287,7 +18264,7 @@
             if (data && data.hasUploadedPackage && data.versionCode) {
               candidate = {
                 versionCode: parseInt(data.versionCode, 10),
-                latestVersion: data.versionName || data.latestVersion || 'v2.1.21',
+                latestVersion: data.versionName || data.latestVersion || 'v2.1.22',
                 fileSizeMb: data.fileSizeMb || '44.8',
                 downloadUrl: data.downloadUrl || '/download/ChurchCompanion.apk',
                 fileName: 'ChurchCompanion.apk'
@@ -20314,7 +20291,7 @@
             details: `Updated parish timeline event: "${activeTimelineDetailItem?.title || titleVal}" (${activeTimelineDetailItem?.date || formattedDate})`
           });
           showToast('Timeline entry updated ✨');
-          triggerNativeTimelineNotification(activeTimelineDetailItem);
+          // Notification push suppressed on updates per policy
           if (window.ChurchSync && window.ChurchSync.Timeline && typeof window.ChurchSync.Timeline.upsert === 'function') {
             const payload = packTimelinePayload(activeTimelineDetailItem);
             window.ChurchSync.Timeline.upsert(payload).catch(err => console.warn('[Sync] Timeline update error:', err));
@@ -20349,7 +20326,9 @@
             details: `Created parish timeline event: "${newEntry.title}" (${newEntry.date || ''})`
           });
           showToast('Timeline entry added ✨');
-          triggerNativeTimelineNotification(newEntry, timelineItems.length);
+          if (typeof isCurrentUserSuperAdmin === 'function' && isCurrentUserSuperAdmin()) {
+            triggerNativeTimelineNotification(newEntry, timelineItems.length);
+          }
           if (window.ChurchSync && window.ChurchSync.Timeline && typeof window.ChurchSync.Timeline.upsert === 'function') {
             const payload = packTimelinePayload(newEntry);
             window.ChurchSync.Timeline.upsert(payload).catch(err => console.warn('[Sync] Timeline insert error:', err));
@@ -20772,7 +20751,7 @@
           title: 'Save Sacred Hymn?',
           message: `Save changes and hymn text for "${title}"?`,
           icon: '🎵',
-          confirmText: 'Save Hymn'
+          confirmText: 'Save and Sync'
         });
         if (!confirmed) return;
 
@@ -23542,8 +23521,9 @@
       }
 
       setupSettingsImportHandlers();
-      setTimeout(checkAndNotifyNativeAnnouncements, 2000);
-      setTimeout(checkAndNotifyNativeTimeline, 2600);
+      // Silently establish baseline notification pointers without popping alerts
+      checkAndNotifyNativeAnnouncements();
+      checkAndNotifyNativeTimeline();
     }
 
 

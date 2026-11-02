@@ -2977,5 +2977,56 @@ a, button, [role="button"], .dock-item, .quick-card, .action-pill-card,
   outline-offset: 2px;
 }
 
+/* ==============================================================================
+   SMOOTH PERFORMANCE & MOMENTUM SCROLLING ENGINE (60/120 FPS FLUIDITY)
+   ============================================================================== */
+html, body {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  overscroll-behavior-y: none;
+  text-rendering: optimizeLegibility;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Hardware compositing and momentum scrolling for all list and modal bodies */
+.song-lyrics-body,
+.timeline-scroll-container,
+.timeline-list,
+.song-list-scroll,
+.modal-body,
+.modal-content,
+.bottom-sheet-content,
+.tab-content,
+.chat-messages-container,
+.drawer-content,
+.admin-selected-songs-list {
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: contain;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Contain layout and paint for long song and timeline lists to eliminate jank */
+.song-card,
+.timeline-card,
+.announcement-card,
+.hymn-list-item {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 76px;
+  contain: layout style paint;
+}
+
+/* Silky smooth modal and backdrop transitions without layout thrashing */
+.modal-overlay,
+.bottom-sheet-overlay,
+.toast-container {
+  will-change: opacity, transform;
+  transform: translateZ(0);
+}
+
+
 
 

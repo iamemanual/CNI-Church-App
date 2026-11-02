@@ -2019,8 +2019,11 @@
         if (res.error) throw res.error;
         result = res.data || remotePayload;
 
-        if (segment === 'announcements') {
-          triggerOneSignalAnnouncementPush(remotePayload);
+        if (segment === 'announcements' && op === 'insert') {
+          const isSuper = typeof window !== 'undefined' && typeof window.isCurrentUserSuperAdmin === 'function' && window.isCurrentUserSuperAdmin();
+          if (isSuper) {
+            triggerOneSignalAnnouncementPush(remotePayload);
+          }
         }
       }
 
@@ -2128,6 +2131,8 @@
 
   function triggerOneSignalAnnouncementPush(announcement) {
     try {
+      const isSuper = typeof window !== 'undefined' && typeof window.isCurrentUserSuperAdmin === 'function' && window.isCurrentUserSuperAdmin();
+      if (!isSuper) return;
       const title = announcement.title || 'New Announcement';
       const body = announcement.body || announcement.details || 'New announcement posted';
 
