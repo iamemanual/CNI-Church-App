@@ -221,7 +221,7 @@
           } else if (locChord && !incoming._explicit_chord_removal) {
             merged.chord_url = locChord;
             merged.chordUrl = locChord;
-          } else {
+          } else if (incoming._explicit_chord_removal) {
             merged.chord_url = null;
             merged.chordUrl = null;
           }
@@ -880,17 +880,19 @@
       const self = this;
       const IS_DEV = (typeof location !== 'undefined' && location.hostname === 'localhost');
 
-      // Network listeners: update indicator safely without triggering automatic background syncs
+      // Network listeners: update indicator and re-establish live Supabase Realtime channel
       window.addEventListener('online', function () {
-        if (IS_DEV) console.log('[SyncEngine] Network online — waiting for user-initiated sync.');
+        if (IS_DEV) console.log('[SyncEngine] Network online — re-establishing realtime channels.');
         if (self._status === 'offline') {
           self._setStatus('idle');
         }
+        self._subscribeRealtime();
       });
 
       window.addEventListener('offline', function () {
         if (IS_DEV) console.log('[SyncEngine] Network offline — local data preserved.');
         self._setStatus('offline');
+        self._unsubscribeRealtime();
       });
 
       // Setup auth listener for setAuth on token refresh
@@ -902,8 +904,9 @@
       // Guard: Perform exactly ONE automatic Supabase sync per app session on launch.
       // Prevent duplicate launch syncs caused by re-renders, navigation, or script re-execution.
       if (hasSessionSynced()) {
-        if (IS_DEV) console.log('[SyncEngine] Single launch sync already completed for this session. Automatic sync disabled.');
+        if (IS_DEV) console.log('[SyncEngine] Single launch sync already completed for this session.');
         this._setStatus(navigator.onLine ? 'idle' : 'offline');
+        this._subscribeRealtime();
         return;
       }
 
@@ -919,15 +922,8 @@
       if (IS_DEV) console.log('[SyncEngine] Performing single automatic launch sync for session...');
       await this.performSync({ isLaunch: true });
 
-      // After launch sync completes, strictly disable all automatic synchronization:
-      // no background sync, no polling, no Realtime subscriptions, no periodic refreshes,
-      // no navigation-triggered syncs, and no automatic retries.
-      this._stopWatchdog();
-      if (this._reconnectTimeout) {
-        clearTimeout(this._reconnectTimeout);
-        this._reconnectTimeout = null;
-      }
-      this._unsubscribeRealtime();
+      // Maintain live Realtime subscriptions for songs, chords, and community updates
+      this._subscribeRealtime();
     },
 
     stop: function () {
@@ -1306,7 +1302,8 @@
                                          itemIdStr.startsWith('custom-') ||
                                          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(itemIdStr) ||
                                          item.book_reference || item.created_at || item.updated_at;
-                if (isRemoteOrCustom && !activeIds.has(itemIdStr) && !activeTitles.has(itemTitleStr)) {
+                // Never prune locally modified hymns or custom songs unless explicitly marked deleted
+                if (item.deleted_at && isRemoteOrCustom && !activeIds.has(itemIdStr)) {
                   if (item.id) await tbl.delete(item.id).catch(function () {});
                   else if (item.title) await tbl.where('title').equalsIgnoreCase(item.title).delete().catch(function () {});
                 }
@@ -1478,7 +1475,7 @@
 
     /**
      * Realtime Subscriptions & Background Polling Management
-     * Strictly disabled post-launch: all subsequent synchronization must be triggered manually.
+     * Maintains live websocket connection to Supabase Realtime channel
      */
     _unsubscribeRealtime: function () {
       const client = this._getClient();
@@ -1489,8 +1486,54 @@
     },
 
     _subscribeRealtime: function () {
-      // Disabled by policy: all subsequent synchronization is strictly user-triggered.
+      const client = this._getClient();
+      if (!client || !navigator.onLine) return;
       this._unsubscribeRealtime();
+
+      try {
+        const self = this;
+        const channel = client.channel('unified-sync-channel');
+
+        const tables = [
+          'songs',
+          'prayer_book',
+          'timeline_events',
+          'todays_song_selection',
+          'announcements',
+          'chat_messages',
+          'message_deliveries',
+          'message_reads',
+          'message_reactions',
+          'congregation_members',
+          'profiles',
+          'almanac_entries',
+          'admin_requests',
+          'youth_access_requests',
+          'posts'
+        ];
+
+        tables.forEach(function (tbl) {
+          channel.on('postgres_changes', { event: '*', schema: 'public', table: tbl }, function (payload) {
+            self._handleRealtimeEvent(tbl, payload);
+          });
+        });
+
+        channel.subscribe(function (status, err) {
+          if (status === 'SUBSCRIBED') {
+            self._reconnectAttempts = 0;
+            if (typeof window !== 'undefined' && window.ChurchSync) {
+              window.ChurchSync.emit('realtimeConnected', { channel: 'unified' });
+            }
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+            console.warn('[SyncEngine] Realtime connection status:', status, err || '');
+            self._scheduleReconnect();
+          }
+        });
+
+        this._realtimeChannel = channel;
+      } catch (err) {
+        console.warn('[SyncEngine] Realtime subscription exception:', err);
+      }
     },
 
     _watchdogTimer: null,
@@ -1498,7 +1541,6 @@
     WATCHDOG_MS: 300000,
 
     _startWatchdog: function () {
-      // Disabled by policy: no background polling or watchdog intervals.
       this._stopWatchdog();
     },
 
@@ -1510,11 +1552,17 @@
     },
 
     _scheduleReconnect: function () {
-      // Disabled by policy: no automatic retries; all retries must be user-triggered.
       if (this._reconnectTimeout) {
         clearTimeout(this._reconnectTimeout);
         this._reconnectTimeout = null;
       }
+      if (!navigator.onLine) return;
+      this._reconnectAttempts++;
+      const delay = Math.min(this.MAX_BACKOFF_MS, this.BASE_BACKOFF_MS * Math.pow(2, this._reconnectAttempts));
+      const self = this;
+      this._reconnectTimeout = setTimeout(function () {
+        self._subscribeRealtime();
+      }, delay);
     },
 
     _handleRealtimeEvent: async function (table, payload) {
@@ -1948,6 +1996,25 @@
           }
         }
       } else {
+        if (segment === 'songbook' && client && typeof client.rpc === 'function') {
+          try {
+            const chordVal = remotePayload.chord_url || remotePayload.chordUrl || '';
+            const ytVal = remotePayload.youtube_url || remotePayload.youtubeUrl || '';
+            const isRemChord = Boolean(remotePayload._explicit_chord_removal);
+            const isRemYt = Boolean(remotePayload._explicit_yt_removal);
+            await client.rpc('update_song_links', {
+              p_song_id: remotePayload.id,
+              p_chord_url: chordVal || null,
+              p_youtube_url: ytVal || null,
+              p_song_title: remotePayload.title || null,
+              p_remove_chord: isRemChord,
+              p_remove_youtube: isRemYt
+            });
+          } catch (rpcErr) {
+            console.warn('[syncWrite] update_song_links RPC warning:', rpcErr);
+          }
+        }
+
         const res = await client.from(targetTable).upsert(remotePayload, { onConflict: onConflictKey }).select().maybeSingle();
         if (res.error) throw res.error;
         result = res.data || remotePayload;

@@ -729,15 +729,9 @@
                 if (existing) {
                   newRec.chord_url = existing;
                   newRec.chordUrl = existing;
-                } else {
-                  newRec.chord_url = null;
-                  newRec.chordUrl = null;
                 }
-              } catch (_) {
-                newRec.chord_url = null;
-                newRec.chordUrl = null;
-              }
-            } else {
+              } catch (_) {}
+            } else if (newRec._explicit_chord_removal) {
               newRec.chord_url = null;
               newRec.chordUrl = null;
             }
@@ -1694,6 +1688,71 @@
       _emit("song_book:change", { eventType: "DELETE", old: { id: songId, title: songTitle } });
 
       return { data: { id: songId, title: songTitle }, error: null };
+    },
+    async updateLinks(songId, options = {}) {
+      const client = _state.realtimeClient || window.churchSupabase || _supabaseClient;
+      const { chordUrl, youtubeUrl, title, removeChord, removeYoutube } = options;
+      const nowIso = new Date().toISOString();
+
+      // 1. Call RPC update_song_links for direct database update
+      let rpcResult = null;
+      if (client && typeof client.rpc === 'function') {
+        try {
+          const res = await client.rpc('update_song_links', {
+            p_song_id: songId,
+            p_chord_url: chordUrl || null,
+            p_youtube_url: youtubeUrl || null,
+            p_song_title: title || null,
+            p_remove_chord: Boolean(removeChord),
+            p_remove_youtube: Boolean(removeYoutube)
+          });
+          if (res && res.data) {
+            rpcResult = res.data;
+          }
+        } catch (err) {
+          console.warn('[Songs.updateLinks] RPC exception:', err);
+        }
+      }
+
+      // 2. Update local persistent chords map
+      try {
+        const chordsMap = JSON.parse(localStorage.getItem('sanctuary_hymn_chords') || '{}');
+        const sKey = (title || '').toLowerCase().trim();
+        if (removeChord) {
+          if (songId) delete chordsMap[songId];
+          if (sKey) delete chordsMap[sKey];
+        } else if (chordUrl) {
+          if (songId) chordsMap[songId] = chordUrl;
+          if (sKey) chordsMap[sKey] = chordUrl;
+        }
+        localStorage.setItem('sanctuary_hymn_chords', JSON.stringify(chordsMap));
+      } catch (_) {}
+
+      // 3. Update Dexie stores
+      const updatedRecord = rpcResult || {
+        id: songId,
+        title: title || 'Hymn',
+        chord_url: removeChord ? null : (chordUrl || null),
+        chordUrl: removeChord ? null : (chordUrl || null),
+        youtube_url: removeYoutube ? null : (youtubeUrl || null),
+        youtubeUrl: removeYoutube ? null : (youtubeUrl || null),
+        updated_at: nowIso
+      };
+
+      if (db && db.songs) try { await db.songs.update(songId, updatedRecord); } catch (_) {}
+      if (db && db.song_book) try { await db.song_book.update(songId, updatedRecord); } catch (_) {}
+      if (db && db.custom_songs) try { await db.custom_songs.update(songId, updatedRecord); } catch (_) {}
+      if (typeof window.churchDexieDb !== 'undefined' && window.churchDexieDb) {
+        if (window.churchDexieDb.songs) try { await window.churchDexieDb.songs.update(songId, updatedRecord); } catch (_) {}
+        if (window.churchDexieDb.custom_songs) try { await window.churchDexieDb.custom_songs.update(songId, updatedRecord); } catch (_) {}
+      }
+
+      // 4. Emit events & bridge to app.js
+      _emit('songs:change', { eventType: 'UPDATE', new: updatedRecord });
+      _emit('song_book:change', { eventType: 'UPDATE', new: updatedRecord });
+      window.dispatchEvent(new CustomEvent('church:sync:songbook', { detail: { item: updatedRecord, op: 'update' } }));
+
+      return { data: updatedRecord, error: null };
     },
     onChange(fn) { _on("songs:change", fn); }
   };

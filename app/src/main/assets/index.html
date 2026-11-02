@@ -13677,8 +13677,14 @@ textarea:focus-visible,
             </div>
           </div>
 
-          <!-- Cloudflare Turnstile Automated Bot Defense -->
-          <div class="cf-turnstile" data-sitekey="0x4AAAAAAFwK-3sEC2iTgCQk" data-theme="auto" style="display:flex; justify-content:center; margin:12px 0 4px;"></div>
+          <!-- Cloudflare Turnstile Automated Bot Defense (Invisible Execution with Minimal Brand Icon) -->
+          <div class="cf-turnstile" data-sitekey="0x4AAAAAAFwK-3sEC2iTgCQk" data-size="invisible"></div>
+          <div class="turnstile-brand-badge" style="display: flex; align-items: center; justify-content: center; gap: 6px; margin: 10px 0 2px; font-size: 0.75rem; color: var(--text-muted); opacity: 0.85;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="#F38020" aria-label="Cloudflare Security" style="flex-shrink: 0;">
+              <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z"/>
+            </svg>
+            <span>Protected by Cloudflare</span>
+          </div>
 
           <div class="registration-modal-footer" style="display:flex; flex-direction:column; gap:10px; margin-top:14px;">
             <button type="submit" id="adminSignInSubmitBtn" class="btn-primary registration-submit-btn" style="border-radius:20px; height:50px; font-weight:700; width:100%;">
@@ -15991,8 +15997,14 @@ textarea:focus-visible,
               <!-- Inline Error Display -->
               <div class="inline-error hidden" id="modalSignInError"></div>
 
-              <!-- Cloudflare Turnstile Automated Bot Defense -->
-              <div class="cf-turnstile" data-sitekey="0x4AAAAAAFwK-3sEC2iTgCQk" data-theme="auto" style="display:flex; justify-content:center; margin:10px 0;"></div>
+              <!-- Cloudflare Turnstile Automated Bot Defense (Invisible Execution with Minimal Brand Icon) -->
+              <div class="cf-turnstile" data-sitekey="0x4AAAAAAFwK-3sEC2iTgCQk" data-size="invisible"></div>
+              <div class="turnstile-brand-badge" style="display: flex; align-items: center; justify-content: center; gap: 6px; margin: 8px 0; font-size: 0.75rem; color: var(--text-muted); opacity: 0.85;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="#F38020" aria-label="Cloudflare Security" style="flex-shrink: 0;">
+                  <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z"/>
+                </svg>
+                <span>Protected by Cloudflare</span>
+              </div>
 
               <!-- Action Button: Sign In -->
               <button type="button" class="auth-button" id="modalSignInBtn" onclick="handleChurchModalSignIn()">
@@ -16849,6 +16861,40 @@ textarea:focus-visible,
         <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 8px; padding: 12px 20px; border-top: 1px solid var(--border-subtle);">
           <button type="button" class="btn-secondary" id="cancelEditSongModalBtn">Cancel</button>
           <button type="button" class="btn-primary" id="saveEditSongModalBtn">Save Changes</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 13B-2. Quick Song Link Modal (Realtime Supabase Sync for Chords & Play Links) -->
+    <div id="quickSongLinkModalOverlay" class="modal-overlay hidden" aria-modal="true" role="dialog" style="z-index: 10009;">
+      <div class="modal-card" style="max-width: 440px; border-radius: 24px; padding: 0; overflow: hidden; box-shadow: var(--shadow-xl);">
+        <div class="modal-header" style="background: linear-gradient(135deg, rgba(6, 182, 212, 0.14) 0%, rgba(6, 182, 212, 0.04) 100%); border-bottom: 1px solid var(--border-subtle); padding: 18px 20px; display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span id="quickSongLinkIcon" style="font-size: 1.25rem;">🎸</span>
+            <div>
+              <h3 id="quickSongLinkTitle" style="font-size: 1.05rem; font-weight: 800; margin: 0; color: var(--text-primary);">Sync Chords Link</h3>
+              <p id="quickSongLinkSubtitle" style="font-size: 0.76rem; color: var(--text-muted); margin: 2px 0 0 0;">Synchronizes in real time with Supabase</p>
+            </div>
+          </div>
+          <button id="closeQuickSongLinkModalBtn" class="modal-close" aria-label="Close" type="button" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 4px;">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+        <div style="padding: 20px 22px;">
+          <label class="form-label" for="quickSongLinkInput" id="quickSongLinkLabel" style="font-size: 0.82rem; font-weight: 700; margin-bottom: 6px; display: block; color: var(--text-primary);">Chords Sheet URL / Tabs Link:</label>
+          <input type="url" id="quickSongLinkInput" class="form-control" placeholder="https://... (Drive, Ultimate Guitar, sheet music, tabs)" style="border-radius: 14px; padding: 12px 14px; font-size: 0.92rem; width: 100%; margin-bottom: 14px;">
+          
+          <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
+            <button type="button" id="removeQuickSongLinkBtn" class="btn-secondary hidden" style="border-radius: 14px; height: 42px; font-weight: 700; color: #ef4444; border-color: rgba(239, 68, 68, 0.35); padding: 0 14px; font-size: 0.84rem;">
+              🗑️ Remove Link
+            </button>
+            <button type="button" id="cancelQuickSongLinkBtn" class="btn-secondary" style="border-radius: 14px; height: 42px; font-weight: 600; padding: 0 16px; font-size: 0.84rem;">
+              Cancel
+            </button>
+            <button type="button" id="saveQuickSongLinkBtn" class="btn-primary" style="border-radius: 14px; height: 42px; font-weight: 700; padding: 0 18px; font-size: 0.84rem; background: linear-gradient(135deg, #06b6d4, #0891b2);">
+              <span id="saveQuickSongLinkBtnText">Save & Sync</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

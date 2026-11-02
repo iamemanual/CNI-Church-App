@@ -1127,6 +1127,43 @@ body {
   box-shadow: none !important;
 }
 
+/* Quick Edit Button for Song Links */
+.btn-song-quick-edit {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  border-radius: 999px !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  cursor: pointer !important;
+  padding: 4px 6px !important;
+  min-height: 26px !important;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+[data-theme="light"] .btn-song-quick-edit {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid rgba(0, 0, 0, 0.14) !important;
+  color: #475569 !important;
+}
+
+.btn-song-quick-edit:hover {
+  background: rgba(255, 255, 255, 0.24) !important;
+  color: #ffffff !important;
+}
+
+[data-theme="light"] .btn-song-quick-edit:hover {
+  background: rgba(0, 0, 0, 0.10) !important;
+  color: #0f172a !important;
+}
+
+.btn-song-quick-edit:active {
+  transform: scale(0.92) !important;
+}
+
 /* Song Lyrics Left Padding Pinpoint */
 .song-lyrics-body {
   padding: 8px 14px 2px 14px !important;

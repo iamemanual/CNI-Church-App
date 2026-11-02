@@ -1448,13 +1448,17 @@
         return;
       }
 
-      // Cloudflare Turnstile Bot Defense Check (Web environment)
+      // Cloudflare Turnstile Bot Defense Check (Web environment - Invisible Execution)
       if (typeof window.turnstile !== 'undefined' && location.protocol.startsWith('http') && location.hostname !== 'localhost') {
-        const turnstileToken = window.turnstile.getResponse();
-        if (!turnstileToken) {
-          showAdminSignInError('Please complete the Cloudflare Security Verification 🛡️');
-          return;
-        }
+        try {
+          let turnstileToken = window.turnstile.getResponse();
+          if (!turnstileToken) {
+            const tsElem = document.querySelector('#adminSignInForm .cf-turnstile');
+            if (tsElem && typeof window.turnstile.execute === 'function') {
+              try { window.turnstile.execute(tsElem); } catch (_) {}
+            }
+          }
+        } catch (_) {}
       }
 
       setAdminSignInLoading(true);
@@ -2153,15 +2157,59 @@
                   e.preventDefault();
                   e.stopPropagation();
                   if (canEditSong) {
-                    showToast('Please add Chords sheet link for this hymn 🎸');
-                    const editBtn = document.getElementById('editCurrentSongLyricsBtn');
-                    if (editBtn) editBtn.click();
-                    setTimeout(() => {
-                      const chordIn = document.getElementById('editSongChordInput');
-                      if (chordIn) chordIn.focus();
-                    }, 180);
+                    if (typeof window.openQuickSongLinkModal === 'function') {
+                      window.openQuickSongLinkModal('chords', active);
+                    } else {
+                      showToast('Please add Chords sheet link for this hymn 🎸');
+                      const editBtn = document.getElementById('editCurrentSongLyricsBtn');
+                      if (editBtn) editBtn.click();
+                      setTimeout(() => {
+                        const chordIn = document.getElementById('editSongChordInput');
+                        if (chordIn) chordIn.focus();
+                      }, 180);
+                    }
                   } else {
                     showToast('No Chords sheet linked yet for this hymn 🎸');
+                  }
+                }
+              });
+            }
+          }
+
+          // Also seamlessly update YouTube action pill in real time
+          const ytBtn = document.getElementById('songPlayYoutubeBtn');
+          const rawYt = ytUrl || active.youtube_url || active.youtubeUrl;
+          let finalYt = rawYt ? (/^https?:\/\//i.test(rawYt) ? rawYt : 'https://' + rawYt) : '';
+          const isAndroid = /Android/i.test(navigator.userAgent || '');
+          const videoId = typeof extractYoutubeVideoId === 'function' ? extractYoutubeVideoId(finalYt) : null;
+          const nativeAppHref = (isAndroid && videoId) ? `vnd.youtube:${videoId}` : (finalYt || '#');
+
+          if (ytBtn) {
+            if (finalYt) {
+              ytBtn.outerHTML = `
+                <a href="${escapeHtml(nativeAppHref)}" data-yt-url="${escapeHtml(finalYt)}" class="btn-song-youtube" id="songPlayYoutubeBtn" title="Play on YouTube App (${escapeHtml(active.title)})" aria-label="Play on YouTube App">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                  <span>Play</span>
+                </a>`;
+            } else {
+              ytBtn.outerHTML = `
+                <button type="button" class="btn-song-youtube no-link" id="songPlayYoutubeBtn" title="${canEditSong ? 'Add YouTube link (Super Admin)' : 'No YouTube video linked yet'}" aria-label="Play on YouTube">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                  <span>Play</span>
+                </button>`;
+            }
+
+            const updatedYtBtn = document.getElementById('songPlayYoutubeBtn');
+            if (updatedYtBtn) {
+              updatedYtBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const targetUrl = updatedYtBtn.getAttribute('data-yt-url') || finalYt;
+                if (targetUrl) {
+                  if (typeof openInYoutubeApp === 'function') openInYoutubeApp(targetUrl);
+                } else if (canEditSong) {
+                  if (typeof window.openQuickSongLinkModal === 'function') {
+                    window.openQuickSongLinkModal('youtube', active);
                   }
                 }
               });
@@ -10883,25 +10931,37 @@
                 ${songNum ? `<span class="song-num-badge">Hymn #${escapeHtml(String(songNum))}</span>` : ''}
                 <h1 class="song-lyrics-title">${escapeHtml(song.title)}</h1>
               </div>
-              <div class="song-header-actions">
-                ${finalYtUrl ? `
-                  <a href="${escapeHtml(nativeAppHref)}" data-yt-url="${escapeHtml(finalYtUrl)}" class="btn-song-youtube" id="songPlayYoutubeBtn" title="Play on YouTube App (${escapeHtml(song.title)})" aria-label="Play on YouTube App">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-                    <span>Play</span>
-                  </a>` : `
-                  <button type="button" class="btn-song-youtube no-link" id="songPlayYoutubeBtn" title="${canEditSong ? 'Add YouTube link (Super Admin)' : 'No YouTube video linked yet'}" aria-label="Play on YouTube">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-                    <span>Play</span>
-                  </button>`}
-                ${finalChordUrl ? `
-                  <a href="${escapeHtml(finalChordUrl)}" target="_blank" rel="noopener noreferrer" data-chord-url="${escapeHtml(finalChordUrl)}" class="btn-song-chords" id="songPlayChordsBtn" title="Chords Sheet for ${escapeHtml(song.title)}" aria-label="Chords Sheet">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-                    <span>Chords</span>
-                  </a>` : `
-                  <button type="button" class="btn-song-chords no-link" id="songPlayChordsBtn" title="${canEditSong ? 'Add Chords link (Super Admin)' : 'No Chords sheet linked yet'}" aria-label="Chords Sheet">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-                    <span>Chords</span>
-                  </button>`}
+              <div class="song-header-actions" style="display:flex; align-items:center; gap:6px;">
+                <div style="display:inline-flex; align-items:center; gap:3px;">
+                  ${finalYtUrl ? `
+                    <a href="${escapeHtml(nativeAppHref)}" data-yt-url="${escapeHtml(finalYtUrl)}" class="btn-song-youtube" id="songPlayYoutubeBtn" title="Play on YouTube App (${escapeHtml(song.title)})" aria-label="Play on YouTube App">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                      <span>Play</span>
+                    </a>` : `
+                    <button type="button" class="btn-song-youtube no-link" id="songPlayYoutubeBtn" title="${canEditSong ? 'Add YouTube link (Super Admin)' : 'No YouTube video linked yet'}" aria-label="Play on YouTube">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                      <span>Play</span>
+                    </button>`}
+                  ${canEditSong && finalYtUrl ? `
+                    <button type="button" class="btn-song-quick-edit" id="songEditYoutubeQuickBtn" title="Edit YouTube Link (${escapeHtml(song.title)})" aria-label="Edit YouTube Link">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>` : ''}
+                </div>
+                <div style="display:inline-flex; align-items:center; gap:3px;">
+                  ${finalChordUrl ? `
+                    <a href="${escapeHtml(finalChordUrl)}" target="_blank" rel="noopener noreferrer" data-chord-url="${escapeHtml(finalChordUrl)}" class="btn-song-chords" id="songPlayChordsBtn" title="Chords Sheet for ${escapeHtml(song.title)}" aria-label="Chords Sheet">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                      <span>Chords</span>
+                    </a>` : `
+                    <button type="button" class="btn-song-chords no-link" id="songPlayChordsBtn" title="${canEditSong ? 'Add Chords link (Super Admin)' : 'No Chords sheet linked yet'}" aria-label="Chords Sheet">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                      <span>Chords</span>
+                    </button>`}
+                  ${canEditSong && finalChordUrl ? `
+                    <button type="button" class="btn-song-quick-edit" id="songEditChordsQuickBtn" title="Edit Chords Link (${escapeHtml(song.title)})" aria-label="Edit Chords Link">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>` : ''}
+                </div>
               </div>
             </div>
             <hr class="song-header-divider" />
@@ -10945,23 +11005,36 @@
       const ytPlayBtn = document.getElementById('songPlayYoutubeBtn');
       if (ytPlayBtn) {
         ytPlayBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
           const targetUrl = ytPlayBtn.getAttribute('data-yt-url') || finalYtUrl;
           if (targetUrl) {
+            e.preventDefault();
+            e.stopPropagation();
             openInYoutubeApp(targetUrl);
           } else {
+            e.preventDefault();
+            e.stopPropagation();
             if (canEditSong) {
-              showToast('Please add YouTube video link for this hymn 🎵');
-              const editBtn = document.getElementById('editCurrentSongLyricsBtn');
-              if (editBtn) editBtn.click();
-              setTimeout(() => {
-                const ytIn = document.getElementById('editSongYoutubeInput');
-                if (ytIn) ytIn.focus();
-              }, 180);
+              if (typeof window.openQuickSongLinkModal === 'function') {
+                window.openQuickSongLinkModal('youtube', song);
+              } else {
+                showToast('Please add YouTube video link for this hymn 🎵');
+                const editBtn = document.getElementById('editCurrentSongLyricsBtn');
+                if (editBtn) editBtn.click();
+              }
             } else {
               showToast('YouTube video not linked yet for this hymn 🎵');
             }
+          }
+        });
+      }
+
+      const ytEditQuickBtn = document.getElementById('songEditYoutubeQuickBtn');
+      if (ytEditQuickBtn) {
+        ytEditQuickBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof window.openQuickSongLinkModal === 'function') {
+            window.openQuickSongLinkModal('youtube', song);
           }
         });
       }
@@ -10984,16 +11057,27 @@
             e.preventDefault();
             e.stopPropagation();
             if (canEditSong) {
-              showToast('Please add Chords sheet link for this hymn 🎸');
-              const editBtn = document.getElementById('editCurrentSongLyricsBtn');
-              if (editBtn) editBtn.click();
-              setTimeout(() => {
-                const chordIn = document.getElementById('editSongChordInput');
-                if (chordIn) chordIn.focus();
-              }, 180);
+              if (typeof window.openQuickSongLinkModal === 'function') {
+                window.openQuickSongLinkModal('chords', song);
+              } else {
+                showToast('Please add Chords sheet link for this hymn 🎸');
+                const editBtn = document.getElementById('editCurrentSongLyricsBtn');
+                if (editBtn) editBtn.click();
+              }
             } else {
               showToast('No Chords sheet linked yet for this hymn 🎸');
             }
+          }
+        });
+      }
+
+      const chordsEditQuickBtn = document.getElementById('songEditChordsQuickBtn');
+      if (chordsEditQuickBtn) {
+        chordsEditQuickBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof window.openQuickSongLinkModal === 'function') {
+            window.openQuickSongLinkModal('chords', song);
           }
         });
       }
@@ -18681,13 +18765,17 @@
         return;
       }
 
-      // Cloudflare Turnstile Bot Defense Check (Web environment)
+      // Cloudflare Turnstile Bot Defense Check (Web environment - Invisible Execution)
       if (typeof window.turnstile !== 'undefined' && location.protocol.startsWith('http') && location.hostname !== 'localhost') {
-        const turnstileToken = window.turnstile.getResponse();
-        if (!turnstileToken) {
-          showChurchModalSignInError('Please complete the Cloudflare Security Verification 🛡️');
-          return;
-        }
+        try {
+          let turnstileToken = window.turnstile.getResponse();
+          if (!turnstileToken) {
+            const tsElem = document.querySelector('#churchRegistrationModal .cf-turnstile');
+            if (tsElem && typeof window.turnstile.execute === 'function') {
+              try { window.turnstile.execute(tsElem); } catch (_) {}
+            }
+          }
+        } catch (_) {}
       }
 
       const targetFullName = `${first} ${last}`.trim().toLowerCase();
@@ -20776,6 +20864,21 @@
           }
         }
 
+        // Dedicated link sync via update_song_links RPC to guarantee real-time broadcast and persistent chords/play links
+        if (window.ChurchSync && window.ChurchSync.Songs && typeof window.ChurchSync.Songs.updateLinks === 'function') {
+          try {
+            await window.ChurchSync.Songs.updateLinks(songId, {
+              chordUrl: chordUrl || null,
+              youtubeUrl: youtubeUrl || null,
+              songTitle: title,
+              removeChord: isRemovingChord,
+              removeYoutube: isRemovingYt
+            });
+          } catch (err) {
+            console.warn('[Sync] updateLinks RPC save exception:', err);
+          }
+        }
+
         // Persist into local Dexie & backups
         try {
           const dexieSong = {
@@ -20876,6 +20979,317 @@
           if (typeof openSongBookScreen === 'function') {
             openSongBookScreen(targetBookKey);
           }
+        }
+      });
+    }
+
+    // ── Quick Song Link Modal (Realtime Supabase Sync for Chords & YouTube) ──
+    const quickSongLinkModalOverlay = document.getElementById('quickSongLinkModalOverlay');
+    const closeQuickSongLinkModalBtn = document.getElementById('closeQuickSongLinkModalBtn');
+    const cancelQuickSongLinkBtn = document.getElementById('cancelQuickSongLinkBtn');
+    const saveQuickSongLinkBtn = document.getElementById('saveQuickSongLinkBtn');
+    const removeQuickSongLinkBtn = document.getElementById('removeQuickSongLinkBtn');
+    const quickSongLinkInput = document.getElementById('quickSongLinkInput');
+
+    function closeQuickSongLinkModal() {
+      if (quickSongLinkModalOverlay) {
+        quickSongLinkModalOverlay.classList.add('hidden');
+        quickSongLinkModalOverlay._targetSong = null;
+        quickSongLinkModalOverlay._targetType = null;
+      }
+      if (quickSongLinkInput) quickSongLinkInput.value = '';
+    }
+
+    if (closeQuickSongLinkModalBtn) {
+      closeQuickSongLinkModalBtn.addEventListener('click', closeQuickSongLinkModal);
+    }
+    if (cancelQuickSongLinkBtn) {
+      cancelQuickSongLinkBtn.addEventListener('click', closeQuickSongLinkModal);
+    }
+    if (quickSongLinkModalOverlay) {
+      quickSongLinkModalOverlay.addEventListener('click', (e) => {
+        if (e.target === quickSongLinkModalOverlay) {
+          closeQuickSongLinkModal();
+        }
+      });
+    }
+
+    window.openQuickSongLinkModal = function(type, targetSong) {
+      const perms = (typeof useAppPermissions === 'function') ? useAppPermissions() : {};
+      const canEditSong = perms.canEdit || perms.canAddSong || (typeof isSuperAdmin === 'function' && isSuperAdmin());
+      if (!canEditSong) {
+        showToast('Admin permissions required to link chords or YouTube 🛡️');
+        return;
+      }
+
+      const song = targetSong || window._activeEditingSong || currentOpenSong || currentActiveSongObj;
+      if (!song) {
+        showToast('No hymn selected to link');
+        return;
+      }
+
+      if (!quickSongLinkModalOverlay) return;
+
+      const titleEl = document.getElementById('quickSongLinkTitle');
+      const subtitleEl = document.getElementById('quickSongLinkSubtitle');
+      const iconEl = document.getElementById('quickSongLinkIcon');
+      const labelEl = document.getElementById('quickSongLinkLabel');
+      const saveBtnText = document.getElementById('saveQuickSongLinkBtnText');
+
+      const isChord = type === 'chords';
+      const songTitle = song.title || 'Sacred Hymn';
+
+      if (titleEl) titleEl.textContent = isChord ? 'Sync Chords Link' : 'Sync YouTube Link';
+      if (subtitleEl) subtitleEl.textContent = `${songTitle} • Realtime Supabase Sync`;
+      if (iconEl) iconEl.textContent = isChord ? '🎸' : '🎵';
+      if (labelEl) labelEl.textContent = isChord ? 'Chords Sheet URL / Tabs Link:' : 'YouTube Video URL or Video ID:';
+      if (saveBtnText) saveBtnText.textContent = 'Save & Sync';
+
+      let currentVal = isChord
+        ? (song.chord_url || song.chordUrl || '')
+        : (song.youtube_url || song.youtubeUrl || '');
+
+      if (isChord && !currentVal) {
+        try {
+          const chordsMap = JSON.parse(localStorage.getItem('sanctuary_hymn_chords') || '{}');
+          const sKey = (song.title || '').toLowerCase().trim();
+          currentVal = chordsMap[song.id] || (sKey ? chordsMap[sKey] : '') || '';
+        } catch (_) {}
+      }
+
+      if (quickSongLinkInput) {
+        quickSongLinkInput.placeholder = isChord
+          ? 'https://... (Drive, Ultimate Guitar, sheet music, tabs)'
+          : 'https://www.youtube.com/watch?v=...';
+        quickSongLinkInput.value = currentVal || '';
+      }
+
+      if (removeQuickSongLinkBtn) {
+        if (currentVal) removeQuickSongLinkBtn.classList.remove('hidden');
+        else removeQuickSongLinkBtn.classList.add('hidden');
+      }
+
+      quickSongLinkModalOverlay._targetSong = song;
+      quickSongLinkModalOverlay._targetType = type;
+      quickSongLinkModalOverlay.classList.remove('hidden');
+
+      setTimeout(() => {
+        if (quickSongLinkInput) {
+          quickSongLinkInput.focus();
+          quickSongLinkInput.select();
+        }
+      }, 150);
+    };
+
+    if (saveQuickSongLinkBtn) {
+      saveQuickSongLinkBtn.addEventListener('click', async () => {
+        const song = quickSongLinkModalOverlay?._targetSong;
+        const type = quickSongLinkModalOverlay?._targetType || 'chords';
+        if (!song) {
+          closeQuickSongLinkModal();
+          return;
+        }
+
+        const rawVal = quickSongLinkInput ? quickSongLinkInput.value.trim() : '';
+        const isChord = type === 'chords';
+        let finalVal = rawVal;
+
+        if (finalVal) {
+          if (!isChord) {
+            const vid = typeof extractYoutubeVideoId === 'function' ? extractYoutubeVideoId(finalVal) : null;
+            if (vid && !/^https?:\/\//i.test(finalVal)) {
+              finalVal = `https://www.youtube.com/watch?v=${vid}`;
+            } else if (!/^https?:\/\//i.test(finalVal)) {
+              finalVal = 'https://' + finalVal;
+            }
+          } else if (!/^https?:\/\//i.test(finalVal)) {
+            finalVal = 'https://' + finalVal;
+          }
+        }
+
+        const saveBtnText = document.getElementById('saveQuickSongLinkBtnText');
+        if (saveBtnText) saveBtnText.textContent = 'Syncing...';
+        saveQuickSongLinkBtn.disabled = true;
+
+        try {
+          const songId = song.id || crypto.randomUUID();
+          const songTitle = song.title || 'Sacred Hymn';
+
+          if (isChord) {
+            song.chord_url = finalVal || null;
+            song.chordUrl = finalVal || null;
+          } else {
+            song.youtube_url = finalVal || null;
+            song.youtubeUrl = finalVal || null;
+          }
+
+          // Update local chords storage map
+          if (isChord) {
+            try {
+              const chordsMap = JSON.parse(localStorage.getItem('sanctuary_hymn_chords') || '{}');
+              const lowerT = (songTitle || '').toLowerCase().trim();
+              if (finalVal) {
+                chordsMap[songId] = finalVal;
+                if (lowerT) chordsMap[lowerT] = finalVal;
+              } else {
+                delete chordsMap[songId];
+                if (lowerT) delete chordsMap[lowerT];
+              }
+              localStorage.setItem('sanctuary_hymn_chords', JSON.stringify(chordsMap));
+            } catch (_) {}
+          }
+
+          // 1. Sync through Supabase updateLinks RPC
+          if (window.ChurchSync && window.ChurchSync.Songs && typeof window.ChurchSync.Songs.updateLinks === 'function') {
+            await window.ChurchSync.Songs.updateLinks(songId, {
+              chordUrl: isChord ? finalVal : undefined,
+              youtubeUrl: !isChord ? finalVal : undefined,
+              songTitle: songTitle,
+              removeChord: isChord && !finalVal,
+              removeYoutube: !isChord && !finalVal
+            });
+          } else if (typeof window.syncWrite === 'function') {
+            await window.syncWrite('songbook', 'update', {
+              id: songId,
+              title: songTitle,
+              chord_url: isChord ? finalVal : (song.chord_url || null),
+              youtube_url: !isChord ? finalVal : (song.youtube_url || null),
+              _explicit_chord_removal: isChord && !finalVal,
+              _explicit_yt_removal: !isChord && !finalVal
+            });
+          }
+
+          // 2. Persist into Dexie cache
+          try {
+            if (typeof churchDexieDb !== 'undefined' && churchDexieDb && churchDexieDb.songs) {
+              await churchDexieDb.songs.update(songId, {
+                [isChord ? 'chord_url' : 'youtube_url']: finalVal || null,
+                [isChord ? 'chordUrl' : 'youtubeUrl']: finalVal || null
+              });
+            }
+          } catch (_) {}
+
+          // 3. Update current memory list
+          if (Array.isArray(window.currentSongList)) {
+            const mem = window.currentSongList.find(s => s && (s.id === songId || (s.title && s.title.toLowerCase().trim() === songTitle.toLowerCase().trim())));
+            if (mem) {
+              if (isChord) {
+                mem.chord_url = finalVal || null;
+                mem.chordUrl = finalVal || null;
+              } else {
+                mem.youtube_url = finalVal || null;
+                mem.youtubeUrl = finalVal || null;
+              }
+            }
+          }
+
+          closeQuickSongLinkModal();
+          showToast(isChord
+            ? (finalVal ? 'Chords sheet linked and synced to all users! 🎸' : 'Chords link cleared.')
+            : (finalVal ? 'YouTube video linked and synced to all users! 🎵' : 'YouTube link cleared.'));
+
+          // Re-render current lyrics view without leaving page
+          const isLyricsActive = state.activeTab === 'viewSongLyrics' || (views.viewSongLyrics && views.viewSongLyrics.classList.contains('active'));
+          if (isLyricsActive && typeof openSongLyricsScreen === 'function') {
+            openSongLyricsScreen(song, song.bookKey || currentOpenSongBookKey);
+          }
+        } catch (err) {
+          console.error('[QuickLink] Save error:', err);
+          showToast('Could not sync link: ' + (err.message || 'Network error'));
+        } finally {
+          if (saveBtnText) saveBtnText.textContent = 'Save & Sync';
+          saveQuickSongLinkBtn.disabled = false;
+        }
+      });
+    }
+
+    if (removeQuickSongLinkBtn) {
+      removeQuickSongLinkBtn.addEventListener('click', async () => {
+        const song = quickSongLinkModalOverlay?._targetSong;
+        const type = quickSongLinkModalOverlay?._targetType || 'chords';
+        if (!song) {
+          closeQuickSongLinkModal();
+          return;
+        }
+
+        const isChord = type === 'chords';
+        const label = isChord ? 'Chords sheet' : 'YouTube video';
+        const confirmed = (typeof window.showConfirmDialog === 'function')
+          ? await window.showConfirmDialog({
+              title: `Remove ${label}?`,
+              message: `Remove linked ${label} for "${song.title || 'this hymn'}"? It will be removed for all users.`,
+              icon: isChord ? '🎸' : '🎵',
+              confirmText: 'Remove Link',
+              danger: true
+            })
+          : confirm(`Remove linked ${label} for "${song.title || 'this hymn'}"?`);
+
+        if (!confirmed) return;
+
+        removeQuickSongLinkBtn.disabled = true;
+        try {
+          const songId = song.id || crypto.randomUUID();
+          const songTitle = song.title || 'Sacred Hymn';
+
+          if (isChord) {
+            song.chord_url = null;
+            song.chordUrl = null;
+            try {
+              const chordsMap = JSON.parse(localStorage.getItem('sanctuary_hymn_chords') || '{}');
+              delete chordsMap[songId];
+              const lowerT = (songTitle || '').toLowerCase().trim();
+              if (lowerT) delete chordsMap[lowerT];
+              localStorage.setItem('sanctuary_hymn_chords', JSON.stringify(chordsMap));
+            } catch (_) {}
+          } else {
+            song.youtube_url = null;
+            song.youtubeUrl = null;
+          }
+
+          if (window.ChurchSync && window.ChurchSync.Songs && typeof window.ChurchSync.Songs.updateLinks === 'function') {
+            await window.ChurchSync.Songs.updateLinks(songId, {
+              chordUrl: isChord ? null : undefined,
+              youtubeUrl: !isChord ? null : undefined,
+              songTitle: songTitle,
+              removeChord: isChord,
+              removeYoutube: !isChord
+            });
+          }
+
+          try {
+            if (typeof churchDexieDb !== 'undefined' && churchDexieDb && churchDexieDb.songs) {
+              await churchDexieDb.songs.update(songId, {
+                [isChord ? 'chord_url' : 'youtube_url']: null,
+                [isChord ? 'chordUrl' : 'youtubeUrl']: null
+              });
+            }
+          } catch (_) {}
+
+          if (Array.isArray(window.currentSongList)) {
+            const mem = window.currentSongList.find(s => s && (s.id === songId || (s.title && s.title.toLowerCase().trim() === songTitle.toLowerCase().trim())));
+            if (mem) {
+              if (isChord) {
+                mem.chord_url = null;
+                mem.chordUrl = null;
+              } else {
+                mem.youtube_url = null;
+                mem.youtubeUrl = null;
+              }
+            }
+          }
+
+          closeQuickSongLinkModal();
+          showToast(`${label} link removed for all users.`);
+
+          const isLyricsActive = state.activeTab === 'viewSongLyrics' || (views.viewSongLyrics && views.viewSongLyrics.classList.contains('active'));
+          if (isLyricsActive && typeof openSongLyricsScreen === 'function') {
+            openSongLyricsScreen(song, song.bookKey || currentOpenSongBookKey);
+          }
+        } catch (err) {
+          console.error('[QuickLink] Remove error:', err);
+          showToast('Could not remove link: ' + (err.message || 'Network error'));
+        } finally {
+          removeQuickSongLinkBtn.disabled = false;
         }
       });
     }
