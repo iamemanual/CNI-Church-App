@@ -1,7 +1,7 @@
 {
   "name": "All Saints' Church Library",
   "short_name": "All Saints' Church",
-  "version": "v2.1.22",
+  "version": "v2.1.23",
   "description": "All Saints' Church Library Application — Prayer Books, Songs & Timeline of Church",
   "start_url": "./index.html",
   "display": "standalone",

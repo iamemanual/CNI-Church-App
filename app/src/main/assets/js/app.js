@@ -17296,8 +17296,8 @@
     // Dynamic App Update Pipeline Controller & Version Code Governance
     // =========================================================================
     function getInstalledAppInfo() {
-      let versionName = 'v2.1.22';
-      let versionCode = 4092056;
+      let versionName = 'v2.1.23';
+      let versionCode = 4092057;
 
       if (window.AndroidBridge) {
         try {
@@ -17541,7 +17541,7 @@
               const vc = parseInt(manifest.versionCode, 10);
               return {
                 versionCode: vc,
-                versionName: manifest.versionName || 'v2.1.22',
+                versionName: manifest.versionName || 'v2.1.23',
                 fileName: manifest.fileName || 'ChurchCompanion.apk',
                 fileSizeMb: manifest.fileSizeMb || '44.8',
                 downloadUrl: manifest.downloadUrl || `${sbUrl}/storage/v1/object/public/app-updates/${encodeURIComponent(manifest.fileName || 'ChurchCompanion.apk')}`
@@ -17642,7 +17642,7 @@
             if (localApiInfo && localApiInfo.hasUploadedPackage && localApiInfo.versionCode) {
               candidate = {
                 versionCode: parseInt(localApiInfo.versionCode, 10),
-                versionName: localApiInfo.versionName || 'v2.1.22',
+                versionName: localApiInfo.versionName || 'v2.1.23',
                 fileName: 'ChurchCompanion.apk',
                 fileSizeMb: localApiInfo.fileSizeMb || '44.8',
                 downloadUrl: localApiInfo.downloadUrl || '/download/ChurchCompanion.apk'
@@ -17684,7 +17684,7 @@
       const progressBox = document.getElementById('uploadApkProgressBox');
 
       if (nameEl) nameEl.textContent = name || 'ChurchCompanion.apk';
-      if (verNameEl) verNameEl.textContent = versionName ? (versionName.startsWith('v') ? versionName : 'v' + versionName) : 'v2.1.22';
+      if (verNameEl) verNameEl.textContent = versionName ? (versionName.startsWith('v') ? versionName : 'v' + versionName) : 'v2.1.23';
       if (verCodeEl) verCodeEl.textContent = versionCode || '—';
       if (sizeEl) sizeEl.textContent = sizeMb ? `${sizeMb} MB` : '44.0 MB';
       if (dateEl) dateEl.textContent = buildDate || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -17979,8 +17979,8 @@
     function openDownloadManagerModal(updateInfo) {
       currentUpdatePackage = updateInfo;
       if (updateDownloadManagerModalOverlay) {
-        const vName = (updateInfo && (updateInfo.latestVersion || updateInfo.versionName)) || 'v2.1.22';
-        const vCode = (updateInfo && (updateInfo.versionCode || updateInfo.buildCode)) || '4092056';
+        const vName = (updateInfo && (updateInfo.latestVersion || updateInfo.versionName)) || 'v2.1.23';
+        const vCode = (updateInfo && (updateInfo.versionCode || updateInfo.buildCode)) || '4092057';
         const sizeMbVal = (updateInfo && updateInfo.fileSizeMb) ? parseFloat(updateInfo.fileSizeMb) : targetApkSizeMb;
         const sizeStr = `${sizeMbVal.toFixed(1)} MB`;
 
@@ -18264,7 +18264,7 @@
             if (data && data.hasUploadedPackage && data.versionCode) {
               candidate = {
                 versionCode: parseInt(data.versionCode, 10),
-                latestVersion: data.versionName || data.latestVersion || 'v2.1.22',
+                latestVersion: data.versionName || data.latestVersion || 'v2.1.23',
                 fileSizeMb: data.fileSizeMb || '44.8',
                 downloadUrl: data.downloadUrl || '/download/ChurchCompanion.apk',
                 fileName: 'ChurchCompanion.apk'
