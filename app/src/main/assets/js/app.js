@@ -163,7 +163,19 @@
     // ==============================================================================
 
             const SUPER_ADMIN_EMAIL = 'emanualmridha2@gmail.com';
-    const SUPER_ADMIN_PASSWORD = '552367';
+    const SUPER_ADMIN_PIN_HASH = '783ea13b8f85338841bd48588fc76f146f7c4633ea1796818fda98c063f5480a';
+    async function verifySuperAdminPin(inputPin) {
+      if (!inputPin) return false;
+      try {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(String(inputPin).trim());
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+        return hashHex === SUPER_ADMIN_PIN_HASH;
+      } catch (_) {
+        return false;
+      }
+    }
     const DEXIE_SESSION_KEY = 'current';
 
     // 1. Initialize Dexie Database
@@ -1436,6 +1448,15 @@
         return;
       }
 
+      // Cloudflare Turnstile Bot Defense Check (Web environment)
+      if (typeof window.turnstile !== 'undefined' && location.protocol.startsWith('http') && location.hostname !== 'localhost') {
+        const turnstileToken = window.turnstile.getResponse();
+        if (!turnstileToken) {
+          showAdminSignInError('Please complete the Cloudflare Security Verification 🛡️');
+          return;
+        }
+      }
+
       setAdminSignInLoading(true);
 
       try {
@@ -1443,7 +1464,7 @@
 
         // 1. Check SuperAdmin Credentials (Emanual Mridha)
         const isSuperAdminName = lowerName.includes('emanual') || lowerName.includes('mridha');
-        const isSuperAdminPin = (trimmedPin === SUPER_ADMIN_PASSWORD);
+        const isSuperAdminPin = await verifySuperAdminPin(trimmedPin);
 
         if (isSuperAdminName && isSuperAdminPin) {
           const savedSuperPost = localStorage.getItem('sanctuary_superadmin_post') || currentAuthSession.congregational_post || 'post-pastor';
@@ -1460,6 +1481,21 @@
           };
 
           await persistAuthSession(currentAuthSession);
+          if (window.churchSupabase && window.churchSupabase.auth) {
+            try {
+              const { data, error } = await window.churchSupabase.auth.signInWithPassword({
+                email: SUPER_ADMIN_EMAIL,
+                password: trimmedPin
+              });
+              if (error) {
+                console.warn('[Supabase Auth] Cloud authentication warning:', error.message);
+              } else if (data && data.session && window.churchSupabase.realtime) {
+                window.churchSupabase.realtime.setAuth(data.session.access_token);
+              }
+            } catch (authErr) {
+              console.warn('[Supabase Auth] Session auth warning:', authErr);
+            }
+          }
           if (typeof updateAppPermissionsUI === 'function') updateAppPermissionsUI();
           if (typeof updateAuthUI === 'function') updateAuthUI();
           if (typeof window.renderActiveCniChat === 'function') window.renderActiveCniChat(true);
@@ -1541,8 +1577,8 @@
         }
 
         // Validate Security PIN
-        const storedPin = matchedAdminRequest?.pin || matchedAdminRequest?.password || matchedProfile?.pin || '123456';
-        const isPinValid = (trimmedPin === storedPin || trimmedPin === '552367' || trimmedPin === '123456' || trimmedPin === '7777');
+        const storedPin = matchedAdminRequest?.pin || matchedAdminRequest?.password || matchedProfile?.pin;
+        const isPinValid = Boolean(storedPin && trimmedPin === storedPin);
 
         if (!isPinValid) {
           showAdminSignInError('Incorrect Security PIN. Please verify your PIN and try again.');
@@ -18641,6 +18677,15 @@
         return;
       }
 
+      // Cloudflare Turnstile Bot Defense Check (Web environment)
+      if (typeof window.turnstile !== 'undefined' && location.protocol.startsWith('http') && location.hostname !== 'localhost') {
+        const turnstileToken = window.turnstile.getResponse();
+        if (!turnstileToken) {
+          showChurchModalSignInError('Please complete the Cloudflare Security Verification 🛡️');
+          return;
+        }
+      }
+
       const targetFullName = `${first} ${last}`.trim().toLowerCase();
 
       if (btn) btn.disabled = true;
@@ -19008,7 +19053,8 @@
           email.toLowerCase() === 'superadmin'
         );
         if (isSuper) {
-          if (password !== SUPER_ADMIN_PASSWORD) {
+          const isValidPin = await verifySuperAdminPin(password);
+          if (!isValidPin) {
             showLoginError('Incorrect Super Admin PIN or Password ❌');
             return;
           }
@@ -19048,6 +19094,21 @@
           await playInModalLoginSuccess('Successfully Logged In', 'Welcome back, Super Admin! 👑', 'Super Admin 👑');
           closeAuthLoginModal();
           await persistAuthSession(currentAuthSession);
+          if (window.churchSupabase && window.churchSupabase.auth) {
+            try {
+              const { data, error } = await window.churchSupabase.auth.signInWithPassword({
+                email: SUPER_ADMIN_EMAIL,
+                password: password
+              });
+              if (error) {
+                console.warn('[Supabase Auth] Cloud authentication warning:', error.message);
+              } else if (data && data.session && window.churchSupabase.realtime) {
+                window.churchSupabase.realtime.setAuth(data.session.access_token);
+              }
+            } catch (authErr) {
+              console.warn('[Supabase Auth] Session auth warning:', authErr);
+            }
+          }
           updateAppPermissionsUI();
           if (typeof window.renderActiveCniChat === 'function') {
             window.renderActiveCniChat(true);

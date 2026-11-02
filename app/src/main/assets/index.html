@@ -29,6 +29,9 @@
   <link rel="prefetch" href="books/aaradhana.html" as="document">
   <link rel="prefetch" href="books/ashaye_rabbani.html" as="document">
   
+  <!-- Cloudflare Turnstile Automated Bot Defense -->
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  
   <style>
 /* ==========================================================================
    CHURCH COMPANION — DESIGN SYSTEM & MASTER STYLESHEET
@@ -13674,7 +13677,10 @@ textarea:focus-visible,
             </div>
           </div>
 
-          <div class="registration-modal-footer" style="display:flex; flex-direction:column; gap:10px; margin-top:18px;">
+          <!-- Cloudflare Turnstile Automated Bot Defense -->
+          <div class="cf-turnstile" data-sitekey="0x4AAAAAAFwK-3sEC2iTgCQk" data-theme="auto" style="display:flex; justify-content:center; margin:12px 0 4px;"></div>
+
+          <div class="registration-modal-footer" style="display:flex; flex-direction:column; gap:10px; margin-top:14px;">
             <button type="submit" id="adminSignInSubmitBtn" class="btn-primary registration-submit-btn" style="border-radius:20px; height:50px; font-weight:700; width:100%;">
               <span class="btn-text">Sign In as Admin</span>
               <span class="btn-spinner hidden">
@@ -15984,6 +15990,9 @@ textarea:focus-visible,
 
               <!-- Inline Error Display -->
               <div class="inline-error hidden" id="modalSignInError"></div>
+
+              <!-- Cloudflare Turnstile Automated Bot Defense -->
+              <div class="cf-turnstile" data-sitekey="0x4AAAAAAFwK-3sEC2iTgCQk" data-theme="auto" style="display:flex; justify-content:center; margin:10px 0;"></div>
 
               <!-- Action Button: Sign In -->
               <button type="button" class="auth-button" id="modalSignInBtn" onclick="handleChurchModalSignIn()">

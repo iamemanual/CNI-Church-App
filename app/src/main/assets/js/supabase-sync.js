@@ -185,10 +185,21 @@
 
     // Direct cloud transport (prioritized for Android standalone APK / WebView)
     if (SUPABASE_URL && REALTIME_KEY) {
+      let authToken = REALTIME_KEY;
+      try {
+        const client = _supabaseClient || window.churchSupabase;
+        if (client && client.auth) {
+          const session = (typeof client.auth.getSession === 'function') ? (await client.auth.getSession())?.data?.session : null;
+          if (session && session.access_token) {
+            authToken = session.access_token;
+          }
+        }
+      } catch (_) {}
+
       const directHeaders = {
         ...headers,
         "apikey": REALTIME_KEY,
-        "Authorization": "Bearer " + REALTIME_KEY
+        "Authorization": "Bearer " + authToken
       };
       const directUrl = SUPABASE_URL + "/rest/v1/" + table + (qs.toString() ? "?" + qs.toString() : "");
       try {
@@ -236,10 +247,21 @@
     };
 
     if (SUPABASE_URL && REALTIME_KEY) {
+      let authToken = REALTIME_KEY;
+      try {
+        const client = _supabaseClient || window.churchSupabase;
+        if (client && client.auth) {
+          const session = (typeof client.auth.getSession === 'function') ? (await client.auth.getSession())?.data?.session : null;
+          if (session && session.access_token) {
+            authToken = session.access_token;
+          }
+        }
+      } catch (_) {}
+
       const directHeaders = {
         ...headers,
         "apikey": REALTIME_KEY,
-        "Authorization": "Bearer " + REALTIME_KEY
+        "Authorization": "Bearer " + authToken
       };
       const directUrl = SUPABASE_URL + "/rest/v1/rpc/" + fnName;
       try {
