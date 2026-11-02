@@ -1715,6 +1715,20 @@
         }
       }
 
+      // 1b. If remote RPC failed or device is offline, enqueue to syncWrite outbox
+      if (!rpcResult && typeof window !== 'undefined' && typeof window.syncWrite === 'function') {
+        try {
+          await window.syncWrite('songbook', 'update', {
+            id: songId,
+            title: title || 'Hymn',
+            chord_url: removeChord ? null : (chordUrl || null),
+            youtube_url: removeYoutube ? null : (youtubeUrl || null),
+            _explicit_chord_removal: Boolean(removeChord),
+            _explicit_yt_removal: Boolean(removeYoutube)
+          });
+        } catch (_) {}
+      }
+
       // 2. Update local persistent chords map
       try {
         const chordsMap = JSON.parse(localStorage.getItem('sanctuary_hymn_chords') || '{}');

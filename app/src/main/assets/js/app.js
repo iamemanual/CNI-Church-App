@@ -18770,7 +18770,10 @@
         try {
           let turnstileToken = window.turnstile.getResponse();
           if (!turnstileToken) {
-            const tsElem = document.querySelector('#churchRegistrationModal .cf-turnstile');
+            const tsElem = document.querySelector('#authLoginModalOverlay .cf-turnstile') || 
+                           document.querySelector('#modalLoginFormContainer .cf-turnstile') || 
+                           document.querySelector('#churchRegistrationModal .cf-turnstile') || 
+                           document.querySelector('.cf-turnstile');
             if (tsElem && typeof window.turnstile.execute === 'function') {
               try { window.turnstile.execute(tsElem); } catch (_) {}
             }
@@ -21112,7 +21115,8 @@
         saveQuickSongLinkBtn.disabled = true;
 
         try {
-          const songId = song.id || crypto.randomUUID();
+          const songId = song.id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : ('song-' + Date.now()));
+          if (!song.id) song.id = songId;
           const songTitle = song.title || 'Sacred Hymn';
 
           if (isChord) {
@@ -21228,7 +21232,8 @@
 
         removeQuickSongLinkBtn.disabled = true;
         try {
-          const songId = song.id || crypto.randomUUID();
+          const songId = song.id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : ('song-' + Date.now()));
+          if (!song.id) song.id = songId;
           const songTitle = song.title || 'Sacred Hymn';
 
           if (isChord) {
