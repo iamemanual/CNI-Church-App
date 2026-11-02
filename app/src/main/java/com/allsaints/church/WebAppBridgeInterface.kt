@@ -144,6 +144,13 @@ class WebAppBridgeInterface(
     }
 
     @JavascriptInterface
+    fun setStatusBarHidden(hidden: Boolean) {
+        if (activity is MainActivity) {
+            activity.setStatusBarHidden(hidden)
+        }
+    }
+
+    @JavascriptInterface
     fun isDeviceOnline(): Boolean = syncManager.isNetworkAvailable()
 
     @JavascriptInterface
@@ -244,18 +251,36 @@ class WebAppBridgeInterface(
     }
 
     @JavascriptInterface
+    fun showNotification(title: String, body: String) {
+        showNotification(title, body, "", "open_announcements")
+    }
+
+    @JavascriptInterface
     fun showNotification(title: String, body: String, tag: String = "") {
+        val action = if (tag.startsWith("timeline_")) "open_timeline" else "open_announcements"
+        showNotification(title, body, tag, action)
+    }
+
+    @JavascriptInterface
+    fun showNotification(title: String, body: String, tag: String, action: String) {
         activity.runOnUiThread {
             try {
-                createNotificationChannel()
-                val channelId = "church_announcements_channel"
+                createNotificationChannels()
+                val isTimeline = action == "open_timeline" || tag.startsWith("timeline_")
+                val channelId = if (isTimeline) "church_timeline_channel" else "church_announcements_channel"
+                val resolvedAction = if (isTimeline) "open_timeline" else "open_announcements"
+
                 val intent = Intent(activity, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                    putExtra("action", "open_announcements")
+                    putExtra("action", resolvedAction)
+                    if (tag.isNotEmpty()) {
+                        putExtra("tag", tag)
+                    }
                 }
+                val requestCode = if (tag.isNotEmpty()) (tag.hashCode() and 0x7FFFFFFF) else (if (isTimeline) 2001 else 1001)
                 val pendingIntent = PendingIntent.getActivity(
                     activity,
-                    0,
+                    requestCode,
                     intent,
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
@@ -264,9 +289,15 @@ class WebAppBridgeInterface(
                     }
                 )
 
+                val resolvedTitle = if (title.isBlank()) {
+                    if (isTimeline) "New Timeline Update" else "New Announcement"
+                } else {
+                    title
+                }
+
                 val builder = NotificationCompat.Builder(activity, channelId)
                     .setSmallIcon(R.mipmap.ic_launcher)
-                    .setContentTitle(title)
+                    .setContentTitle(resolvedTitle)
                     .setContentText(body)
                     .setStyle(NotificationCompat.BigTextStyle().bigText(body))
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -276,7 +307,7 @@ class WebAppBridgeInterface(
 
                 val notificationManager = NotificationManagerCompat.from(activity)
                 if (hasNotificationPermission()) {
-                    val notificationId = if (tag.isNotEmpty()) Math.abs(tag.hashCode()) else 1001
+                    val notificationId = if (tag.isNotEmpty()) (tag.hashCode() and 0x7FFFFFFF) else (if (isTimeline) 2001 else 1001)
                     notificationManager.notify(notificationId, builder.build())
                 }
             } catch (e: Exception) {
@@ -294,22 +325,40 @@ class WebAppBridgeInterface(
         }
     }
 
-    private fun createNotificationChannel() {
+    private fun createNotificationChannels() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channelId = "church_announcements_channel"
-            val channelName = "Church Announcements & Notices"
-            val channelDesc = "Alerts for church notices, prayer requests, and announcements"
-            val importance = NotificationManager.IMPORTANCE_HIGH
-            val channel = NotificationChannel(channelId, channelName, importance).apply {
-                description = channelDesc
+            val notificationManager = activity.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+            // 1. Announcements Channel
+            val annChannelId = "church_announcements_channel"
+            val annChannelName = "Church Announcements & Notices"
+            val annChannelDesc = "Alerts for church notices, prayer requests, and announcements"
+            val annChannel = NotificationChannel(annChannelId, annChannelName, NotificationManager.IMPORTANCE_HIGH).apply {
+                description = annChannelDesc
                 enableLights(true)
                 lightColor = Color.parseColor("#4997D0")
                 enableVibration(true)
                 vibrationPattern = longArrayOf(0, 180, 80, 180)
             }
-            val notificationManager = activity.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
+            notificationManager.createNotificationChannel(annChannel)
+
+            // 2. Timeline Channel
+            val tlChannelId = "church_timeline_channel"
+            val tlChannelName = "Parish Timeline & Milestones"
+            val tlChannelDesc = "Notifications for parish heritage, milestones, and timeline updates"
+            val tlChannel = NotificationChannel(tlChannelId, tlChannelName, NotificationManager.IMPORTANCE_HIGH).apply {
+                description = tlChannelDesc
+                enableLights(true)
+                lightColor = Color.parseColor("#C59B27")
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 180, 80, 180)
+            }
+            notificationManager.createNotificationChannel(tlChannel)
         }
+    }
+
+    private fun createNotificationChannel() {
+        createNotificationChannels()
     }
 
     @JavascriptInterface
@@ -629,6 +678,11 @@ class WebAppBridgeInterface(
         } else {
             true
         }
+    }
+
+    @JavascriptInterface
+    fun hasInstallPermission(): Boolean {
+        return canInstallApk()
     }
 
     @JavascriptInterface

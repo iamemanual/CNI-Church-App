@@ -62,21 +62,23 @@
     try {
       if (typeof window.useAppPermissions === 'function') {
         const perms = window.useAppPermissions();
-        if (perms && (perms.isSuperAdmin || perms.role === 'superadmin')) return true;
+        if (perms && (perms.isSuperAdmin || perms.role === 'superadmin' || perms.role === 'Super Admin')) return true;
       }
       if (window.currentAuthSession) {
-        if (window.currentAuthSession.role === 'superadmin' ||
-            window.currentAuthSession.email === 'emanualmridha2@gmail.com') return true;
+        const s = window.currentAuthSession;
+        if (s.role === 'superadmin' || s.role === 'Super Admin' ||
+            (s.email && s.email.toLowerCase() === 'emanualmridha2@gmail.com')) return true;
       }
       const storedRole = localStorage.getItem('cc_user_role') || localStorage.getItem('sanctuary_user_role');
-      if (storedRole === 'superadmin') return true;
+      if (storedRole === 'superadmin' || storedRole === 'Super Admin') return true;
       const sessionStr = localStorage.getItem('sanctuary_auth_session') || localStorage.getItem('cc_auth_session');
       if (sessionStr) {
         const parsed = JSON.parse(sessionStr);
-        if (parsed.role === 'superadmin' || parsed.email === 'emanualmridha2@gmail.com') return true;
+        if (parsed.role === 'superadmin' || parsed.role === 'Super Admin' ||
+            (parsed.email && parsed.email.toLowerCase() === 'emanualmridha2@gmail.com')) return true;
       }
     } catch (_) {}
-    return true; // Forcefully allow administrative access as requested
+    return false;
   }
 
   function isCurrentUserAdmin() {
@@ -476,8 +478,13 @@
     } catch (_) {}
 
     const candidateYears = Array.from(new Set([2026, ...availableYears])).sort((a, b) => a - b);
-    const canManageYears = (isCurrentUserSuperAdmin() || isCurrentUserAdmin());
+    const isSuperAdmin = isCurrentUserSuperAdmin();
+    const canManageYears = (isSuperAdmin || isCurrentUserAdmin());
     let html = '';
+
+    if (!isSuperAdmin) {
+      exitSelectionMode();
+    }
 
     for (const yr of candidateYears) {
       const yData = await loadYearData(yr);
@@ -490,7 +497,7 @@
                  data-action="select-year"
                  data-year="${yr}"
                  aria-label="Liturgical Year ${yr}">
-          ${(isCustomYear && canManageYears) ? `
+          ${(isCustomYear && isSuperAdmin) ? `
             <button class="yc-delete-btn"
                     type="button"
                     title="Delete Liturgical Year ${yr}"
@@ -525,7 +532,7 @@
     }
 
     grid.innerHTML = html;
-    if (canManageYears) {
+    if (isSuperAdmin) {
       initYearsGridLongPress();
     }
   }
@@ -1742,6 +1749,7 @@
   let activePressedCard = null;
 
   function enterSelectionMode() {
+    if (!isCurrentUserSuperAdmin()) return;
     isSelectionModeActive = true;
     const grid = document.getElementById('yearsGrid');
     if (grid) grid.classList.add('is-selection-mode');
@@ -1766,11 +1774,15 @@
   }
 
   function initYearsGridLongPress() {
+    if (!isCurrentUserSuperAdmin()) return;
     const grid = document.getElementById('yearsGrid');
     if (!grid || grid._longPressBound) return;
     grid._longPressBound = true;
 
     function handleStart(e) {
+      // Pinpoint Requirement: The long press feature is strictly only for superadmin
+      if (!isCurrentUserSuperAdmin()) return;
+
       const card = e.target.closest('.year-card[data-action="select-year"]');
       if (!card || e.target.closest('[data-action="delete-year"]')) return;
 
@@ -1837,6 +1849,7 @@
 
     // Desktop Context Menu (Right-click)
     grid.addEventListener('contextmenu', e => {
+      if (!isCurrentUserSuperAdmin()) return;
       const card = e.target.closest('.year-card[data-action="select-year"]');
       if (card) {
         e.preventDefault();
@@ -1848,6 +1861,10 @@
   }
 
   function openDeleteYearModal(year) {
+    if (!isCurrentUserSuperAdmin()) {
+      showToast('Super Admin permission required to delete liturgical cycles 👑');
+      return;
+    }
     year = parseInt(year, 10);
     if (isNaN(year)) return;
     yearPendingDeletion = year;
@@ -1898,6 +1915,10 @@
 
   async function confirmDeleteYear() {
     if (!yearPendingDeletion) return;
+    if (!isCurrentUserSuperAdmin()) {
+      showToast('Super Admin permission required to delete liturgical cycles 👑');
+      return;
+    }
     const yr = yearPendingDeletion;
     const btn = document.getElementById('btnConfirmDeleteYear');
     if (btn) {
@@ -2088,16 +2109,20 @@
 
     // Delegated Clicks
     document.addEventListener('click', e => {
-      // 0. Delete Year Button on card (Pinpoint Deletion Feature)
+      // 0. Delete Year Button on card (Pinpoint Deletion Feature - Super Admin Only)
       const delBtn = e.target.closest('[data-action="delete-year"]');
       if (delBtn) {
         e.preventDefault();
         e.stopPropagation();
+        if (!isCurrentUserSuperAdmin()) {
+          showToast('Super Admin permission required to delete liturgical cycles 👑');
+          return;
+        }
         openDeleteYearModal(delBtn.getAttribute('data-year'));
         return;
       }
 
-      // 1. Select Year (or trigger Deletion Modal in Selection Mode)
+      // 1. Select Year (or trigger Deletion Modal in Selection Mode - Super Admin Only)
       const yearCard = e.target.closest('[data-action="select-year"]');
       if (yearCard) {
         if (isLongPressActive) {
@@ -2107,7 +2132,11 @@
         if (isSelectionModeActive) {
           e.preventDefault();
           e.stopPropagation();
-          openDeleteYearModal(yr);
+          if (isCurrentUserSuperAdmin()) {
+            openDeleteYearModal(yr);
+          } else {
+            exitSelectionMode();
+          }
           return;
         }
         selectYear(yr);

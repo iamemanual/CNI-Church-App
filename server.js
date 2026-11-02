@@ -330,6 +330,52 @@ function getNativeBridgeInjection() {
       console.log("[Native Bridge] Exit App requested");
       showToastUI("Exiting Application...");
     },
+    setStatusBarHidden: function(hidden) {
+      console.log("[Native Bridge] setStatusBarHidden:", Boolean(hidden));
+    },
+    setFullscreen: function(hidden) {
+      console.log("[Native Bridge] setFullscreen:", Boolean(hidden));
+    },
+    shareImage: function(dataUrl, title, text) {
+      console.log("[Native Bridge] shareImage:", title);
+      showToastUI("Opening share dialog...");
+      if (navigator.share && navigator.canShare) {
+        fetch(dataUrl)
+          .then(res => res.blob())
+          .then(blob => {
+            const file = new File([blob], 'verse_card.png', { type: 'image/png' });
+            navigator.share({ title: title, text: text, files: [file] }).catch(() => {});
+          }).catch(() => {});
+      }
+    },
+    saveImageToGallery: function(dataUrl) {
+      console.log("[Native Bridge] saveImageToGallery requested");
+      try {
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = 'Verse_Card.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToastUI("Aesthetic card saved!");
+        return true;
+      } catch (e) {
+        return false;
+      }
+    },
+    hasNotificationPermission: function() { return true; },
+    requestNotificationPermission: function() { showToastUI("Notifications enabled"); return true; },
+    canInstallApk: function() { return true; },
+    hasInstallPermission: function() { return true; },
+    requestInstallPermission: function() {
+      console.log("[Native Bridge] requestInstallPermission");
+      showToastUI("Install permission enabled");
+      return true;
+    },
+    showNotification: function(title, body, tag, action) {
+      console.log("[Native Bridge] Notification:", title, body, tag, action);
+      showToastUI("🔔 " + title + ": " + body);
+    },
     evaluatePermissionsJson: function(roleStr, isYouth) {
       return JSON.stringify({
         role: roleStr || "Presbyter In-Charge",
@@ -777,7 +823,7 @@ const server = http.createServer((req, res) => {
 
     if (isPublished && published && published.versionCode) {
       const apkVersionCode = parseInt(published.versionCode, 10);
-      const isNewUpdate = apkVersionCode !== installedVersionCode;
+      const isNewUpdate = apkVersionCode > installedVersionCode;
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({

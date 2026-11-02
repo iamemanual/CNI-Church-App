@@ -2319,3 +2319,190 @@ body.keyboard-is-open #manualAddModal.modal-backdrop,
   background: #ef4444 !important;
   box-shadow: 0 0 6px rgba(239, 68, 68, 0.70) !important;
 }
+
+/* ==============================================================================
+   LITURGICAL SEASONS & COLORS LEGEND MODAL STYLING
+   ============================================================================== */
+.liturgical-legend-dialog {
+  max-width: 520px !important;
+}
+
+.legend-header-icon-badge {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.22) 0%, rgba(212, 175, 55, 0.08) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  color: var(--jewel-gold, #C59B27);
+  flex-shrink: 0;
+}
+
+.liturgical-legend-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  padding-bottom: 8px;
+}
+
+.legend-color-card {
+  padding: 13px 15px;
+  border-radius: 14px;
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.legend-color-card:hover {
+  transform: translateY(-1px);
+}
+
+.legend-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.legend-color-swatch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 0.90rem;
+}
+
+.swatch-disc {
+  width: 13px;
+  height: 13px;
+  border-radius: 9999px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.legend-spiritual-theme {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2.5px 8px;
+  border-radius: 9999px;
+}
+
+.legend-card-meaning, .legend-card-feasts {
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--text-secondary, #94a3b8);
+}
+
+.legend-card-meaning strong, .legend-card-feasts strong {
+  color: var(--text-primary, #f1f5f9);
+}
+
+[data-theme="light"] .legend-card-meaning,
+[data-theme="light"] .legend-card-feasts {
+  color: #475569;
+}
+
+[data-theme="light"] .legend-card-meaning strong,
+[data-theme="light"] .legend-card-feasts strong {
+  color: #0f172a;
+}
+
+/* 1. White / Gold */
+.legend-white {
+  background: var(--jewel-gold-soft, rgba(197, 155, 39, 0.12));
+  border-left: 4.5px solid var(--jewel-gold, #C59B27);
+}
+.legend-white .legend-color-name { color: var(--jewel-gold, #C59B27); }
+.legend-white .swatch-disc {
+  background: #ffffff;
+  border: 1.5px solid var(--jewel-gold, #C59B27);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.7);
+}
+.legend-white .legend-spiritual-theme {
+  background: rgba(197, 155, 39, 0.20);
+  color: var(--jewel-gold, #C59B27);
+}
+
+/* 2. Green */
+.legend-green {
+  background: var(--jewel-emerald-soft, rgba(5, 150, 105, 0.12));
+  border-left: 4.5px solid var(--jewel-emerald, #059669);
+}
+.legend-green .legend-color-name { color: var(--jewel-emerald, #059669); }
+.legend-green .swatch-disc {
+  background: #10b981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+}
+.legend-green .legend-spiritual-theme {
+  background: rgba(5, 150, 105, 0.20);
+  color: var(--jewel-emerald, #059669);
+}
+
+/* 3. Violet / Purple */
+.legend-violet {
+  background: var(--jewel-violet-soft, rgba(139, 92, 246, 0.12));
+  border-left: 4.5px solid var(--jewel-violet, #8B5CF6);
+}
+.legend-violet .legend-color-name { color: var(--jewel-violet, #8B5CF6); }
+.legend-violet .swatch-disc {
+  background: #8b5cf6;
+  box-shadow: 0 0 6px rgba(139, 92, 246, 0.6);
+}
+.legend-violet .legend-spiritual-theme {
+  background: rgba(139, 92, 246, 0.20);
+  color: var(--jewel-violet, #8B5CF6);
+}
+
+/* 4. Red */
+.legend-red {
+  background: var(--jewel-ruby-soft, rgba(220, 38, 38, 0.12));
+  border-left: 4.5px solid var(--jewel-ruby, #DC2626);
+}
+.legend-red .legend-color-name { color: var(--jewel-ruby, #DC2626); }
+.legend-red .swatch-disc {
+  background: #ef4444;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+}
+.legend-red .legend-spiritual-theme {
+  background: rgba(220, 38, 38, 0.20);
+  color: var(--jewel-ruby, #DC2626);
+}
+
+/* 5. Black / Ash */
+.legend-black {
+  background: rgba(100, 116, 139, 0.12);
+  border-left: 4.5px solid #64748b;
+}
+.legend-black .legend-color-name { color: #94a3b8; }
+.legend-black .swatch-disc {
+  background: #334155;
+  border: 1px solid #94a3b8;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+}
+.legend-black .legend-spiritual-theme {
+  background: rgba(100, 116, 139, 0.22);
+  color: #94a3b8;
+}
+
+/* 6. Rose / Pink */
+.legend-rose {
+  background: rgba(244, 114, 182, 0.12);
+  border-left: 4.5px solid #f472b6;
+}
+.legend-rose .legend-color-name { color: #f472b6; }
+.legend-rose .swatch-disc {
+  background: #f472b6;
+  box-shadow: 0 0 6px rgba(244, 114, 182, 0.6);
+}
+.legend-rose .legend-spiritual-theme {
+  background: rgba(244, 114, 182, 0.20);
+  color: #f472b6;
+}

@@ -5556,7 +5556,7 @@ body.in-song-selection-mode .song-list-container,
 
 /* Header */
 .song-lyrics-header {
-  margin-bottom: 14px !important;
+  margin-bottom: 6px !important;
   text-align: left !important;
 }
 
@@ -5564,25 +5564,34 @@ body.in-song-selection-mode .song-list-container,
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  gap: 8px !important;
-  margin-bottom: 8px !important;
+  gap: 10px !important;
+  margin-bottom: 4px !important;
   width: 100% !important;
-  min-height: 38px !important;
+  min-height: auto !important;
 }
 
-.song-header-badges {
-  display: flex !important;
+.song-header-title-wrap {
+  display: inline-flex !important;
   align-items: center !important;
-  gap: 6px !important;
+  gap: 8px !important;
   flex-wrap: wrap !important;
-  align-self: center !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+.song-header-badges,
+.song-book-badge {
+  display: none !important;
 }
 
 .song-header-actions {
   display: inline-flex !important;
+  flex-direction: row !important;
   align-items: center !important;
-  justify-content: center !important;
+  justify-content: flex-end !important;
   align-self: center !important;
+  gap: 6px !important;
+  flex-shrink: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
 }
@@ -5594,12 +5603,12 @@ body.in-song-selection-mode .song-list-container,
   justify-content: center !important;
   vertical-align: middle !important;
   margin: 0 !important;
-  gap: 7px !important;
+  gap: 5px !important;
   font-family: inherit !important;
-  font-size: 0.86rem !important;
+  font-size: 0.78rem !important;
   font-weight: 700 !important;
-  padding: 5px 14px !important;
-  min-height: 33px !important;
+  padding: 4px 11px !important;
+  min-height: 28px !important;
   border-radius: 9999px !important;
   background: linear-gradient(135deg, rgba(239, 68, 68, 0.24) 0%, rgba(185, 28, 28, 0.12) 100%) !important;
   backdrop-filter: blur(20px) saturate(190%) !important;
@@ -5663,44 +5672,37 @@ body.in-song-selection-mode .song-list-container,
   color: rgba(0, 0, 0, 0.45) !important;
 }
 
-.song-book-badge {
-  display: inline-flex !important;
-  align-items: center !important;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif !important;
-  font-size: 0.72rem !important;
-  font-weight: 600 !important;
-  color: var(--accent-gold, #4997D0) !important;
-  background: rgba(73, 151, 208, 0.1) !important;
-  border: 1px solid rgba(73, 151, 208, 0.24) !important;
-  padding: 2.5px 9px !important;
-  border-radius: 9999px !important;
-  letter-spacing: 0.02em !important;
-  text-transform: uppercase !important;
-}
-
 .song-num-badge {
   display: inline-flex !important;
   align-items: center !important;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif !important;
-  font-size: 0.72rem !important;
-  font-weight: 600 !important;
+  font-size: 0.74rem !important;
+  font-weight: 700 !important;
   color: var(--text-secondary, #5c574e) !important;
-  background: var(--bg-subtle, rgba(0, 0, 0, 0.04)) !important;
-  border: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.08)) !important;
-  padding: 2.5px 8px !important;
+  background: var(--bg-subtle, rgba(0, 0, 0, 0.05)) !important;
+  border: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.10)) !important;
+  padding: 2.5px 8.5px !important;
   border-radius: 9999px !important;
   letter-spacing: 0.02em !important;
+  flex-shrink: 0 !important;
+}
+
+[data-theme="dark"] .song-num-badge {
+  color: rgba(255, 255, 255, 0.75) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
 }
 
 .song-lyrics-title {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", -apple-system-headline, sans-serif !important;
-  font-size: 1.28rem !important;
+  font-size: 1.25rem !important;
   font-weight: 700 !important;
   color: var(--text-primary, #1d1d1f) !important;
   line-height: 1.25 !important;
-  margin: 4px 0 0 0 !important;
+  margin: 0 !important;
   letter-spacing: -0.015em !important;
   text-align: left !important;
+  word-break: break-word !important;
 }
 
 [data-theme="dark"] .song-lyrics-title {
@@ -5727,7 +5729,7 @@ body.in-song-selection-mode .song-list-container,
 .song-lyrics-body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", -apple-system-body, sans-serif !important;
   color: var(--text-primary, #1d1d1f) !important;
-  padding: 8px 0 2px 0 !important;
+  padding: 8px 14px 2px 14px !important;
   text-align: left !important;
 }
 
@@ -13808,7 +13810,8 @@ textarea:focus-visible,
       <!-- ================= 1. HOME VIEW ================= -->
       <section id="viewHome" class="view-panel active">
         <!-- Daily Greeting & Date -->
-        <div class="daily-greeting-card">
+        <div class="daily-greeting-card" id="homeDailyGreetingCard">
+          <span class="card-occasion-art" id="cardOccasionArt" aria-hidden="true"></span>
           <div class="greeting-text">
             <span class="greeting-time" id="greetingTimeText">Peace be with you</span>
             <h2 class="greeting-date" id="homeDateDisplay"><span class="immersive-date-row"><span class="immersive-date-number">14</span><span class="immersive-date-meta"><span class="immersive-date-month">October</span><span class="immersive-date-weekday">Wednesday</span></span></span></h2>
@@ -14024,8 +14027,8 @@ textarea:focus-visible,
                 <p class="page-subtitle">Select a liturgical year to explore lectionary folders</p>
               </div>
               <div style="display:flex; gap:8px;">
-                <button class="btn-squircle-icon" onclick="AlmanacApp.openLegendModal()" title="Liturgical Seasons & Colors" aria-label="Liturgical Seasons & Colors">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                <button class="btn-squircle-icon" onclick="AlmanacApp.openLegendModal()" title="Liturgical Seasons &amp; Colors" aria-label="Liturgical Seasons &amp; Colors">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.992 6.5 17.5 2 12 2z"/></svg>
                 </button>
               </div>
             </div>
@@ -14271,7 +14274,10 @@ textarea:focus-visible,
                   <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                 </svg>
               </div>
-              <label class="setting-label" for="settingNotificationToggle" style="font-size: 0.95rem; font-weight: 600; cursor: pointer; color: var(--text-primary); margin: 0;">Notifications</label>
+              <div style="display: flex; flex-direction: column;">
+                <label class="setting-label" for="settingNotificationToggle" style="font-size: 0.95rem; font-weight: 600; cursor: pointer; color: var(--text-primary); margin: 0;">Push Notifications</label>
+                <span id="notificationPermissionDesc" style="font-size: 0.74rem; color: var(--text-muted); margin-top: 2px;">Announcements &amp; Parish Timeline updates</span>
+              </div>
             </div>
             <label class="ios-toggle-switch" for="settingNotificationToggle" title="Toggle Notifications">
               <input type="checkbox" id="settingNotificationToggle" aria-label="Toggle notifications">
@@ -14466,10 +14472,10 @@ textarea:focus-visible,
             <div class="setting-info" style="flex: 1; padding-right: 12px; min-width: 0;">
               <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px;">
                 <span id="updateProgressTitle" style="font-size: 0.82rem; font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Downloading Update…</span>
-                <span id="updateProgressStats" style="font-size: 0.74rem; font-weight: 700; color: var(--accent-gold); white-space: nowrap; margin-left: 8px;">0% • 0 MB</span>
+                <span id="updateProgressStats" style="font-size: 0.74rem; font-weight: 700; color: #10B981; white-space: nowrap; margin-left: 8px;">0% • 0 MB</span>
               </div>
               <div style="width: 100%; height: 6px; background: rgba(255, 255, 255, 0.08); border-radius: 9999px; overflow: hidden; position: relative;">
-                <div id="updateProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #F59E0B, #10B981); border-radius: 9999px; transition: width 0.15s ease-out;"></div>
+                <div id="updateProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #10B981, #059669); border-radius: 9999px; transition: width 0.15s ease-out;"></div>
               </div>
             </div>
             <button class="settings-btn-secondary" id="cancelUpdateDownloadBtn" type="button" title="Cancel Download" style="padding: 5px 12px; font-size: 0.74rem; border-radius: 9999px; cursor: pointer; flex-shrink: 0;">
@@ -15176,23 +15182,126 @@ textarea:focus-visible,
 
     <!-- Liturgical Seasons & Colors Pop Window Modal -->
     <div class="modal-backdrop" id="legendModal" role="dialog" aria-modal="true" aria-labelledby="legendModalTitle" onclick="if(event.target===this) AlmanacApp.closeLegendModal()">
-      <div class="modal-sheet-dialog">
+      <div class="modal-sheet-dialog liturgical-legend-dialog">
         <div class="modal-top-bar">
-          <h2 id="legendModalTitle">Liturgical Seasons & Colors</h2>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="legend-header-icon-badge">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
+                <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
+                <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>
+                <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
+                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.992 6.5 17.5 2 12 2z"/>
+              </svg>
+            </div>
+            <div>
+              <h2 id="legendModalTitle" style="margin:0; font-size:1.12rem; font-weight:700;">Liturgical Seasons & Colors</h2>
+              <p style="margin:2px 0 0; font-size:0.75rem; color:var(--text-secondary, #94a3b8);">The sacred colors & rhythm of the Church Year</p>
+            </div>
+          </div>
           <button class="btn-squircle-icon" onclick="AlmanacApp.closeLegendModal()" aria-label="Close legend">✕</button>
         </div>
-        <div style="display:flex; flex-direction:column; gap:12px; font-size:0.86rem; line-height:1.5;">
-          <div style="padding:14px; background:var(--jewel-gold-soft); border-left:4px solid var(--jewel-gold); border-radius:var(--radius-item);">
-            <strong style="color:var(--jewel-gold);">White / Gold</strong>: Christmas, Epiphany, Easter, Transfiguration, All Saints, Ascension. Symbolizes divine holiness, purity, and festive celebration.
+        <div class="liturgical-legend-content">
+          <!-- 1. White / Gold -->
+          <div class="legend-color-card legend-white">
+            <div class="legend-card-header">
+              <div class="legend-color-swatch swatch-white">
+                <span class="swatch-disc"></span>
+                <span class="legend-color-name">White / Gold</span>
+              </div>
+              <span class="legend-spiritual-theme">Holiness & Purity</span>
+            </div>
+            <div class="legend-card-meaning">
+              <strong>Significance:</strong> Divine holiness, glorious resurrection, triumph, pure light, and festive joy in Christ.
+            </div>
+            <div class="legend-card-feasts">
+              <strong>Seasons & Occasions:</strong> Christmas, Epiphany, Eastertide, Ascension, Trinity Sunday, All Saints' Day, Christ the King, & Festivals of the Lord.
+            </div>
           </div>
-          <div style="padding:14px; background:var(--jewel-emerald-soft); border-left:4px solid var(--jewel-emerald); border-radius:var(--radius-item);">
-            <strong style="color:var(--jewel-emerald);">Green</strong>: Epiphany Season & Ordinary Time (Kingdomtide). Symbolizes spiritual growth, hope, mission, and the continuous life of the Church.
+
+          <!-- 2. Green -->
+          <div class="legend-color-card legend-green">
+            <div class="legend-card-header">
+              <div class="legend-color-swatch swatch-green">
+                <span class="swatch-disc"></span>
+                <span class="legend-color-name">Green</span>
+              </div>
+              <span class="legend-spiritual-theme">Spiritual Growth</span>
+            </div>
+            <div class="legend-card-meaning">
+              <strong>Significance:</strong> The living hope, continuous spiritual nourishment, discipleship, and ongoing mission of God's Church.
+            </div>
+            <div class="legend-card-feasts">
+              <strong>Seasons & Occasions:</strong> Ordinary Time (Kingdomtide) — Sundays after Epiphany and Sundays after Pentecost.
+            </div>
           </div>
-          <div style="padding:14px; background:var(--jewel-violet-soft); border-left:4px solid var(--jewel-violet); border-radius:var(--radius-item);">
-            <strong style="color:var(--jewel-violet);">Violet / Purple</strong>: Advent & Lent Seasons. Symbolizes solemn expectation, preparation, penitence, and contemplative devotion.
+
+          <!-- 3. Violet / Purple -->
+          <div class="legend-color-card legend-violet">
+            <div class="legend-card-header">
+              <div class="legend-color-swatch swatch-violet">
+                <span class="swatch-disc"></span>
+                <span class="legend-color-name">Violet / Purple</span>
+              </div>
+              <span class="legend-spiritual-theme">Penitence & Prep</span>
+            </div>
+            <div class="legend-card-meaning">
+              <strong>Significance:</strong> Solemn expectation, quiet prayer, self-examination, repentance, and preparation for Christ's arrival.
+            </div>
+            <div class="legend-card-feasts">
+              <strong>Seasons & Occasions:</strong> Advent Season (4 weeks before Christmas) & Lent Season (40 days of prayer & fasting before Easter).
+            </div>
           </div>
-          <div style="padding:14px; background:var(--jewel-ruby-soft); border-left:4px solid var(--jewel-ruby); border-radius:var(--radius-item);">
-            <strong style="color:var(--jewel-ruby);">Red</strong>: Pentecost, Palm Sunday, Maundy Thursday, Martyrs. Symbolizes the Holy Spirit, fire, love, and Christ's sacrificial blood.
+
+          <!-- 4. Red -->
+          <div class="legend-color-card legend-red">
+            <div class="legend-card-header">
+              <div class="legend-color-swatch swatch-red">
+                <span class="swatch-disc"></span>
+                <span class="legend-color-name">Red</span>
+              </div>
+              <span class="legend-spiritual-theme">Holy Spirit & Fire</span>
+            </div>
+            <div class="legend-card-meaning">
+              <strong>Significance:</strong> The descent of the Holy Spirit, tongues of fire, fervor of faith, and the sacrificial blood of Christ and martyrs.
+            </div>
+            <div class="legend-card-feasts">
+              <strong>Seasons & Occasions:</strong> Day of Pentecost, Palm / Passion Sunday, Good Friday / Holy Week, Holy Cross Day, Ordinations, & Christian Martyrs.
+            </div>
+          </div>
+
+          <!-- 5. Black / Ash -->
+          <div class="legend-color-card legend-black">
+            <div class="legend-card-header">
+              <div class="legend-color-swatch swatch-black">
+                <span class="swatch-disc"></span>
+                <span class="legend-color-name">Black / Ash</span>
+              </div>
+              <span class="legend-spiritual-theme">Solemnity & Mortality</span>
+            </div>
+            <div class="legend-card-meaning">
+              <strong>Significance:</strong> Deep solemnity, mortality ("Dust to dust"), mourning, and contemplation of human brokenness before the Cross.
+            </div>
+            <div class="legend-card-feasts">
+              <strong>Seasons & Occasions:</strong> Ash Wednesday, Good Friday (altar bare/veiled), Memorial Services, & Funerals.
+            </div>
+          </div>
+
+          <!-- 6. Rose / Pink -->
+          <div class="legend-color-card legend-rose">
+            <div class="legend-card-header">
+              <div class="legend-color-swatch swatch-rose">
+                <span class="swatch-disc"></span>
+                <span class="legend-color-name">Rose / Pink</span>
+              </div>
+              <span class="legend-spiritual-theme">Joy Amidst Penance</span>
+            </div>
+            <div class="legend-card-meaning">
+              <strong>Significance:</strong> Refreshment, dawn of hope, and joyful anticipation piercing through a penitential season.
+            </div>
+            <div class="legend-card-feasts">
+              <strong>Seasons & Occasions:</strong> Gaudete Sunday (Third Sunday of Advent) & Laetare Sunday (Fourth Sunday of Lent).
+            </div>
           </div>
         </div>
       </div>
@@ -15563,14 +15672,14 @@ textarea:focus-visible,
         <!-- OPTION 2: AESTHETIC IMAGE SHARING PANEL -->
         <div id="verseShareImagePanel" style="display: none;">
           <!-- Live Aesthetic Card Preview -->
-          <div style="padding: 12px 20px 8px 20px; display: flex; flex-direction: column; align-items: center;">
-            <div style="position: relative; max-width: 250px; width: 100%; border-radius: 20px; overflow: hidden; box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 0 1.5px rgba(212, 175, 55, 0.4); background: #070A10;">
-              <img id="verseShareImagePreview" alt="Aesthetic Verse of the Day Card Preview" style="width: 100%; height: auto; display: block; border-radius: 18px;" />
-              <div id="verseShareImageLoading" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.65); color: var(--accent-gold); font-size: 0.85rem; font-weight: 600;">
+          <div style="padding: 16px 20px 10px 20px; display: flex; flex-direction: column; align-items: center;">
+            <div class="verse-share-preview-card" style="position: relative; max-width: 270px; width: 100%; border-radius: 20px; overflow: hidden; box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.08); background: #090B10; transition: transform 0.25s ease, box-shadow 0.25s ease;">
+              <img id="verseShareImagePreview" alt="Aesthetic Verse of the Day Card Preview" style="width: 100%; height: auto; display: block; border-radius: 20px;" />
+              <div id="verseShareImageLoading" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(9, 11, 16, 0.82); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); color: var(--accent-gold); font-size: 0.85rem; font-weight: 600; border-radius: 20px;">
                 <span>✨ Rendering card...</span>
               </div>
             </div>
-            <span style="font-size: 0.72rem; color: var(--text-muted); margin-top: 8px; text-align: center;">✦ High-DPI Illuminated Scripture Card (4:5 Portrait)</span>
+            <span style="font-size: 0.74rem; font-weight: 500; color: var(--text-muted); margin-top: 10px; text-align: center; letter-spacing: 0.03em;">Scripture Card (4:5 Portrait)</span>
           </div>
 
           <!-- Hidden Canvas for high-res generation -->
@@ -16717,6 +16826,13 @@ textarea:focus-visible,
             <input type="url" id="editSongYoutubeInput" class="form-control" placeholder="https://www.youtube.com/watch?v=... or youtu.be/...">
           </div>
           <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="editSongChordInput" style="font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #06b6d4;"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+              <span>Chords Sheet / Tabs Link:</span>
+            </label>
+            <input type="url" id="editSongChordInput" class="form-control" placeholder="https://... (Chords sheet, guitar tabs, or online drive link)">
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
             <label class="form-label" for="editSongLyricsInput" style="font-weight: 700; margin-bottom: 4px; display: block;">Lyrics / गीत के बोल:</label>
             <textarea id="editSongLyricsInput" class="form-control" rows="8" placeholder="Enter lyrics here..." style="font-family: inherit; font-size: 0.9rem; line-height: 1.6;"></textarea>
           </div>
@@ -16804,15 +16920,49 @@ textarea:focus-visible,
           <button id="closeUpdateDownloadModalBtn" type="button" class="modal-close" aria-label="Close" style="background: rgba(255, 255, 255, 0.08); border: none; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted);">✕</button>
         </div>
 
-        <!-- Release Info -->
-        <div style="background: rgba(255, 255, 255, 0.04); border-radius: 14px; padding: 12px; margin-bottom: 16px; border: 1px solid rgba(255, 255, 255, 0.06);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <span style="font-size: 0.78rem; color: var(--text-muted);">Uploaded by Super Admin</span>
-            <span class="role-badge" id="modalUpdateBadge" style="background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.7rem; padding: 2px 8px;">Available</span>
+        <!-- Release Info Card -->
+        <div style="background: rgba(255, 255, 255, 0.04); border-radius: 16px; padding: 14px; margin-bottom: 16px; border: 1px solid rgba(255, 255, 255, 0.08);">
+          <!-- Top Row: Super Admin Badge & Status -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--accent-gold); font-weight: 600;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+              </svg>
+              <span>Uploaded by Super Admin</span>
+            </div>
+            <span class="role-badge" id="modalUpdateBadge" style="background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.7rem; padding: 2px 8px; border-radius: 9999px; font-weight: 700;">Available</span>
           </div>
-          <div style="display: flex; justify-content: space-between; align-items: baseline;">
-            <span style="font-size: 0.88rem; font-weight: 600; color: var(--text-primary);" id="modalUpdateVersionTitle">Church Companion Update</span>
-            <span style="font-size: 0.76rem; color: var(--accent-gold); font-weight: 700;" id="modalUpdateSize">44.8 MB</span>
+
+          <!-- Structured 2x2 Specs Grid -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 10px; padding: 7px 10px;">
+              <span style="display: block; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600;">Version</span>
+              <span id="modalUpdateVersionNumber" style="display: block; font-size: 0.88rem; font-weight: 700; color: #ffffff; margin-top: 2px;">Release v2.1.18</span>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 10px; padding: 7px 10px;">
+              <span style="display: block; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600;">Version Code</span>
+              <span id="modalUpdateVersionCode" style="display: block; font-size: 0.88rem; font-weight: 700; color: #F59E0B; margin-top: 2px;">Build 4092050</span>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 10px; padding: 7px 10px;">
+              <span style="display: block; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600;">App Size</span>
+              <span id="modalUpdateSize" style="display: block; font-size: 0.88rem; font-weight: 700; color: #10B981; margin-top: 2px;">43.7 MB</span>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 10px; padding: 7px 10px;">
+              <span style="display: block; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600;">Application</span>
+              <span style="display: block; font-size: 0.82rem; font-weight: 700; color: #A78BFA; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Church Companion</span>
+            </div>
+          </div>
+
+          <!-- What's New Section (Short Notes) -->
+          <div style="padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.06);">
+            <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent-gold); font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
+              <span>✨ What's New</span>
+            </div>
+            <div id="modalUpdateWhatsNew" style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.45; white-space: pre-line;">
+              • Enhanced liturgical readings & lectionary updates
+              • UI refinements & performance improvements
+              • Offline dual-cache stability updates
+            </div>
           </div>
         </div>
 
@@ -16820,10 +16970,10 @@ textarea:focus-visible,
         <div id="modalDownloadProgressContainer" style="display: none; margin-bottom: 18px;">
           <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
             <span id="modalProgressStatus" style="font-size: 0.82rem; font-weight: 600; color: var(--text-primary);">Downloading update package…</span>
-            <span id="modalProgressPercent" style="font-size: 0.82rem; font-weight: 700; color: var(--accent-gold);">0%</span>
+            <span id="modalProgressPercent" style="font-size: 0.82rem; font-weight: 700; color: #10B981;">0%</span>
           </div>
           <div style="width: 100%; height: 8px; background: rgba(255, 255, 255, 0.08); border-radius: 9999px; overflow: hidden; position: relative;">
-            <div id="modalProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #F59E0B, #10B981); border-radius: 9999px; transition: width 0.15s ease-out;"></div>
+            <div id="modalProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #10B981, #059669); border-radius: 9999px; transition: width 0.15s ease-out;"></div>
           </div>
           <div style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 0.72rem; color: var(--text-muted);">
             <span id="modalDownloadedMb">0 MB</span>
@@ -16909,13 +17059,24 @@ textarea:focus-visible,
           </div>
 
           <!-- Upload Status & Progress Bar -->
-          <div id="uploadApkProgressBox" style="display: none;">
+          <div id="uploadApkProgressBox" style="display: none; margin-top: 10px;">
             <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
               <span id="uploadApkStatusText" style="font-size: 0.80rem; font-weight: 600; color: #fff;">Uploading APK to cloud…</span>
-              <span id="uploadApkPercent" style="font-size: 0.80rem; font-weight: 700; color: #10B981;">0%</span>
+              <span id="uploadApkPercent" style="font-size: 0.80rem; font-weight: 700; color: #3B82F6;">0%</span>
             </div>
             <div style="width: 100%; height: 6px; background: rgba(255, 255, 255, 0.08); border-radius: 9999px; overflow: hidden; position: relative;">
-              <div id="uploadApkProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #10B981, #059669); border-radius: 9999px; transition: width 0.15s ease-out;"></div>
+              <div id="uploadApkProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #3B82F6, #1D4ED8); border-radius: 9999px; transition: width 0.15s ease-out;"></div>
+            </div>
+            <!-- Upload Controls: Pause/Resume and Cancel -->
+            <div id="uploadApkControlsRow" style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px;">
+              <button type="button" id="btnPauseResumeUploadApk" class="settings-btn-secondary" style="padding: 5px 12px; font-size: 0.74rem; border-radius: 8px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer;">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                <span id="btnPauseResumeUploadText">Pause</span>
+              </button>
+              <button type="button" id="btnCancelUploadApk" class="settings-btn-secondary danger" style="padding: 5px 12px; font-size: 0.74rem; border-radius: 8px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; color: #EF4444; border-color: rgba(239, 68, 68, 0.3);">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <span>Cancel</span>
+              </button>
             </div>
           </div>
         </div>
@@ -16929,15 +17090,6 @@ textarea:focus-visible,
               <line x1="12" y1="3" x2="12" y2="15"></line>
             </svg>
             <span>Browse &amp; Select APK</span>
-          </button>
-
-          <button type="button" class="btn-secondary" id="btnUploadWorkspaceApk" style="width: 100%; height: 42px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; cursor: pointer;">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-              <line x1="8" y1="21" x2="16" y2="21"></line>
-              <line x1="12" y1="17" x2="12" y2="21"></line>
-            </svg>
-            <span>Upload Workspace APK (ChurchCompanion.apk)</span>
           </button>
         </div>
       </div>

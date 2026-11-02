@@ -1460,7 +1460,9 @@
           composer: s.composer || s.author || "Church Hymnal",
           book_reference: s.book_reference || "masihiGeet",
           youtube_url: s.youtube_url || s.youtubeUrl || null,
-          youtubeUrl: s.youtube_url || s.youtubeUrl || null
+          youtubeUrl: s.youtube_url || s.youtubeUrl || null,
+          chord_url: s.chord_url || s.chordUrl || s.chords || null,
+          chordUrl: s.chord_url || s.chordUrl || s.chords || null
         }));
         if (db && db.songs) try { await db.songs.bulkPut(normalized); } catch (_) {}
         if (db && db.song_book) try { await db.song_book.bulkPut(normalized); } catch (_) {}
@@ -1491,6 +1493,7 @@
       const songId = songData.id || crypto.randomUUID();
       const nowIso = new Date().toISOString();
       const ytUrl = (songData.youtube_url || songData.youtubeUrl || songData.video_url || "").trim() || null;
+      const chUrl = (songData.chord_url || songData.chordUrl || songData.chords || "").trim() || null;
 
       const remotePayload = {
         id: songId,
@@ -1501,6 +1504,7 @@
         composer: songData.composer || songData.author || "Church Hymnal",
         book_reference: songData.book_reference || "masihiGeet",
         youtube_url: ytUrl,
+        chord_url: chUrl,
         updated_at: songData.updated_at || nowIso,
         deleted_at: songData.deleted_at || null
       };
@@ -1525,7 +1529,9 @@
         ...remotePayload,
         author: remotePayload.composer,
         youtube_url: ytUrl,
-        youtubeUrl: ytUrl
+        youtubeUrl: ytUrl,
+        chord_url: chUrl,
+        chordUrl: chUrl
       };
 
       if (db && db.songs) try { await db.songs.put(localRecord); } catch (_) {}

@@ -60,6 +60,9 @@ class MainActivity : AppCompatActivity() {
     private var currentTopInsetDp: Int = 0
     private var currentBottomInsetDp: Int = 0
 
+    private var pendingNotificationAction: String? = null
+    private var pendingNotificationTag: String? = null
+
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -92,6 +95,7 @@ class MainActivity : AppCompatActivity() {
         registerSyncBroadcastReceiver()
         setupBackNavigation()
 
+        cacheNotificationIntent(intent)
         handleNotificationIntent(intent)
 
         webView.loadUrl("file:///android_asset/index.html")
@@ -223,6 +227,18 @@ class MainActivity : AppCompatActivity() {
                 super.onPageFinished(view, url)
                 injectSafeAreaInsets(currentTopInsetDp, currentBottomInsetDp)
                 broadcastNetworkStateToJs(bridge.isDeviceOnline())
+
+                pendingNotificationAction?.let { action ->
+                    val pendingIntent = Intent().apply {
+                        putExtra("action", action)
+                        putExtra("tag", pendingNotificationTag)
+                    }
+                    webView.postDelayed({
+                        handleNotificationIntent(pendingIntent)
+                    }, 500)
+                    pendingNotificationAction = null
+                    pendingNotificationTag = null
+                }
             }
         }
 
@@ -378,6 +394,23 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun setStatusBarHidden(hidden: Boolean) {
+        runOnUiThread {
+            try {
+                val insetsController = WindowCompat.getInsetsController(window, window.decorView)
+                insetsController.systemBarsBehavior =
+                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                if (hidden) {
+                    insetsController.hide(WindowInsetsCompat.Type.statusBars())
+                } else {
+                    insetsController.show(WindowInsetsCompat.Type.statusBars())
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error toggling status bar visibility", e)
+            }
+        }
+    }
+
     private fun setupNetworkMonitoring() {
         try {
             connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
@@ -518,9 +551,33 @@ class MainActivity : AppCompatActivity() {
         handleNotificationIntent(intent)
     }
 
+    private fun cacheNotificationIntent(intent: Intent?) {
+        val action = intent?.getStringExtra("action")
+        if (action != null) {
+            pendingNotificationAction = action
+            pendingNotificationTag = intent.getStringExtra("tag")
+        }
+    }
+
     private fun handleNotificationIntent(intent: Intent?) {
-        if (intent?.getStringExtra("action") == "open_announcements") {
-            evaluateJavascript("if (typeof openAnnouncementModal === 'function') { openAnnouncementModal(); }")
+        val action = intent?.getStringExtra("action") ?: return
+        val tag = intent.getStringExtra("tag") ?: ""
+        when (action) {
+            "open_announcements" -> {
+                evaluateJavascript("if (typeof openAnnouncementModal === 'function') { openAnnouncementModal(); }")
+            }
+            "open_timeline" -> {
+                val eventId = tag.removePrefix("timeline_")
+                evaluateJavascript(
+                    """
+                    if (typeof openTimelineScreen === 'function') {
+                        openTimelineScreen('$eventId');
+                    } else if (typeof switchTab === 'function') {
+                        switchTab('viewTimeline');
+                    }
+                    """.trimIndent()
+                )
+            }
         }
     }
 

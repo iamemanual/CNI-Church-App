@@ -243,6 +243,108 @@ body {
   box-shadow: var(--ios27-shadow-md) !important;
 }
 
+/* --- Liturgical Occasion Card Decorations (All Saints, All Souls, Christmas, Easter, New Year) --- */
+.card-occasion-art {
+  position: absolute !important;
+  right: 14px !important;
+  top: 10px !important;
+  font-size: 1.15rem !important;
+  letter-spacing: 3px !important;
+  opacity: 0.85 !important;
+  pointer-events: none !important;
+  user-select: none !important;
+  z-index: 2 !important;
+  line-height: 1 !important;
+}
+
+/* 1. All Saints' Day (November 1) */
+.daily-greeting-card.occasion-all-saints {
+  background: linear-gradient(135deg, rgba(44, 34, 14, 0.96) 0%, rgba(24, 19, 10, 0.98) 100%) !important;
+  border: 1.5px solid rgba(212, 175, 55, 0.65) !important;
+  box-shadow: 0 6px 24px rgba(212, 175, 55, 0.22), 0 0 0 1px rgba(212, 175, 55, 0.35) !important;
+}
+
+[data-theme="light"] .daily-greeting-card.occasion-all-saints {
+  background: linear-gradient(135deg, #FFFDF0 0%, #FFF8E1 100%) !important;
+  border: 1.5px solid rgba(197, 155, 39, 0.55) !important;
+  box-shadow: 0 6px 20px rgba(197, 155, 39, 0.18) !important;
+}
+
+.daily-greeting-card.occasion-all-saints .greeting-time {
+  color: #FACC15 !important;
+  text-shadow: 0 0 10px rgba(250, 204, 21, 0.45);
+  font-weight: 800 !important;
+  letter-spacing: 0.09em !important;
+}
+
+[data-theme="light"] .daily-greeting-card.occasion-all-saints .greeting-time {
+  color: #B45309 !important;
+  text-shadow: none !important;
+}
+
+/* 2. All Souls' Day (November 2) */
+.daily-greeting-card.occasion-all-souls {
+  background: linear-gradient(135deg, rgba(30, 26, 42, 0.96) 0%, rgba(18, 16, 26, 0.98) 100%) !important;
+  border: 1.5px solid rgba(167, 139, 250, 0.55) !important;
+  box-shadow: 0 6px 24px rgba(139, 92, 246, 0.22), 0 0 0 1px rgba(167, 139, 250, 0.30) !important;
+}
+
+[data-theme="light"] .daily-greeting-card.occasion-all-souls {
+  background: linear-gradient(135deg, #FAF8FF 0%, #F3EEFF 100%) !important;
+  border: 1.5px solid rgba(139, 92, 246, 0.45) !important;
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.15) !important;
+}
+
+.daily-greeting-card.occasion-all-souls .greeting-time {
+  color: #C4B5FD !important;
+  text-shadow: 0 0 10px rgba(196, 181, 253, 0.45);
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+}
+
+[data-theme="light"] .daily-greeting-card.occasion-all-souls .greeting-time {
+  color: #7C3AED !important;
+  text-shadow: none !important;
+}
+
+/* 3. Christmas Season (December 24-26) */
+.daily-greeting-card.occasion-christmas {
+  background: linear-gradient(135deg, rgba(46, 16, 22, 0.96) 0%, rgba(18, 28, 20, 0.98) 100%) !important;
+  border: 1.5px solid rgba(239, 68, 68, 0.65) !important;
+  box-shadow: 0 6px 24px rgba(220, 38, 38, 0.25), 0 0 0 1px rgba(212, 175, 55, 0.40) !important;
+}
+
+[data-theme="light"] .daily-greeting-card.occasion-christmas {
+  background: linear-gradient(135deg, #FFF5F5 0%, #F0FDF4 100%) !important;
+  border: 1.5px solid rgba(220, 38, 38, 0.50) !important;
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.18) !important;
+}
+
+.daily-greeting-card.occasion-christmas .greeting-time {
+  color: #EF4444 !important;
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.45);
+  font-weight: 800 !important;
+}
+
+[data-theme="light"] .daily-greeting-card.occasion-christmas .greeting-time {
+  color: #DC2626 !important;
+  text-shadow: none !important;
+}
+
+/* 4. Easter Season */
+.daily-greeting-card.occasion-easter {
+  background: linear-gradient(135deg, rgba(44, 36, 18, 0.96) 0%, rgba(20, 24, 38, 0.98) 100%) !important;
+  border: 1.5px solid rgba(234, 179, 8, 0.70) !important;
+  box-shadow: 0 6px 24px rgba(234, 179, 8, 0.25) !important;
+}
+
+/* 5. New Year */
+.daily-greeting-card.occasion-new-year {
+  background: linear-gradient(135deg, rgba(16, 32, 54, 0.96) 0%, rgba(12, 20, 34, 0.98) 100%) !important;
+  border: 1.5px solid rgba(56, 189, 248, 0.60) !important;
+  box-shadow: 0 6px 24px rgba(56, 189, 248, 0.20) !important;
+}
+
 .liturgical-badge.interactive-pill {
   cursor: pointer !important;
   display: inline-flex !important;
@@ -567,8 +669,6 @@ body {
 .almanac-today-card,
 .almanac-service-card,
 .timeline-list-card,
-.settings-action-card,
-.settings-floating-card,
 .church-auth-card {
   border-radius: var(--ios27-radius-card-md) !important;
   background: rgba(30, 36, 46, 0.94) !important;
@@ -583,16 +683,13 @@ body {
 [data-theme="light"] .almanac-today-card,
 [data-theme="light"] .almanac-service-card,
 [data-theme="light"] .timeline-list-card,
-[data-theme="light"] .settings-action-card,
-[data-theme="light"] .settings-floating-card,
 [data-theme="light"] .church-auth-card {
   background: #FFFFFF !important;
   border: 1px solid rgba(0, 0, 0, 0.18) !important;
 }
 
 .almanac-folder-card:hover,
-.timeline-list-card:hover,
-.settings-action-card:hover {
+.timeline-list-card:hover {
   border-color: var(--ios27-glass-border-hover) !important;
   box-shadow: var(--ios27-shadow-md) !important;
 }
@@ -630,12 +727,13 @@ body {
 }
 
 .settings-action-cards-grid .settings-action-card,
-.settings-action-card.action-pill-card {
+.settings-action-card.action-pill-card,
+.settings-group.settings-action-card {
   width: 100% !important;
-  border-radius: var(--ios27-radius-card-md) !important;
-  background: rgba(30, 36, 46, 0.94) !important;
-  border: 1px solid var(--ios27-glass-border) !important;
-  box-shadow: var(--ios27-shadow-sm) !important;
+  border-radius: var(--radius-lg, var(--ios27-radius-card-md)) !important;
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-subtle) !important;
+  box-shadow: var(--shadow-sm, var(--ios27-shadow-sm)) !important;
   padding: 13px 14px !important;
   min-height: 58px !important;
   box-sizing: border-box !important;
@@ -643,20 +741,31 @@ body {
   cursor: pointer !important;
   position: relative !important;
   overflow: hidden !important;
-  transition: border-color 0.22s ease, box-shadow 0.22s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: border-color 0.22s ease, box-shadow 0.22s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), background 0.22s ease !important;
 }
 
 [data-theme="light"] .settings-action-cards-grid .settings-action-card,
-[data-theme="light"] .settings-action-card.action-pill-card {
-  background: #FFFFFF !important;
-  border: 1px solid rgba(0, 0, 0, 0.18) !important;
-  box-shadow: var(--ios27-shadow-sm) !important;
+[data-theme="light"] .settings-action-card.action-pill-card,
+[data-theme="light"] .settings-group.settings-action-card {
+  background: var(--bg-surface, #FFFFFF) !important;
+  border: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.08)) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+[data-theme="amoled"] .settings-action-cards-grid .settings-action-card,
+[data-theme="amoled"] .settings-action-card.action-pill-card,
+[data-theme="amoled"] .settings-group.settings-action-card {
+  background: var(--bg-surface, #000000) !important;
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08)) !important;
+  box-shadow: none !important;
 }
 
 .settings-action-cards-grid .settings-action-card:hover,
-.settings-action-card.action-pill-card:hover {
-  border-color: var(--ios27-glass-border-hover) !important;
-  box-shadow: var(--ios27-shadow-md) !important;
+.settings-action-card.action-pill-card:hover,
+.settings-group.settings-action-card:hover {
+  background: var(--bg-surface-elevated, var(--bg-surface)) !important;
+  border-color: var(--accent-gold, var(--ios27-glass-border-hover)) !important;
+  box-shadow: var(--shadow-md, var(--ios27-shadow-md)) !important;
   transform: translateY(-2px) !important;
 }
 
@@ -795,8 +904,97 @@ body {
   color: #DC2626 !important;
 }
 
+/* --- Space-Efficient Apple Music Style Song Header Layout --- */
+.song-lyrics-header {
+  margin-bottom: 6px !important;
+}
+
+.song-header-top {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  margin-bottom: 4px !important;
+  min-height: auto !important;
+  width: 100% !important;
+}
+
+.song-header-title-wrap {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+.song-header-badges,
+.song-book-badge {
+  display: none !important;
+}
+
+.song-header-actions {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 6px !important;
+  flex-shrink: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.song-num-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  font-family: inherit !important;
+  font-size: 0.74rem !important;
+  font-weight: 700 !important;
+  color: var(--text-secondary, #5c574e) !important;
+  background: var(--bg-subtle, rgba(0, 0, 0, 0.05)) !important;
+  border: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.10)) !important;
+  padding: 2.5px 8.5px !important;
+  border-radius: 9999px !important;
+  letter-spacing: 0.02em !important;
+  flex-shrink: 0 !important;
+}
+
+[data-theme="dark"] .song-num-badge {
+  color: rgba(255, 255, 255, 0.75) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.song-lyrics-title {
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  margin: 0 !important;
+  color: var(--text-primary, #1d1d1f) !important;
+  word-break: break-word !important;
+}
+
+[data-theme="dark"] .song-lyrics-title {
+  color: #f5f5f7 !important;
+}
+
+.song-header-divider {
+  margin: 6px 0 0 0 !important;
+}
+
 /* User Pinpoint #2: YouTube Play Glass Action Pill (Zero Glow) */
 .btn-song-youtube {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+  margin: 0 !important;
+  gap: 5px !important;
+  font-family: inherit !important;
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+  padding: 4px 11px !important;
+  min-height: 28px !important;
   border-radius: var(--ios27-radius-pill) !important;
   backdrop-filter: blur(20px) saturate(190%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(190%) !important;
@@ -805,6 +1003,9 @@ body {
   color: #ffffff !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.20) !important;
   transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+  flex-shrink: 0 !important;
+  line-height: 1 !important;
+  letter-spacing: 0.02em !important;
 }
 
 [data-theme="light"] .btn-song-youtube {
@@ -850,6 +1051,70 @@ body {
   border-color: rgba(0, 0, 0, 0.12) !important;
   color: rgba(0, 0, 0, 0.45) !important;
   box-shadow: none !important;
+}
+
+/* User Pinpoint: Song Chords Action Pill */
+.btn-song-chords {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+  margin: 0 !important;
+  gap: 5px !important;
+  font-family: inherit !important;
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+  padding: 4px 11px !important;
+  min-height: 28px !important;
+  border-radius: var(--ios27-radius-pill) !important;
+  backdrop-filter: blur(20px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(190%) !important;
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.24) 0%, rgba(14, 116, 144, 0.12) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  color: #ffffff !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.20) !important;
+  flex-shrink: 0 !important;
+  line-height: 1 !important;
+  letter-spacing: 0.02em !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+[data-theme="light"] .btn-song-chords {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.14) 0%, rgba(14, 116, 144, 0.06) 100%) !important;
+  border: 1px solid rgba(8, 145, 178, 0.42) !important;
+  color: #0891B2 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.50) !important;
+}
+
+.btn-song-chords svg {
+  stroke: currentColor !important;
+  flex-shrink: 0 !important;
+}
+
+.btn-song-chords:hover {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.36) 0%, rgba(14, 116, 144, 0.18) 100%) !important;
+  border-color: rgba(255, 255, 255, 0.50) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.30) !important;
+}
+
+[data-theme="light"] .btn-song-chords:hover {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.22) 0%, rgba(14, 116, 144, 0.10) 100%) !important;
+  border-color: rgba(8, 145, 178, 0.60) !important;
+  color: #0E7490 !important;
+}
+
+.btn-song-chords:active {
+  transform: scale(0.95) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Song Lyrics Left Padding Pinpoint */
+.song-lyrics-body {
+  padding: 8px 14px 2px 14px !important;
 }
 
 .btn-approve-admin {

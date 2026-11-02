@@ -2018,7 +2018,7 @@
 
   function triggerOneSignalAnnouncementPush(announcement) {
     try {
-      const title = announcement.title || 'Church Announcement';
+      const title = announcement.title || 'New Announcement';
       const body = announcement.body || announcement.details || 'New announcement posted';
 
       if (window.plugins && window.plugins.OneSignal && window.plugins.OneSignal.postNotification) {

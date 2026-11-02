@@ -4179,10 +4179,24 @@
   // ==========================================================================
   const appNavigationHistory = [];
 
+  function setBookReaderStatusBar(hide) {
+    try {
+      if (window.AndroidBridge && typeof window.AndroidBridge.setStatusBarHidden === 'function') {
+        window.AndroidBridge.setStatusBarHidden(Boolean(hide));
+      } else if (window.AndroidBridge && typeof window.AndroidBridge.setFullscreen === 'function') {
+        window.AndroidBridge.setFullscreen(Boolean(hide));
+      }
+    } catch (e) {
+      console.warn('StatusBar toggle error:', e);
+    }
+  }
+  window.setBookReaderStatusBar = setBookReaderStatusBar;
+
   function handleAppBackAction(fromPopState = false) {
     // 0. Check PDF Fullscreen Reader Overlay
     const pdfReader = document.getElementById('pdfReaderScreen');
     if (pdfReader && !pdfReader.classList.contains('hidden')) {
+      setBookReaderStatusBar(false);
       if (typeof closePdfBook === 'function') {
         closePdfBook();
       } else {
@@ -4585,21 +4599,25 @@
         setTimeout(window.triggerChatAutoLift, 200);
       }
     } else if (tabId === 'viewBookReader') {
+      setBookReaderStatusBar(true);
       document.body.classList.add('in-reader-mode');
       document.body.classList.remove('in-chat-mode');
       document.body.classList.remove('in-song-mode');
       document.body.classList.remove('in-import-mode');
     } else if (tabId === 'viewSongList' || tabId === 'viewSongLyrics') {
+      if (state.activeTab === 'viewBookReader') setBookReaderStatusBar(false);
       document.body.classList.add('in-song-mode');
       document.body.classList.remove('in-chat-mode');
       document.body.classList.remove('in-reader-mode');
       document.body.classList.remove('in-import-mode');
     } else if (tabId === 'viewImportManager') {
+      if (state.activeTab === 'viewBookReader') setBookReaderStatusBar(false);
       document.body.classList.add('in-import-mode');
       document.body.classList.remove('in-chat-mode');
       document.body.classList.remove('in-reader-mode');
       document.body.classList.remove('in-song-mode');
     } else {
+      if (state.activeTab === 'viewBookReader') setBookReaderStatusBar(false);
       document.body.classList.remove('in-chat-mode');
       document.body.classList.remove('in-reader-mode');
       document.body.classList.remove('in-song-mode');
@@ -5158,6 +5176,7 @@
     const loadingEl = document.getElementById("pdfLoadingIndicator");
 
     if (!overlay) return;
+    setBookReaderStatusBar(true);
 
     // Resolve URL (maps old .pdf names or keys to .html book equivalents)
     let targetUrl = (pdfUrl || "").trim();
@@ -5462,6 +5481,7 @@
       overlay.style.backgroundColor = "";
       overlay.classList.add("hidden");
     }
+    setBookReaderStatusBar(false);
     const currentTheme = (document.documentElement && document.documentElement.getAttribute('data-theme')) || localStorage.getItem('sanctuary_theme') || 'amoled';
     setTheme(currentTheme);
     syncModalOpenState();
@@ -7342,8 +7362,91 @@
       `;
     }
 
-    if (greetingTimeText) {
-      greetingTimeText.textContent = 'Peace be with you';
+    // Liturgical Occasion Card Decoration Engine
+    const cardMonth = now.getMonth() + 1; // 1-12
+    const cardDay = now.getDate(); // 1-31
+    const greetingCard = document.getElementById('homeDailyGreetingCard') || document.querySelector('.daily-greeting-card');
+    const occasionArtEl = document.getElementById('cardOccasionArt');
+
+    if (greetingCard) {
+      greetingCard.classList.remove('occasion-all-saints', 'occasion-all-souls', 'occasion-christmas', 'occasion-easter', 'occasion-new-year', 'occasion-epiphany', 'occasion-good-friday', 'occasion-pentecost');
+    }
+
+    let occasion = null;
+
+    // Check Major Liturgical Milestones
+    if (cardMonth === 11 && cardDay === 1) {
+      occasion = {
+        cls: 'occasion-all-saints',
+        greeting: '✨ ALL SAINTS’ DAY ✨',
+        art: '✨ 👑 ✨'
+      };
+    } else if (cardMonth === 11 && cardDay === 2) {
+      occasion = {
+        cls: 'occasion-all-souls',
+        greeting: '🕊️ ALL SOULS’ DAY 🕊️',
+        art: '🕊️ 🕯️'
+      };
+    } else if (cardMonth === 12 && cardDay === 24) {
+      occasion = {
+        cls: 'occasion-christmas',
+        greeting: '⭐ CHRISTMAS EVE ⭐',
+        art: '⭐ 🕊️'
+      };
+    } else if (cardMonth === 12 && (cardDay === 25 || cardDay === 26)) {
+      occasion = {
+        cls: 'occasion-christmas',
+        greeting: '⭐ MERRY CHRISTMAS ⭐',
+        art: '⭐ 🎄'
+      };
+    } else if (cardMonth === 12 && cardDay === 31) {
+      occasion = {
+        cls: 'occasion-new-year',
+        greeting: '🕊️ NEW YEAR’S EVE 🕊️',
+        art: '🕊️ ✨'
+      };
+    } else if (cardMonth === 1 && cardDay === 1) {
+      occasion = {
+        cls: 'occasion-new-year',
+        greeting: '🕊️ BLESSED NEW YEAR 🕊️',
+        art: '🕊️ 🌅'
+      };
+    } else if (cardMonth === 1 && cardDay === 6) {
+      occasion = {
+        cls: 'occasion-epiphany',
+        greeting: '🌟 THE EPIPHANY 🌟',
+        art: '🌟 ✨'
+      };
+    }
+
+    // Dynamic Lectionary Lookup
+    if (!occasion && typeof window.CHURCH_DATA !== 'undefined' && window.CHURCH_DATA.almanacDatabase) {
+      const pad = (n) => String(n).padStart(2, '0');
+      const dateKey = `${now.getFullYear()}-${pad(cardMonth)}-${pad(cardDay)}`;
+      const dayData = window.CHURCH_DATA.almanacDatabase[dateKey] || (window.AlmanacApp && typeof window.AlmanacApp.getDayData === 'function' ? window.AlmanacApp.getDayData(dateKey) : null);
+      if (dayData && dayData.theme) {
+        const themeLower = dayData.theme.toLowerCase();
+        if (themeLower.includes('all saint')) {
+          occasion = { cls: 'occasion-all-saints', greeting: '✨ ALL SAINTS’ DAY ✨', art: '✨ 👑 ✨' };
+        } else if (themeLower.includes('all soul')) {
+          occasion = { cls: 'occasion-all-souls', greeting: '🕊️ ALL SOULS’ DAY 🕊️', art: '🕊️ 🕯️' };
+        } else if (themeLower.includes('easter') || themeLower.includes('resurrection')) {
+          occasion = { cls: 'occasion-easter', greeting: '🌅 CHRIST IS RISEN! 🌅', art: '🌅 ✝️' };
+        } else if (themeLower.includes('good friday')) {
+          occasion = { cls: 'occasion-good-friday', greeting: '✝️ SOLEMN GOOD FRIDAY ✝️', art: '✝️ 🕊️' };
+        } else if (themeLower.includes('pentecost')) {
+          occasion = { cls: 'occasion-pentecost', greeting: '🔥 DAY OF PENTECOST 🔥', art: '🔥 🕊️' };
+        }
+      }
+    }
+
+    if (occasion) {
+      if (greetingCard) greetingCard.classList.add(occasion.cls);
+      if (greetingTimeText) greetingTimeText.textContent = occasion.greeting;
+      if (occasionArtEl) occasionArtEl.textContent = occasion.art || '';
+    } else {
+      if (greetingTimeText) greetingTimeText.textContent = 'Peace be with you';
+      if (occasionArtEl) occasionArtEl.textContent = '';
     }
 
     // 2. Fetch Verse of the Day (new verse for every day)
@@ -7442,37 +7545,25 @@
     const w = 1080;
     const h = 1350;
 
-    // 1. Deep Obsidian / Midnight Sapphire Liturgical Gradient
-    const bgGrad = ctx.createLinearGradient(0, 0, w, h);
-    bgGrad.addColorStop(0, '#070A10');
-    bgGrad.addColorStop(0.3, '#0B1324');
-    bgGrad.addColorStop(0.65, '#111A30');
-    bgGrad.addColorStop(1, '#060910');
+    // 1. Deep Midnight Velvet & Pure Obsidian Background
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
+    bgGrad.addColorStop(0, '#090B10');
+    bgGrad.addColorStop(0.30, '#0E131E');
+    bgGrad.addColorStop(0.70, '#0E131E');
+    bgGrad.addColorStop(1, '#07080D');
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, w, h);
 
-    // 2. Divine Ambient Glow (Radiant Warm Gold Center)
-    const glow = ctx.createRadialGradient(w / 2, h * 0.46, 30, w / 2, h * 0.46, 540);
-    glow.addColorStop(0, 'rgba(234, 179, 8, 0.22)');
-    glow.addColorStop(0.45, 'rgba(217, 119, 6, 0.08)');
-    glow.addColorStop(0.85, 'rgba(15, 23, 42, 0.02)');
+    // 2. Soft, Luminous Sacred Ambient Light (Warm Golden Candlelight)
+    const glow = ctx.createRadialGradient(w / 2, h * 0.44, 20, w / 2, h * 0.44, 560);
+    glow.addColorStop(0, 'rgba(224, 185, 95, 0.10)');
+    glow.addColorStop(0.40, 'rgba(180, 130, 40, 0.04)');
+    glow.addColorStop(0.80, 'rgba(10, 14, 22, 0.01)');
     glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, w, h);
 
-    // 3. Delicate Star Particles / Rosettes
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
-    const starCoords = [
-      [180, 240], [890, 220], [140, 780], [940, 810],
-      [220, 1120], [860, 1100], [310, 190], [770, 180]
-    ];
-    starCoords.forEach(([sx, sy]) => {
-      ctx.beginPath();
-      ctx.arc(sx, sy, 2.5, 0, Math.PI * 2);
-      ctx.fill();
-    });
-
-    // 4. Double Gold Framing with Smooth Rounded Insets
+    // Helper for smooth rounded rectangle
     function drawRoundedRect(x, y, width, height, radius) {
       ctx.beginPath();
       ctx.moveTo(x + radius, y);
@@ -7487,63 +7578,40 @@
       ctx.closePath();
     }
 
-    // Outer Gold Rim
-    ctx.strokeStyle = 'rgba(212, 175, 55, 0.45)';
-    ctx.lineWidth = 2.5;
-    drawRoundedRect(44, 44, w - 88, h - 88, 36);
-    ctx.stroke();
-
-    // Inner Subtle Hairline Rim
-    ctx.strokeStyle = 'rgba(212, 175, 55, 0.20)';
+    // 3. Subtle Hairline Frame (Minimal & Clean, Zero Corner Clutter)
+    const frameInset = 54;
+    const frameRadius = 24;
+    const frameGrad = ctx.createLinearGradient(0, frameInset, 0, h - frameInset);
+    frameGrad.addColorStop(0, 'rgba(212, 175, 55, 0.22)');
+    frameGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.10)');
+    frameGrad.addColorStop(1, 'rgba(212, 175, 55, 0.16)');
+    ctx.strokeStyle = frameGrad;
     ctx.lineWidth = 1;
-    drawRoundedRect(56, 56, w - 112, h - 112, 26);
+    drawRoundedRect(frameInset, frameInset, w - (frameInset * 2), h - (frameInset * 2), frameRadius);
     ctx.stroke();
 
-    // 5. Four Corner Rosettes (✦)
-    ctx.font = '22px serif';
-    ctx.fillStyle = 'rgba(212, 175, 55, 0.85)';
+    // 4. Dignified Sacred Header (Simple & Aesthetic)
+    // Slender Latin Cross
+    ctx.font = '400 24px -apple-system, BlinkMacSystemFont, serif';
+    ctx.fillStyle = '#D4AF37';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('✦', 76, 76);
-    ctx.fillText('✦', w - 76, 76);
-    ctx.fillText('✦', 76, h - 76);
-    ctx.fillText('✦', w - 76, h - 76);
+    ctx.fillText('✝', w / 2, 142);
 
-    // 6. Church Crest Header
-    // Sacred Latin Cross
-    ctx.font = '700 46px -apple-system, sans-serif';
-    ctx.fillStyle = '#EAB308';
-    ctx.fillText('✝', w / 2, 140);
+    // Spaced Provenance Subtitle
+    const headerTitle = (traditionTag || 'DAILY SCRIPTURE').toUpperCase();
+    ctx.font = '600 12px -apple-system, BlinkMacSystemFont, "Cinzel", "Plus Jakarta Sans", sans-serif';
+    ctx.fillStyle = 'rgba(226, 232, 240, 0.60)';
+    const spacedHeader = headerTitle.split('').join('  ');
+    ctx.fillText(spacedHeader, w / 2, 182);
 
-    // Church Name in Letter-spaced Small Caps
-    ctx.font = '600 23px -apple-system, BlinkMacSystemFont, "Cinzel", "Times New Roman", serif';
-    ctx.fillStyle = 'rgba(248, 250, 252, 0.92)';
-    ctx.fillText("ALL SAINTS' CHURCH • SANCTUARY", w / 2, 195);
-
-    // Liturgical Tag Pill
-    const tagText = (traditionTag || 'VERSE OF THE DAY').toUpperCase();
-    ctx.font = '700 16px -apple-system, BlinkMacSystemFont, sans-serif';
-    const tagWidth = ctx.measureText(tagText).width + 36;
-    ctx.fillStyle = 'rgba(212, 175, 55, 0.14)';
-    ctx.strokeStyle = 'rgba(212, 175, 55, 0.35)';
-    ctx.lineWidth = 1.2;
-    drawRoundedRect(w / 2 - tagWidth / 2, 222, tagWidth, 32, 16);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = '#FACC15';
-    ctx.fillText(tagText, w / 2, 238);
-
-    // 7. Decorative Opening Quote Mark
-    ctx.font = 'italic 700 84px Georgia, serif';
-    ctx.fillStyle = 'rgba(212, 175, 55, 0.38)';
-    ctx.fillText('“', w / 2, 335);
-
-    // 8. Scripture Body Text (Dynamic Multiline Centered Wrap)
-    const cleanVerse = (verseText || '').replace(/^["“”«»]+/, '').replace(/["“”«»]+$/, '').trim();
+    // 5. Scripture Body Text (Clean Editorial Typography, Pure Aesthetic Simplicity)
+    const rawClean = (verseText || '').replace(/^["“”«»]+/, '').replace(/["“”«»]+$/, '').trim();
+    const cleanVerse = `“${rawClean}”`;
     const maxTextWidth = 840;
-    
+
     function wrapLines(text, fSize) {
-      ctx.font = `italic ${fSize}px Georgia, "Palatino Linotype", "Times New Roman", serif`;
+      ctx.font = `italic 400 ${fSize}px "Newsreader", "Cinzel", "Playfair Display", "Baskerville", "Georgia", serif`;
       const words = text.split(/\s+/);
       const res = [];
       let currentLine = words[0] || '';
@@ -7560,75 +7628,70 @@
       return res;
     }
 
-    let fontSize = 42;
-    let lineHeight = 66;
+    let fontSize = 44;
+    let lineHeight = 72;
     let lines = wrapLines(cleanVerse, fontSize);
-    if (lines.length > 5) {
-      fontSize = 36;
-      lineHeight = 56;
+    if (lines.length > 4) {
+      fontSize = 38;
+      lineHeight = 62;
       lines = wrapLines(cleanVerse, fontSize);
     }
-    if (lines.length > 7) {
-      fontSize = 30;
-      lineHeight = 48;
+    if (lines.length > 6) {
+      fontSize = 32;
+      lineHeight = 52;
+      lines = wrapLines(cleanVerse, fontSize);
+    }
+    if (lines.length > 9) {
+      fontSize = 28;
+      lineHeight = 46;
       lines = wrapLines(cleanVerse, fontSize);
     }
 
     const textBlockHeight = lines.length * lineHeight;
-    const textStartY = 540 - (textBlockHeight / 2) + 40;
+    // Golden ratio optical center slightly above 50%
+    const textStartY = (h * 0.46) - (textBlockHeight / 2) + (fontSize * 0.35);
 
-    ctx.font = `italic ${fontSize}px Georgia, "Palatino Linotype", "Times New Roman", serif`;
+    // Render Scripture Lines with Crisp, Clean Alabaster Clarity
+    ctx.font = `italic 400 ${fontSize}px "Newsreader", "Cinzel", "Playfair Display", "Baskerville", "Georgia", serif`;
     ctx.fillStyle = '#FFFFFF';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.65)';
-    ctx.shadowBlur = 16;
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+    ctx.shadowBlur = 6;
     ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 4;
+    ctx.shadowOffsetY = 2;
 
     lines.forEach((line, idx) => {
       ctx.fillText(line, w / 2, textStartY + (idx * lineHeight));
     });
 
-    // Reset Shadow
+    // Reset shadow
     ctx.shadowColor = 'transparent';
     ctx.shadowBlur = 0;
 
-    // 9. Closing Quote Mark
-    ctx.font = 'italic 700 84px Georgia, serif';
-    ctx.fillStyle = 'rgba(212, 175, 55, 0.38)';
-    ctx.fillText('”', w / 2, textStartY + textBlockHeight + 25);
-
-    // 10. Golden Rosette Divider
-    const divY = Math.max(textStartY + textBlockHeight + 90, 890);
-    const divGrad = ctx.createLinearGradient(w / 2 - 160, divY, w / 2 + 160, divY);
+    // 6. Minimal Golden Accent Divider
+    const divY = Math.min(Math.max(textStartY + textBlockHeight + 54, 880), 990);
+    const divGrad = ctx.createLinearGradient(w / 2 - 40, divY, w / 2 + 40, divY);
     divGrad.addColorStop(0, 'rgba(212, 175, 55, 0)');
-    divGrad.addColorStop(0.3, 'rgba(212, 175, 55, 0.6)');
-    divGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.9)');
-    divGrad.addColorStop(0.7, 'rgba(212, 175, 55, 0.6)');
+    divGrad.addColorStop(0.5, 'rgba(212, 175, 55, 0.45)');
     divGrad.addColorStop(1, 'rgba(212, 175, 55, 0)');
 
     ctx.strokeStyle = divGrad;
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(w / 2 - 160, divY);
-    ctx.lineTo(w / 2 - 25, divY);
-    ctx.moveTo(w / 2 + 25, divY);
-    ctx.lineTo(w / 2 + 160, divY);
+    ctx.moveTo(w / 2 - 40, divY);
+    ctx.lineTo(w / 2 + 40, divY);
     ctx.stroke();
 
-    ctx.font = '20px serif';
-    ctx.fillStyle = '#FACC15';
-    ctx.fillText('✦', w / 2, divY);
-
-    // 11. Prominent Bible Reference Badge
+    // 7. Scripture Reference (Refined, Editorial Golden Typography)
     const cleanRef = (verseRef || 'Psalm 119:105').toUpperCase();
-    ctx.font = '700 34px -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif';
-    ctx.fillStyle = '#FDE047';
-    ctx.fillText(cleanRef, w / 2, divY + 65);
+    ctx.font = '600 22px -apple-system, BlinkMacSystemFont, "Cinzel", "Plus Jakarta Sans", sans-serif';
+    ctx.fillStyle = '#E5C07B';
+    const spacedRef = cleanRef.split('').join(' ');
+    ctx.fillText(spacedRef, w / 2, divY + 44);
 
-    // 12. Bottom Church Companion Ribbon
-    ctx.font = '500 20px -apple-system, BlinkMacSystemFont, sans-serif';
-    ctx.fillStyle = 'rgba(212, 175, 55, 0.85)';
-    ctx.fillText("✝️ CHURCH COMPANION • DAILY SCRIPTURE", w / 2, h - 120);
+    // 8. Understated Bottom Church Companion Footer
+    ctx.font = '500 12px -apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", sans-serif';
+    ctx.fillStyle = 'rgba(212, 175, 55, 0.42)';
+    ctx.fillText("ALL SAINTS' CHURCH • CHURCH COMPANION", w / 2, h - 90);
 
     return canvas.toDataURL('image/png');
   }
@@ -9071,9 +9134,7 @@
       return;
     }
 
-    const title = item && item.date 
-      ? `Church Announcement • ${item.date}` 
-      : (totalCount > 1 ? `Church Announcement (${totalCount} Notices)` : 'Church Announcement');
+    const title = 'New Announcement';
     
     const body = (item && (item.details || item.prayer_request_by)) 
       ? (item.details || `Notice from ${item.prayer_request_by}`)
@@ -9086,6 +9147,37 @@
       console.warn('[NativeNotif] Failed to dispatch native notification:', e);
     }
   }
+
+  /* Native Android OS Timeline Notification Service */
+  function triggerNativeTimelineNotification(item, totalCount = 1) {
+    if (localStorage.getItem('church_notifications_enabled') === 'false') return;
+
+    const bridge = window.AndroidBridge || window.AndroidApp || window.bridge;
+    if (!bridge || typeof bridge.showNotification !== 'function') return;
+
+    if (typeof bridge.hasNotificationPermission === 'function' && !bridge.hasNotificationPermission()) {
+      return;
+    }
+
+    const title = 'New Timeline Update';
+
+    const cleanDesc = item && item.description ? item.description.replace(/\s*<!--TL_META:[\s\S]*?-->\s*$/, '').trim() : '';
+    const body = item && item.title
+      ? (cleanDesc ? `${item.title}: ${cleanDesc}` : item.title)
+      : 'A new parish milestone has been updated in Church Companion.';
+
+    const tag = item && item.id ? `timeline_${item.id}` : `timeline_${Date.now()}`;
+    try {
+      bridge.showNotification(title, body, tag, 'open_timeline');
+    } catch (e) {
+      try {
+        bridge.showNotification(title, body, tag);
+      } catch (err) {
+        console.warn('[NativeNotif] Failed to dispatch native timeline notification:', err);
+      }
+    }
+  }
+  window.triggerNativeTimelineNotification = triggerNativeTimelineNotification;
 
   // =========================================================================
   // Settings Tab: Native Notification Toggle Controller (Pinpoint Architecture)
@@ -9121,8 +9213,8 @@
       }
       if (desc) {
         desc.textContent = active 
-          ? 'Native push notifications are active' 
-          : 'Tap toggle to allow native push notifications';
+          ? 'Active for announcements & timeline updates' 
+          : 'Tap toggle to enable announcements & timeline updates';
       }
     }
 
@@ -9223,6 +9315,41 @@
       triggerNativeAnnouncementNotification(latest, stored.length);
     }
   }
+
+  function checkAndNotifyNativeTimeline() {
+    let items = (typeof window.timelineItems !== 'undefined' && Array.isArray(window.timelineItems)) ? window.timelineItems : [];
+    if (!items || items.length === 0) {
+      try {
+        const saved = localStorage.getItem('sanctuary_timeline_entries');
+        if (saved) items = JSON.parse(saved);
+      } catch (_) {}
+    }
+    if (!items || !Array.isArray(items) || items.length === 0) return;
+
+    let bl = [];
+    try { bl = JSON.parse(localStorage.getItem('sanctuary_deleted_timeline_blacklist') || '[]'); } catch (_) { bl = []; }
+    const blSet = new Set((Array.isArray(bl) ? bl : []).map(String));
+    const activeItems = items.filter(i => i && !blSet.has(String(i.id)) && !i.deleted_at);
+    if (activeItems.length === 0) return;
+
+    const sorted = [...activeItems].sort((a, b) => {
+      const timeA = a.createdAt || a.created_at || a.updatedAt || a.updated_at || 0;
+      const timeB = b.createdAt || b.created_at || b.updatedAt || b.updated_at || 0;
+      const numA = typeof timeA === 'number' ? timeA : (new Date(timeA).getTime() || 0);
+      const numB = typeof timeB === 'number' ? timeB : (new Date(timeB).getTime() || 0);
+      return numB - numA;
+    });
+
+    const latest = sorted[0];
+    const lastNotifiedId = localStorage.getItem('church_last_notified_native_timeline_id');
+
+    if (latest && latest.id && String(latest.id) !== lastNotifiedId) {
+      localStorage.setItem('church_last_notified_native_timeline_id', String(latest.id));
+      if (!lastNotifiedId) return; // Baseline recorded on initial install/load
+      triggerNativeTimelineNotification(latest, activeItems.length);
+    }
+  }
+  window.checkAndNotifyNativeTimeline = checkAndNotifyNativeTimeline;
 
   function syncSongModalBookmarkState() {
     const songs = getStoredTodaySongs();
@@ -9434,6 +9561,7 @@
   }
 
   function closeBookScreen() {
+    setBookReaderStatusBar(false);
     try {
       localStorage.removeItem('sanctuary_active_book');
     } catch (e) {}
@@ -9636,7 +9764,9 @@
               category: sec.category || 'hymn',
               bookKey: resolvedBookKey,
               book_reference: resolvedBookKey,
-              youtube_url: sec.youtube_url || sec.youtubeUrl || ''
+              youtube_url: sec.youtube_url || sec.youtubeUrl || '',
+              chord_url: sec.chord_url || sec.chordUrl || sec.chords || '',
+              chordUrl: sec.chord_url || sec.chordUrl || sec.chords || ''
             });
           }
         }
@@ -9668,7 +9798,9 @@
                 category: s.category || 'hymn',
                 bookKey: resolvedBookKey,
                 book_reference: resolvedBookKey,
-                youtube_url: s.youtube_url || s.youtubeUrl || ''
+                youtube_url: s.youtube_url || s.youtubeUrl || '',
+                chord_url: s.chord_url || s.chordUrl || s.chords || '',
+                chordUrl: s.chord_url || s.chordUrl || s.chords || ''
               });
             }
           }
@@ -9760,9 +9892,14 @@
                  String(existing.songNumber) === String(s.song_number || s.serialNumber))
               );
               const ytUrl = s.youtube_url || s.youtubeUrl || s.video_url || '';
+              const chUrl = (s.chord_url || s.chordUrl || s.chords || s.chords_url || '').trim();
               if (existingIdx >= 0) {
                 // Overlay DB edits onto static or existing song
                 if (ytUrl) songs[existingIdx].youtube_url = ytUrl;
+                if (chUrl || s.hasOwnProperty('chord_url') || s.hasOwnProperty('chordUrl') || s.hasOwnProperty('chords')) {
+                  songs[existingIdx].chord_url = chUrl;
+                  songs[existingIdx].chordUrl = chUrl;
+                }
                 if (s.lyrics) songs[existingIdx].lyrics = s.lyrics;
                 if (s.title) songs[existingIdx].title = s.title;
                 if (s.composer || s.author) {
@@ -9783,7 +9920,9 @@
                   category: s.category || 'hymn',
                   bookKey: resolvedBookKey,
                   book_reference: s.book_reference || resolvedBookKey,
-                  youtube_url: ytUrl
+                  youtube_url: ytUrl,
+                  chord_url: chUrl,
+                  chordUrl: chUrl
                 });
               }
             }
@@ -9793,6 +9932,20 @@
     } catch (err) {
       console.warn('[SongBook] Dexie/Storage read error:', err);
     }
+
+    // 2B. Overlay persistent hymn chords map from LocalStorage
+    try {
+      const chordsMap = JSON.parse(localStorage.getItem('sanctuary_hymn_chords') || '{}');
+      songs.forEach(s => {
+        if (!s) return;
+        const sKey = (s.title || '').toLowerCase().trim();
+        const mappedUrl = chordsMap[s.id] || (sKey ? chordsMap[sKey] : undefined);
+        if (mappedUrl !== undefined) {
+          s.chord_url = mappedUrl;
+          s.chordUrl = mappedUrl;
+        }
+      });
+    } catch (_) {}
 
     // 3. Sort by song number ascending
     songs.sort((a, b) => (a.songNumber || 0) - (b.songNumber || 0));
@@ -10547,27 +10700,47 @@
       const isAndroid = /Android/i.test(navigator.userAgent || '');
       const nativeAppHref = (isAndroid && videoId) ? `vnd.youtube:${videoId}` : (finalYtUrl || '#');
 
+      let rawChordUrl = (song.chord_url || song.chordUrl || song.chords || song.chords_url || '').trim();
+      if (!rawChordUrl) {
+        try {
+          const chordsMap = JSON.parse(localStorage.getItem('sanctuary_hymn_chords') || '{}');
+          const sKey = (song.title || '').toLowerCase().trim();
+          rawChordUrl = (chordsMap[song.id] || (sKey ? chordsMap[sKey] : '') || '').trim();
+        } catch (_) {}
+      }
+      song.chord_url = rawChordUrl;
+      song.chordUrl = rawChordUrl;
+
+      let finalChordUrl = rawChordUrl;
+      if (finalChordUrl && !/^https?:\/\//i.test(finalChordUrl)) {
+        finalChordUrl = 'https://' + finalChordUrl;
+      }
+
       songLyricsContainer.innerHTML = `
         <div class="song-lyrics-card">
           <header class="song-lyrics-header">
             <div class="song-header-top">
-              <div class="song-header-badges">
-                <span class="song-book-badge">${escapeHtml(bookDisplayName)}</span>
+              <div class="song-header-title-wrap">
                 ${songNum ? `<span class="song-num-badge">Hymn #${escapeHtml(String(songNum))}</span>` : ''}
+                <h1 class="song-lyrics-title">${escapeHtml(song.title)}</h1>
               </div>
               <div class="song-header-actions">
                 ${finalYtUrl ? `
                   <a href="${escapeHtml(nativeAppHref)}" data-yt-url="${escapeHtml(finalYtUrl)}" class="btn-song-youtube" id="songPlayYoutubeBtn" title="Play on YouTube App (${escapeHtml(song.title)})" aria-label="Play on YouTube App">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
                     <span>Play</span>
                   </a>` : `
                   <button type="button" class="btn-song-youtube no-link" id="songPlayYoutubeBtn" title="${canEditSong ? 'Add YouTube link (Super Admin)' : 'No YouTube video linked yet'}" aria-label="Play on YouTube">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
                     <span>Play</span>
                   </button>`}
+                ${finalChordUrl ? `
+                  <a href="${escapeHtml(finalChordUrl)}" target="_blank" rel="noopener noreferrer" data-chord-url="${escapeHtml(finalChordUrl)}" class="btn-song-chords" id="songPlayChordsBtn" title="Chords Sheet for ${escapeHtml(song.title)}" aria-label="Chords Sheet">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                    <span>Chords</span>
+                  </a>` : ''}
               </div>
             </div>
-            <h1 class="song-lyrics-title">${escapeHtml(song.title)}</h1>
             <hr class="song-header-divider" />
           </header>
           <div class="song-lyrics-body" id="songLyricsBody">${formattedLyricsHtml}</div>
@@ -10630,6 +10803,26 @@
         });
       }
 
+      // Bind Chords button: opens chords sheet / tabs link
+      const chordsPlayBtn = document.getElementById('songPlayChordsBtn');
+      if (chordsPlayBtn) {
+        chordsPlayBtn.addEventListener('click', (e) => {
+          const targetUrl = chordsPlayBtn.getAttribute('data-chord-url') || finalChordUrl;
+          if (!targetUrl) {
+            e.preventDefault();
+            return;
+          }
+          if (window.AndroidBridge && typeof window.AndroidBridge.openExternal === 'function') {
+            e.preventDefault();
+            try {
+              window.AndroidBridge.openExternal(targetUrl);
+              return;
+            } catch (_) {}
+          }
+          // Default anchor action naturally opens target="_blank" across Android WebView & desktop browsers
+        });
+      }
+
       // Bind edit hymn button
       const editBtn = document.getElementById('editCurrentSongLyricsBtn');
       if (editBtn) {
@@ -10641,11 +10834,21 @@
           const numIn = document.getElementById('editSongNumberInput');
           const lyricsIn = document.getElementById('editSongLyricsInput');
           const youtubeIn = document.getElementById('editSongYoutubeInput');
+          const chordIn = document.getElementById('editSongChordInput');
           if (titleIn) titleIn.value = song.title || '';
           if (authorIn) authorIn.value = song.composer || song.author || '';
           if (numIn) numIn.value = song.songNumber || '';
           if (lyricsIn) lyricsIn.value = song.lyrics || '';
           if (youtubeIn) youtubeIn.value = song.youtube_url || song.youtubeUrl || song.video_url || '';
+          let chordVal = (song.chord_url || song.chordUrl || song.chords || song.chords_url || '').trim();
+          if (!chordVal) {
+            try {
+              const chordsMap = JSON.parse(localStorage.getItem('sanctuary_hymn_chords') || '{}');
+              const sKey = (song.title || '').toLowerCase().trim();
+              chordVal = (chordsMap[song.id] || (sKey ? chordsMap[sKey] : '') || '').trim();
+            } catch (_) {}
+          }
+          if (chordIn) chordIn.value = chordVal;
           if (overlay) overlay.classList.remove('hidden');
         });
       }
@@ -16275,6 +16478,7 @@
         window.ChurchSync.Timeline.onChange(() => {
           console.log('[Sync] Realtime timeline change received — refreshing timeline UI');
           if (typeof renderTimelineList === 'function') renderTimelineList();
+          checkAndNotifyNativeTimeline();
         });
       }
 
@@ -16374,7 +16578,9 @@
       }
 
       if (window.ChurchSync.Timeline && typeof window.ChurchSync.Timeline.list === 'function') {
-        window.ChurchSync.Timeline.list().catch(() => {});
+        window.ChurchSync.Timeline.list().then(() => {
+          checkAndNotifyNativeTimeline();
+        }).catch(() => {});
       }
       if (window.ChurchSync.Almanac && typeof window.ChurchSync.Almanac.list === 'function') {
         window.ChurchSync.Almanac.list().catch(() => {});
@@ -17308,153 +17514,142 @@
           buildDate: buildDateStr
         });
 
-        if (uploadApkStatusText) uploadApkStatusText.textContent = `Uploading ${file.name} to cloud…`;
-        if (uploadApkProgressBar) uploadApkProgressBar.style.width = '0%';
-        if (uploadApkPercent) uploadApkPercent.textContent = '0%';
+        let activeUploadXhr = null;
+        let isUploadPaused = false;
+        let currentUploadFile = file;
 
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', `${sbUrl}/storage/v1/object/app-updates/${encodeURIComponent(file.name)}`, true);
-        xhr.setRequestHeader('apikey', sbKey);
-        xhr.setRequestHeader('Authorization', `Bearer ${sbKey}`);
-        xhr.setRequestHeader('Content-Type', 'application/vnd.android.package-archive');
-        xhr.setRequestHeader('x-upsert', 'true');
+        function startUploadRequest(fileToUpload) {
+          if (uploadApkStatusText) uploadApkStatusText.textContent = `Uploading ${fileToUpload.name} to cloud…`;
+          if (uploadApkProgressBar) uploadApkProgressBar.style.width = '0%';
+          if (uploadApkPercent) uploadApkPercent.textContent = '0%';
 
-        xhr.upload.onprogress = (evt) => {
-          if (evt.lengthComputable) {
-            const pct = Math.round((evt.loaded / evt.total) * 100);
-            if (uploadApkProgressBar) uploadApkProgressBar.style.width = `${pct}%`;
-            if (uploadApkPercent) uploadApkPercent.textContent = `${pct}%`;
-          }
-        };
+          const xhr = new XMLHttpRequest();
+          activeUploadXhr = xhr;
 
-        xhr.onload = async () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            if (uploadApkStatusText) uploadApkStatusText.textContent = 'Upload complete!';
-            if (uploadApkProgressBar) uploadApkProgressBar.style.width = '100%';
-            if (uploadApkPercent) uploadApkPercent.textContent = '100%';
+          xhr.open('POST', `${sbUrl}/storage/v1/object/app-updates/${encodeURIComponent(fileToUpload.name)}`, true);
+          xhr.setRequestHeader('apikey', sbKey);
+          xhr.setRequestHeader('Authorization', `Bearer ${sbKey}`);
+          xhr.setRequestHeader('Content-Type', 'application/vnd.android.package-archive');
+          xhr.setRequestHeader('x-upsert', 'true');
 
-            // Publish update_manifest.json to Supabase app-updates bucket
-            const manifestPayload = JSON.stringify({
-              versionCode: apkVersionCode || installedCode,
-              versionName: apkVersionName,
-              fileName: file.name,
-              fileSizeMb: sizeMb,
-              downloadUrl: `${sbUrl}/storage/v1/object/public/app-updates/${encodeURIComponent(file.name)}`,
-              updatedAt: new Date().toISOString()
-            });
-
-            await fetch(`${sbUrl}/storage/v1/object/app-updates/update_manifest.json`, {
-              method: 'POST',
-              headers: {
-                'apikey': sbKey,
-                'Authorization': `Bearer ${sbKey}`,
-                'Content-Type': 'application/json',
-                'x-upsert': 'true'
-              },
-              body: manifestPayload
-            }).catch(() => {});
-
-            const updateAvailablePill = document.getElementById('appUpdateAvailablePill');
-            if (apkVersionCode !== null && apkVersionCode === installedCode) {
-              if (updateAvailablePill) updateAvailablePill.style.display = 'none';
-              showToast(`Update pushed. Version code (${apkVersionCode}) matches installed version — you are on the latest version.`);
-            } else if (apkVersionCode !== null && apkVersionCode !== installedCode) {
-              if (updateAvailablePill) updateAvailablePill.style.display = 'inline-flex';
-              showToast(`New update pushed (Build ${apkVersionCode})! Update is available.`);
-            } else {
-              showToast('Update APK uploaded successfully');
+          xhr.upload.onprogress = (evt) => {
+            if (evt.lengthComputable) {
+              const pct = Math.round((evt.loaded / evt.total) * 100);
+              if (uploadApkProgressBar) uploadApkProgressBar.style.width = `${pct}%`;
+              if (uploadApkPercent) uploadApkPercent.textContent = `${pct}%`;
             }
+          };
 
-            addAuditLogEntry({
-              action: 'update_package_upload',
-              entity_type: 'app_package',
-              details: `Super Admin uploaded application package ${file.name} (Build ${apkVersionCode || 'latest'})`
-            });
+          xhr.onload = async () => {
+            activeUploadXhr = null;
+            if (xhr.status >= 200 && xhr.status < 300) {
+              if (uploadApkStatusText) uploadApkStatusText.textContent = 'Upload complete!';
+              if (uploadApkProgressBar) uploadApkProgressBar.style.width = '100%';
+              if (uploadApkPercent) uploadApkPercent.textContent = '100%';
 
-            setTimeout(async () => {
-              closeSuperAdminUploadModal();
-              superAdminApkFileInput.value = '';
-              await refreshAddUpdateButtonState();
-            }, 800);
-          } else {
-            showToast('Upload failed: ' + (xhr.responseText || xhr.statusText));
-            if (uploadApkProgressBox) uploadApkProgressBox.style.display = 'none';
-          }
-        };
+              // Publish update_manifest.json to Supabase app-updates bucket
+              const manifestPayload = JSON.stringify({
+                versionCode: apkVersionCode || installedCode,
+                versionName: apkVersionName,
+                fileName: fileToUpload.name,
+                fileSizeMb: sizeMb,
+                downloadUrl: `${sbUrl}/storage/v1/object/public/app-updates/${encodeURIComponent(fileToUpload.name)}`,
+                updatedAt: new Date().toISOString()
+              });
 
-        xhr.onerror = () => {
-          showToast('Network error during upload');
-          if (uploadApkProgressBox) uploadApkProgressBox.style.display = 'none';
-        };
+              await fetch(`${sbUrl}/storage/v1/object/app-updates/update_manifest.json`, {
+                method: 'POST',
+                headers: {
+                  'apikey': sbKey,
+                  'Authorization': `Bearer ${sbKey}`,
+                  'Content-Type': 'application/json',
+                  'x-upsert': 'true'
+                },
+                body: manifestPayload
+              }).catch(() => {});
 
-        xhr.send(file);
-      });
-    }
+              const updateAvailablePill = document.getElementById('appUpdateAvailablePill');
+              if (apkVersionCode !== null && apkVersionCode === installedCode) {
+                if (updateAvailablePill) updateAvailablePill.style.display = 'none';
+                showToast(`Update pushed. Version code (${apkVersionCode}) matches installed version — you are on the latest version.`);
+              } else if (apkVersionCode !== null && apkVersionCode !== installedCode) {
+                if (updateAvailablePill) updateAvailablePill.style.display = 'inline-flex';
+                showToast(`New update pushed (Build ${apkVersionCode})! Update is available.`);
+              } else {
+                showToast('Update APK uploaded successfully');
+              }
 
-    if (btnUploadWorkspaceApk) {
-      btnUploadWorkspaceApk.addEventListener('click', async () => {
-        const { versionCode: installedCode, versionName: installedName } = getInstalledAppInfo();
-        const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+              addAuditLogEntry({
+                action: 'update_package_upload',
+                entity_type: 'app_package',
+                details: `Super Admin uploaded application package ${fileToUpload.name} (Build ${apkVersionCode || 'latest'})`
+              });
 
-        displayApkUploadDetails({
-          name: 'ChurchCompanion.apk',
-          versionName: installedName || 'v2.1.12',
-          versionCode: installedCode || 4092046,
-          sizeMb: '44.0',
-          buildDate: dateStr
-        });
-
-        if (uploadApkStatusText) uploadApkStatusText.textContent = 'Uploading ChurchCompanion.apk to Supabase…';
-        if (uploadApkProgressBar) uploadApkProgressBar.style.width = '35%';
-        if (uploadApkPercent) uploadApkPercent.textContent = '35%';
-
-        try {
-          const res = await fetch('/api/app/update/upload-workspace', { method: 'POST' });
-          const data = await res.json().catch(() => null);
-          if (data && data.success) {
-            displayApkUploadDetails({
-              name: data.fileName || 'ChurchCompanion.apk',
-              versionName: data.versionName || installedName,
-              versionCode: data.versionCode || installedCode,
-              sizeMb: data.fileSizeMb || '44.0',
-              buildDate: dateStr
-            });
-
-            if (uploadApkProgressBar) uploadApkProgressBar.style.width = '100%';
-            if (uploadApkPercent) uploadApkPercent.textContent = '100%';
-            if (uploadApkStatusText) uploadApkStatusText.textContent = 'Upload complete!';
-
-            const apkVersionCode = (data && data.versionCode) ? parseInt(data.versionCode, 10) : null;
-            const updateAvailablePill = document.getElementById('appUpdateAvailablePill');
-
-            if (apkVersionCode !== null && apkVersionCode === installedCode) {
-              if (updateAvailablePill) updateAvailablePill.style.display = 'none';
-              showToast(`Update pushed. Version code (${apkVersionCode}) matches installed version — you are on the latest version.`);
-            } else if (apkVersionCode !== null && apkVersionCode !== installedCode) {
-              if (updateAvailablePill) updateAvailablePill.style.display = 'inline-flex';
-              showToast(`New update pushed (Build ${apkVersionCode})! Update is available.`);
+              setTimeout(async () => {
+                closeSuperAdminUploadModal();
+                if (superAdminApkFileInput) superAdminApkFileInput.value = '';
+                await refreshAddUpdateButtonState();
+              }, 800);
             } else {
-              showToast('Workspace APK uploaded successfully');
+              showToast('Upload failed: ' + (xhr.responseText || xhr.statusText));
+              if (uploadApkProgressBox) uploadApkProgressBox.style.display = 'none';
             }
+          };
 
-            addAuditLogEntry({
-              action: 'update_package_upload',
-              entity_type: 'app_package',
-              details: `Super Admin uploaded application update package: ChurchCompanion.apk (Build ${apkVersionCode || 'latest'})`
-            });
+          xhr.onerror = () => {
+            activeUploadXhr = null;
+            if (!isUploadPaused) {
+              showToast('Network error during upload');
+              if (uploadApkProgressBox) uploadApkProgressBox.style.display = 'none';
+            }
+          };
 
-            setTimeout(async () => {
-              closeSuperAdminUploadModal();
-              await refreshAddUpdateButtonState();
-            }, 800);
-          } else {
-            showToast('Upload failed: ' + ((data && data.error) || 'Failed to upload'));
-            if (uploadApkProgressBox) uploadApkProgressBox.style.display = 'none';
-          }
-        } catch (err) {
-          showToast('Error uploading APK: ' + err.message);
-          if (uploadApkProgressBox) uploadApkProgressBox.style.display = 'none';
+          xhr.send(fileToUpload);
         }
+
+        // Bind Pause/Resume button
+        const pauseResumeBtn = document.getElementById('btnPauseResumeUploadApk');
+        const pauseResumeText = document.getElementById('btnPauseResumeUploadText');
+        if (pauseResumeBtn) {
+          pauseResumeBtn.onclick = () => {
+            if (!isUploadPaused) {
+              // Pause upload
+              if (activeUploadXhr) {
+                activeUploadXhr.abort();
+                activeUploadXhr = null;
+              }
+              isUploadPaused = true;
+              if (pauseResumeText) pauseResumeText.textContent = 'Resume';
+              if (uploadApkStatusText) uploadApkStatusText.textContent = 'Upload paused';
+              showToast('Upload paused');
+            } else {
+              // Resume upload
+              isUploadPaused = false;
+              if (pauseResumeText) pauseResumeText.textContent = 'Pause';
+              if (currentUploadFile) startUploadRequest(currentUploadFile);
+            }
+          };
+        }
+
+        // Bind Cancel button
+        const cancelUploadBtn = document.getElementById('btnCancelUploadApk');
+        if (cancelUploadBtn) {
+          cancelUploadBtn.onclick = () => {
+            if (activeUploadXhr) {
+              activeUploadXhr.abort();
+              activeUploadXhr = null;
+            }
+            isUploadPaused = false;
+            if (superAdminApkFileInput) superAdminApkFileInput.value = '';
+            if (uploadApkStatusText) uploadApkStatusText.textContent = 'Upload cancelled';
+            showToast('Upload cancelled');
+            setTimeout(() => {
+              if (uploadApkProgressBox) uploadApkProgressBox.style.display = 'none';
+            }, 600);
+          };
+        }
+
+        startUploadRequest(file);
       });
     }
 
@@ -17544,12 +17739,29 @@
     function openDownloadManagerModal(updateInfo) {
       currentUpdatePackage = updateInfo;
       if (updateDownloadManagerModalOverlay) {
-        if (modalUpdateVersionTitle && updateInfo && (updateInfo.latestVersion || updateInfo.versionName)) {
-          modalUpdateVersionTitle.textContent = `Release ${updateInfo.latestVersion || updateInfo.versionName}`;
-        }
-        const sizeStr = `${targetApkSizeMb.toFixed(1)} MB`;
+        const vName = (updateInfo && (updateInfo.latestVersion || updateInfo.versionName)) || 'v2.1.18';
+        const vCode = (updateInfo && (updateInfo.versionCode || updateInfo.buildCode)) || '4092050';
+        const sizeMbVal = (updateInfo && updateInfo.fileSizeMb) ? parseFloat(updateInfo.fileSizeMb) : targetApkSizeMb;
+        const sizeStr = `${sizeMbVal.toFixed(1)} MB`;
+
+        if (modalUpdateVersionTitle) modalUpdateVersionTitle.textContent = `Release ${vName.startsWith('v') ? vName : 'v' + vName}`;
+        const modalUpdateVersionNumber = document.getElementById('modalUpdateVersionNumber');
+        if (modalUpdateVersionNumber) modalUpdateVersionNumber.textContent = vName.startsWith('v') ? vName : `v${vName}`;
+        const modalUpdateVersionCode = document.getElementById('modalUpdateVersionCode');
+        if (modalUpdateVersionCode) modalUpdateVersionCode.textContent = `Build ${vCode}`;
         if (modalUpdateSize) modalUpdateSize.textContent = sizeStr;
         if (modalTotalMb) modalTotalMb.textContent = sizeStr;
+
+        const whatsNewEl = document.getElementById('modalUpdateWhatsNew');
+        if (whatsNewEl) {
+          const notes = updateInfo && (updateInfo.whatsNew || updateInfo.notes || updateInfo.releaseNotes);
+          if (notes && typeof notes === 'string' && notes.trim()) {
+            whatsNewEl.textContent = notes.trim();
+          } else {
+            whatsNewEl.innerHTML = `• Performance improvements &amp; UI polish<br>• Enhanced liturgical calendar &amp; hymn synchronization<br>• Offline dual-cache stability updates`;
+          }
+        }
+
         if (modalProgressBar) modalProgressBar.style.width = '0%';
         if (modalProgressPercent) modalProgressPercent.textContent = '0%';
         if (modalDownloadedMb) modalDownloadedMb.textContent = '0 MB';
@@ -17827,21 +18039,23 @@
 
             const updateAvailablePill = document.getElementById('appUpdateAvailablePill');
 
-            // USER REQUIREMENT:
-            // "every apk build has a unique version code. when i push the updates in the update, app will check if the apk version code is same as installed then its in the latest version also. show that toast notification. if its version code is different then it means its a new update. one more thing if version code is same then dont display update available. this behavior is for app update card in setting page."
-            const isDifferent = Boolean(candidate && candidate.versionCode !== null && candidate.versionCode !== installedCode);
-            const isSame = Boolean(candidate && candidate.versionCode !== null && candidate.versionCode === installedCode);
+            // PINPOINT REQUIREMENT:
+            // "If the installed app version is higher than update available means you are already in latest version"
+            const candidateCode = (candidate && candidate.versionCode !== null) ? parseInt(candidate.versionCode, 10) : null;
+            const isNewUpdate = Boolean(candidateCode && candidateCode > installedCode);
+            const isAlreadyLatest = Boolean(candidateCode && candidateCode <= installedCode);
 
-            if (isDifferent) {
-              // Version code is DIFFERENT: New update available
+            if (isNewUpdate) {
+              // Version code is strictly HIGHER: New update available
               if (updateAvailablePill) updateAvailablePill.style.display = 'inline-flex';
               if (candidate.fileSizeMb) targetApkSizeMb = parseFloat(candidate.fileSizeMb) || 44.8;
-              showToast(`A new update is available (Build ${candidate.versionCode})`);
+              showToast(`A new update is available (Build ${candidateCode})`);
               openDownloadManagerModal(candidate);
-            } else if (isSame) {
-              // Version code is SAME: In latest version, DO NOT display update available!
+            } else if (isAlreadyLatest) {
+              // Installed app version is higher than or equal to update available: already in latest version!
               if (updateAvailablePill) updateAvailablePill.style.display = 'none';
-              showToast("You are on the latest version.");
+              try { localStorage.removeItem('church_update_ready'); } catch (_) {}
+              showToast("You are already on the latest version.");
               if (window.AndroidBridge && typeof window.AndroidBridge.vibrateHaptic === 'function') {
                 window.AndroidBridge.vibrateHaptic();
               }
@@ -17878,17 +18092,46 @@
     }
 
     // 3. Install Update Button
+    // PINPOINT REQUIREMENT:
+    // "When it comes install update it will go to native if already permission granted from mobile, other it will reset"
     if (installUpdateBtn) {
       installUpdateBtn.addEventListener('click', () => {
         try {
           localStorage.setItem('church_update_installed', 'pending');
         } catch (_) {}
 
-        showToast('Opening Android Package Installer…');
-        if (window.AndroidBridge && typeof window.AndroidBridge.installApk === 'function') {
-          window.AndroidBridge.installApk(downloadedApkPath || '');
+        if (window.AndroidBridge) {
+          const canInstall = (typeof window.AndroidBridge.canInstallApk === 'function')
+            ? window.AndroidBridge.canInstallApk()
+            : (typeof window.AndroidBridge.hasInstallPermission === 'function'
+                ? window.AndroidBridge.hasInstallPermission()
+                : true);
+
+          if (canInstall) {
+            // Native permission granted from mobile -> go directly to native package installer
+            showToast('Opening Android Package Installer…');
+            const ok = (typeof window.AndroidBridge.installApk === 'function')
+              ? window.AndroidBridge.installApk(downloadedApkPath || '')
+              : true;
+            if (!ok) {
+              setUpdateCardState('default');
+              try { localStorage.removeItem('church_update_ready'); } catch (_) {}
+            }
+          } else {
+            // Permission not granted from mobile -> prompt permission and reset state
+            showToast('Please allow install permission from settings');
+            if (typeof window.AndroidBridge.requestInstallPermission === 'function') {
+              window.AndroidBridge.requestInstallPermission();
+            } else if (typeof window.AndroidBridge.installApk === 'function') {
+              window.AndroidBridge.installApk(downloadedApkPath || '');
+            }
+            // Reset update card state so user can retry cleanly
+            setUpdateCardState('default');
+            try { localStorage.removeItem('church_update_ready'); } catch (_) {}
+          }
         } else {
           // Browser environment fallback
+          showToast('Downloading update package…');
           const dlUrl = (currentUpdatePackage && currentUpdatePackage.downloadUrl) || downloadedApkPath || '/download/ChurchCompanion.apk';
           const dlLink = document.createElement('a');
           dlLink.href = dlUrl;
@@ -17897,6 +18140,8 @@
           document.body.appendChild(dlLink);
           dlLink.click();
           document.body.removeChild(dlLink);
+          setUpdateCardState('default');
+          try { localStorage.removeItem('church_update_ready'); } catch (_) {}
         }
       });
     }
@@ -19179,6 +19424,57 @@
     window.saveTimelineItems = saveTimelineItems;
     window.loadTimelineItems = loadTimelineItems;
 
+    function getTimelineSortTimestamp(item) {
+      if (!item) return 0;
+      // 1. TL_META embedded in description
+      if (item.description && typeof item.description === 'string') {
+        const metaMatch = item.description.match(/<!--TL_META:([\s\S]*?)-->/);
+        if (metaMatch) {
+          try {
+            const parsed = JSON.parse(metaMatch[1]);
+            const dStr = parsed.rawDate || parsed.date;
+            if (dStr) {
+              const t = new Date(dStr).getTime();
+              if (!isNaN(t)) return t;
+            }
+          } catch (_) {}
+        }
+      }
+      // 2. Direct rawDate, raw_date, event_date
+      const raw = item.rawDate || item.raw_date || item.event_date;
+      if (raw) {
+        const t = new Date(raw).getTime();
+        if (!isNaN(t)) return t;
+      }
+      // 3. Formatted date or item.date
+      const fullDate = (typeof getTimelineFullDate === 'function' ? getTimelineFullDate(item) : '') || item.date;
+      if (fullDate) {
+        const t = new Date(fullDate).getTime();
+        if (!isNaN(t)) return t;
+        const yrMatch = String(fullDate).match(/\b(18|19|20)\d{2}\b/);
+        if (yrMatch) {
+          const yr = parseInt(yrMatch[0], 10);
+          return new Date(yr, 0, 1).getTime();
+        }
+      }
+      // 4. Year field
+      if (item.year) {
+        const yr = parseInt(item.year, 10);
+        if (!isNaN(yr)) return new Date(yr, 0, 1).getTime();
+      }
+      // 5. Timestamps
+      const ts = item.createdAt || item.created_at || item.timestamp || item.updatedAt || item.updated_at;
+      if (ts) {
+        const t = new Date(ts).getTime();
+        if (!isNaN(t)) return t;
+      }
+      // 6. Numeric ID fallback
+      const numId = Number(item.id);
+      if (!isNaN(numId) && numId > 1000000000) return numId;
+      return 0;
+    }
+    window.getTimelineSortTimestamp = getTimelineSortTimestamp;
+
     function renderTimelineList() {
       const container = document.getElementById('timelineListContainer');
       if (!container) return;
@@ -19211,6 +19507,9 @@
         `;
         return;
       }
+
+      // Sort in reverse chronological order (newest milestones appear first at top)
+      timelineItems.sort((a, b) => getTimelineSortTimestamp(b) - getTimelineSortTimestamp(a));
 
       container.innerHTML = '';
       timelineItems.forEach((item) => {
@@ -19351,6 +19650,24 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
       document.querySelector('.app-container')?.scrollTo({ top: 0, behavior: 'smooth' });
     }
+    window.openTimelineDetailView = openTimelineDetailView;
+
+    function openTimelineScreen(eventId) {
+      if (typeof switchTab === 'function') {
+        switchTab('viewTimeline');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        document.querySelector('.app-container')?.scrollTo({ top: 0, behavior: 'smooth' });
+        if (eventId && Array.isArray(timelineItems)) {
+          const item = timelineItems.find(i => i && String(i.id) === String(eventId));
+          if (item && typeof openTimelineDetailView === 'function') {
+            setTimeout(() => {
+              openTimelineDetailView(item);
+            }, 120);
+          }
+        }
+      }
+    }
+    window.openTimelineScreen = openTimelineScreen;
 
     function renderTimelinePhotoPreviews() {
       const previewGrid = document.getElementById('timelinePhotoPreviewGrid');
@@ -19702,6 +20019,7 @@
             details: `Updated parish timeline event: "${activeTimelineDetailItem?.title || titleVal}" (${activeTimelineDetailItem?.date || formattedDate})`
           });
           showToast('Timeline entry updated ✨');
+          triggerNativeTimelineNotification(activeTimelineDetailItem);
           if (window.ChurchSync && window.ChurchSync.Timeline && typeof window.ChurchSync.Timeline.upsert === 'function') {
             const payload = packTimelinePayload(activeTimelineDetailItem);
             window.ChurchSync.Timeline.upsert(payload).catch(err => console.warn('[Sync] Timeline update error:', err));
@@ -19736,6 +20054,7 @@
             details: `Created parish timeline event: "${newEntry.title}" (${newEntry.date || ''})`
           });
           showToast('Timeline entry added ✨');
+          triggerNativeTimelineNotification(newEntry, timelineItems.length);
           if (window.ChurchSync && window.ChurchSync.Timeline && typeof window.ChurchSync.Timeline.upsert === 'function') {
             const payload = packTimelinePayload(newEntry);
             window.ChurchSync.Timeline.upsert(payload).catch(err => console.warn('[Sync] Timeline insert error:', err));
@@ -20020,6 +20339,8 @@
         if (numIn) numIn.value = '';
         const youtubeIn = document.getElementById('editSongYoutubeInput');
         if (youtubeIn) youtubeIn.value = '';
+        const chordIn = document.getElementById('editSongChordInput');
+        if (chordIn) chordIn.value = '';
         window._activeEditingSong = null;
         if (songEditModalOverlay) songEditModalOverlay.classList.remove('hidden');
       });
@@ -20045,6 +20366,16 @@
         if (lyricsIn) lyricsIn.value = active?.lyrics || '';
         const youtubeIn = document.getElementById('editSongYoutubeInput');
         if (youtubeIn) youtubeIn.value = active?.youtube_url || active?.youtubeUrl || active?.video_url || '';
+        const chordIn = document.getElementById('editSongChordInput');
+        let activeChord = (active?.chord_url || active?.chordUrl || active?.chords || active?.chords_url || '').trim();
+        if (!activeChord) {
+          try {
+            const chordsMap = JSON.parse(localStorage.getItem('sanctuary_hymn_chords') || '{}');
+            const sKey = (active?.title || '').toLowerCase().trim();
+            activeChord = (active?.id && chordsMap[active.id]) || (sKey && chordsMap[sKey]) || '';
+          } catch (_) {}
+        }
+        if (chordIn) chordIn.value = activeChord;
         closeSongModal();
         if (songEditModalOverlay) songEditModalOverlay.classList.remove('hidden');
       });
@@ -20136,6 +20467,7 @@
         const author = document.getElementById('editSongAuthorInput')?.value.trim();
         const lyrics = document.getElementById('editSongLyricsInput')?.value.trim();
         const youtubeUrl = document.getElementById('editSongYoutubeInput')?.value.trim() || '';
+        const chordUrl = document.getElementById('editSongChordInput')?.value.trim() || '';
         if (!title || !lyrics) {
           showToast('Please provide hymn title and lyrics');
           return;
@@ -20186,6 +20518,7 @@
           lyrics,
           category: 'hymn',
           youtube_url: youtubeUrl || null,
+          chord_url: chordUrl || null,
           deleted_at: null,
           book_reference: targetBookRef
         };
@@ -20238,6 +20571,8 @@
             category: 'hymn',
             youtube_url: youtubeUrl || null,
             youtubeUrl: youtubeUrl || null,
+            chord_url: chordUrl || null,
+            chordUrl: chordUrl || null,
             book_reference: targetBookRef,
             bookKey: targetBookKey
           };
@@ -20261,16 +20596,46 @@
           active.lyrics = lyrics;
           active.youtube_url = youtubeUrl;
           active.youtubeUrl = youtubeUrl;
+          active.chord_url = chordUrl;
+          active.chordUrl = chordUrl;
           active.bookKey = targetBookKey;
           active.book_reference = targetBookRef;
           if (numVal) active.songNumber = numVal;
+        }
+
+        // Persist to persistent chords map (stays until link is removed)
+        try {
+          const chordsMap = JSON.parse(localStorage.getItem('sanctuary_hymn_chords') || '{}');
+          const lowerTitle = (title || '').toLowerCase().trim();
+          if (chordUrl) {
+            chordsMap[songId] = chordUrl;
+            if (lowerTitle) chordsMap[lowerTitle] = chordUrl;
+            if (active && active.id) chordsMap[active.id] = chordUrl;
+          } else {
+            delete chordsMap[songId];
+            if (lowerTitle) delete chordsMap[lowerTitle];
+            if (active && active.id) delete chordsMap[active.id];
+          }
+          localStorage.setItem('sanctuary_hymn_chords', JSON.stringify(chordsMap));
+        } catch (_) {}
+
+        if (Array.isArray(window.currentSongList)) {
+          const inList = window.currentSongList.find(s => s && (s.id === songId || (s.title && s.title.toLowerCase().trim() === (title || '').toLowerCase().trim())));
+          if (inList) {
+            inList.chord_url = chordUrl;
+            inList.chordUrl = chordUrl;
+            inList.youtube_url = youtubeUrl;
+            inList.youtubeUrl = youtubeUrl;
+            inList.title = title;
+            inList.lyrics = lyrics;
+          }
         }
 
         addAuditLogEntry({
           action: active ? 'song_update' : 'song_create',
           entity_type: 'song',
           entity_id: songId,
-          details: `${active ? 'Updated' : 'Added'} hymn "${title}"${author ? ` (${author})` : ''}${numVal ? ` • Hymn #${numVal}` : ''}${youtubeUrl ? ' (with YouTube link)' : ''}`
+          details: `${active ? 'Updated' : 'Added'} hymn "${title}"${author ? ` (${author})` : ''}${numVal ? ` • Hymn #${numVal}` : ''}${youtubeUrl ? ' (with YouTube link)' : ''}${chordUrl ? ' (with Chords link)' : ''}`
         });
 
         showToast(`Hymn "${title}" saved! 🎵`);
@@ -22541,6 +22906,7 @@
 
       setupSettingsImportHandlers();
       setTimeout(checkAndNotifyNativeAnnouncements, 2000);
+      setTimeout(checkAndNotifyNativeTimeline, 2600);
     }
 
 

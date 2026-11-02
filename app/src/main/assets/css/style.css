@@ -5048,7 +5048,7 @@ body.in-song-selection-mode .song-list-container,
 
 /* Header */
 .song-lyrics-header {
-  margin-bottom: 14px !important;
+  margin-bottom: 6px !important;
   text-align: left !important;
 }
 
@@ -5056,67 +5056,63 @@ body.in-song-selection-mode .song-list-container,
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  gap: 8px !important;
-  margin-bottom: 8px !important;
+  gap: 10px !important;
+  margin-bottom: 4px !important;
   width: 100% !important;
-  min-height: 38px !important;
+  min-height: auto !important;
 }
 
-.song-header-badges {
-  display: flex !important;
+.song-header-title-wrap {
+  display: inline-flex !important;
   align-items: center !important;
-  gap: 6px !important;
+  gap: 8px !important;
   flex-wrap: wrap !important;
-  align-self: center !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+.song-header-badges,
+.song-book-badge {
+  display: none !important;
 }
 
 .song-header-actions {
   display: inline-flex !important;
+  flex-direction: row !important;
   align-items: center !important;
-  justify-content: center !important;
+  justify-content: flex-end !important;
   align-self: center !important;
+  gap: 6px !important;
+  flex-shrink: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
-}
-
-.song-book-badge {
-  display: inline-flex !important;
-  align-items: center !important;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif !important;
-  font-size: 0.72rem !important;
-  font-weight: 600 !important;
-  color: var(--accent-gold, #4997D0) !important;
-  background: rgba(73, 151, 208, 0.1) !important;
-  border: 1px solid rgba(73, 151, 208, 0.24) !important;
-  padding: 2.5px 9px !important;
-  border-radius: 9999px !important;
-  letter-spacing: 0.02em !important;
-  text-transform: uppercase !important;
 }
 
 .song-num-badge {
   display: inline-flex !important;
   align-items: center !important;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif !important;
-  font-size: 0.72rem !important;
-  font-weight: 600 !important;
+  font-size: 0.74rem !important;
+  font-weight: 700 !important;
   color: var(--text-secondary, #5c574e) !important;
-  background: var(--bg-subtle, rgba(0, 0, 0, 0.04)) !important;
-  border: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.08)) !important;
-  padding: 2.5px 8px !important;
+  background: var(--bg-subtle, rgba(0, 0, 0, 0.05)) !important;
+  border: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.10)) !important;
+  padding: 2.5px 8.5px !important;
   border-radius: 9999px !important;
   letter-spacing: 0.02em !important;
+  flex-shrink: 0 !important;
 }
 
 .song-lyrics-title {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", -apple-system-headline, sans-serif !important;
-  font-size: 1.28rem !important;
+  font-size: 1.25rem !important;
   font-weight: 700 !important;
   color: var(--text-primary, #1d1d1f) !important;
   line-height: 1.25 !important;
-  margin: 4px 0 0 0 !important;
+  margin: 0 !important;
   letter-spacing: -0.015em !important;
   text-align: left !important;
+  word-break: break-word !important;
 }
 
 [data-theme="dark"] .song-lyrics-title {
@@ -5131,7 +5127,7 @@ body.in-song-selection-mode .song-list-container,
 .song-header-divider {
   border: none !important;
   border-bottom: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.08)) !important;
-  margin: 12px 0 0 0 !important;
+  margin: 6px 0 0 0 !important;
   opacity: 0.7 !important;
 }
 
@@ -5143,7 +5139,7 @@ body.in-song-selection-mode .song-list-container,
 .song-lyrics-body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", -apple-system-body, sans-serif !important;
   color: var(--text-primary, #1d1d1f) !important;
-  padding: 8px 0 2px 0 !important;
+  padding: 8px 14px 2px 14px !important;
   text-align: left !important;
 }
 
