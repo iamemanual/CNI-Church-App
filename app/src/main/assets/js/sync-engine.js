@@ -1211,13 +1211,13 @@
           const blSet = new Set((Array.isArray(bl) ? bl : []).map(String));
           data = data.filter(it => it && !it.deleted_at && !blSet.has(String(it.id)));
 
-          const activeIds = new Set(data.map(function (it) { return String(it.id); }));
+          // Safe prune: only delete records that are blacklisted or soft-deleted, never wipe un-synced local items
           const pruneTimeline = async function (tbl) {
             if (!tbl) return;
             try {
               const all = await tbl.toArray();
               for (const item of all) {
-                if (item && item.id && !activeIds.has(String(item.id))) {
+                if (item && item.id && (blSet.has(String(item.id)) || item.deleted_at)) {
                   await tbl.delete(item.id).catch(function () {});
                 }
               }
@@ -1229,13 +1229,50 @@
             await pruneTimeline(window.churchDexieDb.timeline_events);
             await pruneTimeline(window.churchDexieDb.custom_timeline);
           }
+
+          // Upsert remote items into Dexie
+          for (const raw of data) {
+            const formatted = (typeof window !== 'undefined' && typeof window.unpackTimelineItem === 'function')
+              ? window.unpackTimelineItem(raw)
+              : raw;
+            if (dbInstance.timeline_events) await dbInstance.timeline_events.put(raw).catch(function () {});
+            if (dbInstance.custom_timeline) await dbInstance.custom_timeline.put(formatted).catch(function () {});
+            if (typeof window !== 'undefined' && window.churchDexieDb) {
+              if (window.churchDexieDb.timeline_events) await window.churchDexieDb.timeline_events.put(raw).catch(function () {});
+              if (window.churchDexieDb.custom_timeline) await window.churchDexieDb.custom_timeline.put(formatted).catch(function () {});
+            }
+          }
+
           try {
             const listKey = 'sanctuary_timeline_entries';
             let list = JSON.parse(localStorage.getItem(listKey) || '[]');
-            if (Array.isArray(list)) {
-              list = list.filter(function (it) { return it && activeIds.has(String(it.id)); });
-              localStorage.setItem(listKey, JSON.stringify(list));
-              if (typeof window.timelineItems !== 'undefined') window.timelineItems = list;
+            if (!Array.isArray(list)) list = [];
+            list = list.filter(function (it) { return it && !blSet.has(String(it.id)) && !it.deleted_at; });
+
+            const listMap = new Map();
+            list.forEach(function (it) { if (it && it.id) listMap.set(String(it.id), it); });
+
+            data.forEach(function (remoteRaw) {
+              const unpacked = (typeof window !== 'undefined' && typeof window.unpackTimelineItem === 'function')
+                ? window.unpackTimelineItem(remoteRaw)
+                : remoteRaw;
+              const existingLocal = listMap.get(String(unpacked.id));
+              if (existingLocal) {
+                const hasLocalPhotos = Array.isArray(existingLocal.photos) && existingLocal.photos.length > 0;
+                const hasRemotePhotos = Array.isArray(unpacked.photos) && unpacked.photos.length > 0;
+                listMap.set(String(unpacked.id), Object.assign({}, existingLocal, unpacked, {
+                  photos: hasRemotePhotos ? unpacked.photos : (hasLocalPhotos ? existingLocal.photos : [])
+                }));
+              } else {
+                listMap.set(String(unpacked.id), unpacked);
+              }
+            });
+
+            const mergedList = Array.from(listMap.values());
+            localStorage.setItem(listKey, JSON.stringify(mergedList));
+            if (typeof window.timelineItems !== 'undefined') window.timelineItems = mergedList;
+            if (typeof window.renderTimelineList === 'function') {
+              try { window.renderTimelineList(); } catch (_) {}
             }
           } catch (_) {}
         }

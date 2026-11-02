@@ -19480,7 +19480,7 @@
 
       return {
         id: item.id,
-        year: yr,
+        year: String(yr),
         title: item.title || 'Timeline Event',
         description: packedDesc,
         sort_order: item.sort_order || 0
@@ -20292,9 +20292,12 @@
           });
           showToast('Timeline entry updated ✨');
           // Notification push suppressed on updates per policy
+          const updatePayload = packTimelinePayload(activeTimelineDetailItem);
+          if (typeof window.syncWrite === 'function') {
+            window.syncWrite('timeline', 'upsert', updatePayload).catch(err => console.warn('[Sync] Timeline syncWrite error:', err));
+          }
           if (window.ChurchSync && window.ChurchSync.Timeline && typeof window.ChurchSync.Timeline.upsert === 'function') {
-            const payload = packTimelinePayload(activeTimelineDetailItem);
-            window.ChurchSync.Timeline.upsert(payload).catch(err => console.warn('[Sync] Timeline update error:', err));
+            window.ChurchSync.Timeline.upsert(updatePayload).catch(err => console.warn('[Sync] Timeline update error:', err));
           }
         } else {
           const newEntry = {
@@ -20329,9 +20332,12 @@
           if (typeof isCurrentUserSuperAdmin === 'function' && isCurrentUserSuperAdmin()) {
             triggerNativeTimelineNotification(newEntry, timelineItems.length);
           }
+          const insertPayload = packTimelinePayload(newEntry);
+          if (typeof window.syncWrite === 'function') {
+            window.syncWrite('timeline', 'insert', insertPayload).catch(err => console.warn('[Sync] Timeline syncWrite error:', err));
+          }
           if (window.ChurchSync && window.ChurchSync.Timeline && typeof window.ChurchSync.Timeline.upsert === 'function') {
-            const payload = packTimelinePayload(newEntry);
-            window.ChurchSync.Timeline.upsert(payload).catch(err => console.warn('[Sync] Timeline insert error:', err));
+            window.ChurchSync.Timeline.upsert(insertPayload).catch(err => console.warn('[Sync] Timeline insert error:', err));
           }
         }
 

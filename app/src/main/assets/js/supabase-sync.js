@@ -1855,14 +1855,26 @@
               });
             }
           });
+
+          // Preserve un-synced local items that are not in remote yet and not blacklisted
+          localList.forEach(localItem => {
+            if (localItem && localItem.id && !blSet.has(String(localItem.id)) && !localItem.deleted_at) {
+              const inRemote = activeItems.some(r => r && String(r.id) === String(localItem.id));
+              if (!inRemote) {
+                merged.unshift(localItem);
+              }
+            }
+          });
+
           localStorage.setItem(listKey, JSON.stringify(merged));
           if (typeof window.timelineItems !== 'undefined') {
             window.timelineItems = merged;
           }
           if (typeof window.churchDexieDb !== 'undefined' && window.churchDexieDb && window.churchDexieDb.custom_timeline) {
             try {
-              await window.churchDexieDb.custom_timeline.clear();
-              await window.churchDexieDb.custom_timeline.bulkPut(merged);
+              for (const m of merged) {
+                await window.churchDexieDb.custom_timeline.put(m).catch(() => {});
+              }
             } catch (_) {}
           }
           if (typeof window.renderTimelineList === 'function') {
@@ -1873,8 +1885,22 @@
       return res;
     },
     async upsert(item) {
-      if (!item.id) item.id = crypto.randomUUID();
+      if (!item.id) item.id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('tl_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6));
       item.updated_at = new Date().toISOString();
+      if (item.year) item.year = String(item.year);
+
+      if (typeof window !== "undefined" && typeof window.syncWrite === "function") {
+        try {
+          const swRes = await window.syncWrite("timeline", "upsert", item);
+          if (swRes && swRes.success) {
+            _emit("timeline:saved", swRes.data);
+            return { data: swRes.data, error: null };
+          }
+        } catch (swErr) {
+          console.warn('[Sync] syncWrite timeline upsert error:', swErr);
+        }
+      }
+
       if (db && db.timeline_events) try { await db.timeline_events.put(item); } catch (_) {}
       const res = await _rest("POST", "timeline_events", { prefer: "resolution=merge-duplicates,return=representation" }, item);
       if (!res.error) {
@@ -1882,7 +1908,7 @@
         _emit("timeline:saved", res.data);
       } else {
         if (db && db.admin_outbox) {
-          try { await db.admin_outbox.put({ id: crypto.randomUUID(), table: "timeline_events", op: "upsert", payload: item, created_at: Date.now() }); } catch (_) {}
+          try { await db.admin_outbox.put({ id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('out_' + Date.now()), table: "timeline_events", op: "upsert", payload: item, created_at: Date.now() }); } catch (_) {}
         }
       }
       return res;
