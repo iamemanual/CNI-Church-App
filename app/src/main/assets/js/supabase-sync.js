@@ -1691,7 +1691,8 @@
     },
     async updateLinks(songId, options = {}) {
       const client = _state.realtimeClient || window.churchSupabase || _supabaseClient;
-      const { chordUrl, youtubeUrl, title, removeChord, removeYoutube } = options;
+      const { chordUrl, youtubeUrl, removeChord, removeYoutube } = options;
+      const title = options.title || options.songTitle || options.p_song_title || '';
       const nowIso = new Date().toISOString();
 
       // 1. Call RPC update_song_links for direct database update
@@ -1729,14 +1730,17 @@
       } catch (_) {}
 
       // 3. Update Dexie stores
-      const updatedRecord = rpcResult || {
+      const baseRecord = (rpcResult && typeof rpcResult === 'object') ? rpcResult : {};
+      const updatedRecord = {
         id: songId,
-        title: title || 'Hymn',
-        chord_url: removeChord ? null : (chordUrl || null),
-        chordUrl: removeChord ? null : (chordUrl || null),
-        youtube_url: removeYoutube ? null : (youtubeUrl || null),
-        youtubeUrl: removeYoutube ? null : (youtubeUrl || null),
-        updated_at: nowIso
+        title: title || baseRecord.title || 'Hymn',
+        chord_url: removeChord ? null : (chordUrl !== undefined ? chordUrl : (baseRecord.chord_url || null)),
+        chordUrl: removeChord ? null : (chordUrl !== undefined ? chordUrl : (baseRecord.chord_url || null)),
+        youtube_url: removeYoutube ? null : (youtubeUrl !== undefined ? youtubeUrl : (baseRecord.youtube_url || null)),
+        youtubeUrl: removeYoutube ? null : (youtubeUrl !== undefined ? youtubeUrl : (baseRecord.youtube_url || null)),
+        updated_at: baseRecord.updated_at || nowIso,
+        _explicit_chord_removal: Boolean(removeChord),
+        _explicit_yt_removal: Boolean(removeYoutube)
       };
 
       if (db && db.songs) try { await db.songs.update(songId, updatedRecord); } catch (_) {}
