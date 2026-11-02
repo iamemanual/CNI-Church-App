@@ -1112,6 +1112,21 @@ body {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25) !important;
 }
 
+.btn-song-chords.no-link {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: rgba(255, 255, 255, 0.55) !important;
+  box-shadow: none !important;
+  opacity: 0.7 !important;
+}
+
+[data-theme="light"] .btn-song-chords.no-link {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+  color: rgba(0, 0, 0, 0.45) !important;
+  box-shadow: none !important;
+}
+
 /* Song Lyrics Left Padding Pinpoint */
 .song-lyrics-body {
   padding: 8px 14px 2px 14px !important;

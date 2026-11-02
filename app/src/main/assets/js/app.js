@@ -2017,6 +2017,129 @@
       }
     });
 
+    // Realtime listener for songbook & chords synchronization
+    window.addEventListener('church:sync:songbook', (evt) => {
+      const item = evt.detail?.item;
+      const op = evt.detail?.op;
+      if (!item) return;
+
+      const songId = item.id;
+      const itemTitle = (item.title || '').toLowerCase().trim();
+      const chordUrl = (item.chord_url || item.chordUrl || item.chords || '').trim();
+      const ytUrl = (item.youtube_url || item.youtubeUrl || item.video_url || '').trim();
+
+      // 1. Maintain persistent chords map in LocalStorage
+      try {
+        const chordsMap = JSON.parse(localStorage.getItem('sanctuary_hymn_chords') || '{}');
+        if (chordUrl) {
+          if (songId) chordsMap[songId] = chordUrl;
+          if (itemTitle) chordsMap[itemTitle] = chordUrl;
+        } else if (op === 'delete' || item.deleted_at || item._explicit_chord_removal) {
+          if (songId) delete chordsMap[songId];
+          if (itemTitle) delete chordsMap[itemTitle];
+        }
+        localStorage.setItem('sanctuary_hymn_chords', JSON.stringify(chordsMap));
+      } catch (_) {}
+
+      // 2. Update active in-memory song list
+      if (Array.isArray(window.currentSongList)) {
+        const found = window.currentSongList.find(s => s && (s.id === songId || ((s.title || '').toLowerCase().trim() === itemTitle)));
+        if (found) {
+          if (chordUrl) {
+            found.chord_url = chordUrl;
+            found.chordUrl = chordUrl;
+          } else if (op === 'delete' || item.deleted_at || item._explicit_chord_removal) {
+            found.chord_url = '';
+            found.chordUrl = '';
+          }
+          if (ytUrl) {
+            found.youtube_url = ytUrl;
+            found.youtubeUrl = ytUrl;
+          }
+          if (item.lyrics) found.lyrics = item.lyrics;
+          if (item.title) found.title = item.title;
+        }
+      }
+
+      // 3. If currently viewing this song on lyrics page, update action pills in REAL TIME!
+      const active = window.currentOpenSong || window.currentActiveSongObj;
+      if (active) {
+        const activeTitle = (active.title || '').toLowerCase().trim();
+        const isCurrentActive = (active.id && active.id === songId) || (activeTitle && activeTitle === itemTitle);
+
+        if (isCurrentActive && op !== 'delete' && !item.deleted_at) {
+          if (chordUrl) {
+            active.chord_url = chordUrl;
+            active.chordUrl = chordUrl;
+          } else if (item._explicit_chord_removal) {
+            active.chord_url = '';
+            active.chordUrl = '';
+          }
+          if (ytUrl) {
+            active.youtube_url = ytUrl;
+            active.youtubeUrl = ytUrl;
+          }
+          if (item.lyrics) active.lyrics = item.lyrics;
+          if (item.title) active.title = item.title;
+
+          // Seamlessly update header action pills without full re-render or jumping scroll
+          const chordsBtn = document.getElementById('songPlayChordsBtn');
+          const rawChord = chordUrl || active.chord_url || active.chordUrl;
+          let finalChord = rawChord ? (/^https?:\/\//i.test(rawChord) ? rawChord : 'https://' + rawChord) : '';
+          const perms = typeof useAppPermissions === 'function' ? useAppPermissions() : { canEdit: false };
+          const canEditSong = Boolean(perms.canEdit || perms.isSuperAdmin || currentAuthSession?.role === 'superadmin');
+
+          if (chordsBtn) {
+            if (finalChord) {
+              chordsBtn.outerHTML = `
+                <a href="${escapeHtml(finalChord)}" target="_blank" rel="noopener noreferrer" data-chord-url="${escapeHtml(finalChord)}" class="btn-song-chords" id="songPlayChordsBtn" title="Chords Sheet for ${escapeHtml(active.title)}" aria-label="Chords Sheet">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                  <span>Chords</span>
+                </a>`;
+            } else {
+              chordsBtn.outerHTML = `
+                <button type="button" class="btn-song-chords no-link" id="songPlayChordsBtn" title="${canEditSong ? 'Add Chords link (Super Admin)' : 'No Chords sheet linked yet'}" aria-label="Chords Sheet">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                  <span>Chords</span>
+                </button>`;
+            }
+
+            const updatedChordsBtn = document.getElementById('songPlayChordsBtn');
+            if (updatedChordsBtn) {
+              updatedChordsBtn.addEventListener('click', (e) => {
+                const targetUrl = updatedChordsBtn.getAttribute('data-chord-url') || finalChord;
+                if (targetUrl) {
+                  if (window.AndroidBridge && typeof window.AndroidBridge.openExternal === 'function') {
+                    e.preventDefault();
+                    try { window.AndroidBridge.openExternal(targetUrl); return; } catch (_) {}
+                  }
+                } else {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (canEditSong) {
+                    showToast('Please add Chords sheet link for this hymn 🎸');
+                    const editBtn = document.getElementById('editCurrentSongLyricsBtn');
+                    if (editBtn) editBtn.click();
+                    setTimeout(() => {
+                      const chordIn = document.getElementById('editSongChordInput');
+                      if (chordIn) chordIn.focus();
+                    }, 180);
+                  } else {
+                    showToast('No Chords sheet linked yet for this hymn 🎸');
+                  }
+                }
+              });
+            }
+          }
+        }
+      }
+
+      // 4. Refresh list cards in background
+      if (typeof refreshSongBookCards === 'function' && window.currentOpenSongBookKey) {
+        refreshSongBookCards(window.currentOpenSongBookKey);
+      }
+    });
+
     // Cloud reconciliation (triggered during app launch or manual refresh, not polling)
     window.reconcileAdminStatusWithCloud = reconcileAdminStatusWithCloud;
 
@@ -9896,7 +10019,7 @@
               if (existingIdx >= 0) {
                 // Overlay DB edits onto static or existing song
                 if (ytUrl) songs[existingIdx].youtube_url = ytUrl;
-                if (chUrl || s.hasOwnProperty('chord_url') || s.hasOwnProperty('chordUrl') || s.hasOwnProperty('chords')) {
+                if (chUrl) {
                   songs[existingIdx].chord_url = chUrl;
                   songs[existingIdx].chordUrl = chUrl;
                 }
@@ -10738,7 +10861,11 @@
                   <a href="${escapeHtml(finalChordUrl)}" target="_blank" rel="noopener noreferrer" data-chord-url="${escapeHtml(finalChordUrl)}" class="btn-song-chords" id="songPlayChordsBtn" title="Chords Sheet for ${escapeHtml(song.title)}" aria-label="Chords Sheet">
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
                     <span>Chords</span>
-                  </a>` : ''}
+                  </a>` : `
+                  <button type="button" class="btn-song-chords no-link" id="songPlayChordsBtn" title="${canEditSong ? 'Add Chords link (Super Admin)' : 'No Chords sheet linked yet'}" aria-label="Chords Sheet">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                    <span>Chords</span>
+                  </button>`}
               </div>
             </div>
             <hr class="song-header-divider" />
@@ -10808,18 +10935,30 @@
       if (chordsPlayBtn) {
         chordsPlayBtn.addEventListener('click', (e) => {
           const targetUrl = chordsPlayBtn.getAttribute('data-chord-url') || finalChordUrl;
-          if (!targetUrl) {
+          if (targetUrl) {
+            if (window.AndroidBridge && typeof window.AndroidBridge.openExternal === 'function') {
+              e.preventDefault();
+              try {
+                window.AndroidBridge.openExternal(targetUrl);
+                return;
+              } catch (_) {}
+            }
+            // Default anchor action naturally opens target="_blank" across Android WebView & desktop browsers
+          } else {
             e.preventDefault();
-            return;
+            e.stopPropagation();
+            if (canEditSong) {
+              showToast('Please add Chords sheet link for this hymn 🎸');
+              const editBtn = document.getElementById('editCurrentSongLyricsBtn');
+              if (editBtn) editBtn.click();
+              setTimeout(() => {
+                const chordIn = document.getElementById('editSongChordInput');
+                if (chordIn) chordIn.focus();
+              }, 180);
+            } else {
+              showToast('No Chords sheet linked yet for this hymn 🎸');
+            }
           }
-          if (window.AndroidBridge && typeof window.AndroidBridge.openExternal === 'function') {
-            e.preventDefault();
-            try {
-              window.AndroidBridge.openExternal(targetUrl);
-              return;
-            } catch (_) {}
-          }
-          // Default anchor action naturally opens target="_blank" across Android WebView & desktop browsers
         });
       }
 
@@ -20508,6 +20647,18 @@
           ? (active?.book_reference && String(active.book_reference).toLowerCase().includes('additional') ? active.book_reference : 'Additional Songs of Church')
           : (active?.book_reference && !String(active.book_reference).toLowerCase().includes('additional') ? active.book_reference : 'Masihi Geeton Ka Sangrah');
 
+        let hasExistingChord = Boolean(active && (active.chord_url || active.chordUrl));
+        if (!hasExistingChord) {
+          try {
+            const chordsMap = JSON.parse(localStorage.getItem('sanctuary_hymn_chords') || '{}');
+            const sId = active?.id || songId;
+            const sTitle = (title || active?.title || '').toLowerCase().trim();
+            hasExistingChord = Boolean((sId && chordsMap[sId]) || (sTitle && chordsMap[sTitle]));
+          } catch (_) {}
+        }
+        const isRemovingChord = Boolean(!chordUrl && hasExistingChord);
+        const isRemovingYt = Boolean(!youtubeUrl && active && (active.youtube_url || active.youtubeUrl));
+
         // ── Supabase Sync: persist song to cloud (with matching ID so it updates the row!)
         const songData = {
           id: songId,
@@ -20520,7 +20671,9 @@
           youtube_url: youtubeUrl || null,
           chord_url: chordUrl || null,
           deleted_at: null,
-          book_reference: targetBookRef
+          book_reference: targetBookRef,
+          _explicit_chord_removal: isRemovingChord,
+          _explicit_yt_removal: isRemovingYt
         };
         // Clear from local blacklist if previously blacklisted
         try {
@@ -20611,7 +20764,7 @@
             chordsMap[songId] = chordUrl;
             if (lowerTitle) chordsMap[lowerTitle] = chordUrl;
             if (active && active.id) chordsMap[active.id] = chordUrl;
-          } else {
+          } else if (isRemovingChord) {
             delete chordsMap[songId];
             if (lowerTitle) delete chordsMap[lowerTitle];
             if (active && active.id) delete chordsMap[active.id];

@@ -211,10 +211,53 @@
           merged.composer = merged.composer || merged.author || 'Church Hymnal';
           merged.author = merged.author || merged.composer;
           merged.book_reference = merged.book_reference || 'masihiGeet';
+
+          // Preserve chord_url: prioritize incoming if non-empty, otherwise retain local chord unless explicitly cleared
+          const incChord = (incoming.chord_url || incoming.chordUrl || incoming.chords || '').trim();
+          const locChord = (local ? (local.chord_url || local.chordUrl || local.chords || '') : '').trim();
+          if (incChord) {
+            merged.chord_url = incChord;
+            merged.chordUrl = incChord;
+          } else if (locChord && !incoming._explicit_chord_removal) {
+            merged.chord_url = locChord;
+            merged.chordUrl = locChord;
+          } else {
+            merged.chord_url = null;
+            merged.chordUrl = null;
+          }
+
+          // Same preservation for youtube_url
+          const incYt = (incoming.youtube_url || incoming.youtubeUrl || incoming.video_url || '').trim();
+          const locYt = (local ? (local.youtube_url || local.youtubeUrl || local.video_url || '') : '').trim();
+          if (incYt) {
+            merged.youtube_url = incYt;
+            merged.youtubeUrl = incYt;
+          } else if (locYt && !incoming._explicit_yt_removal) {
+            merged.youtube_url = locYt;
+            merged.youtubeUrl = locYt;
+          }
         }
         return merged;
       },
       onApplied: function (item, op) {
+        // Sync to persistent chords map if item has chord_url
+        if (item) {
+          try {
+            const chordsMap = JSON.parse(localStorage.getItem('sanctuary_hymn_chords') || '{}');
+            const cUrl = (item.chord_url || item.chordUrl || item.chords || '').trim();
+            const sId = item.id;
+            const sTitle = (item.title || '').toLowerCase().trim();
+            if (op === 'delete' || item.deleted_at || item._explicit_chord_removal) {
+              if (sId) delete chordsMap[sId];
+              if (sTitle) delete chordsMap[sTitle];
+            } else if (cUrl) {
+              if (sId) chordsMap[sId] = cUrl;
+              if (sTitle) chordsMap[sTitle] = cUrl;
+            }
+            localStorage.setItem('sanctuary_hymn_chords', JSON.stringify(chordsMap));
+          } catch (_) {}
+        }
+
         window.dispatchEvent(new CustomEvent('church:sync:songbook', { detail: { item, op } }));
 
         // Purge local blacklist & localStorage backups on delete so deleted songs don't resurrect

@@ -489,6 +489,18 @@
           s && s.id !== id && (!title || !s.title || String(s.title).toLowerCase().trim() !== String(title).toLowerCase().trim())
         );
       }
+
+      // 6. Persistent chords map purge
+      try {
+        const chordsMap = JSON.parse(localStorage.getItem('sanctuary_hymn_chords') || '{}');
+        let chChanged = false;
+        if (id && chordsMap[id]) { delete chordsMap[id]; chChanged = true; }
+        if (title) {
+          const lowerTitle = String(title).toLowerCase().trim();
+          if (chordsMap[lowerTitle]) { delete chordsMap[lowerTitle]; chChanged = true; }
+        }
+        if (chChanged) localStorage.setItem('sanctuary_hymn_chords', JSON.stringify(chordsMap));
+      } catch (_) {}
     } catch (e) {
       console.warn('[Sync] _purgeLocalSong error:', e);
     }
@@ -566,6 +578,7 @@
                 if (window.churchDexieDb.song_book) await window.churchDexieDb.song_book.delete(newRec.id).catch(() => {});
               }
               _purgeLocalSong(newRec.id, newRec.title);
+              window.dispatchEvent(new CustomEvent('church:sync:songbook', { detail: { item: newRec, op: 'delete' } }));
               // Background non-jumping songbook UI refresh
               if (typeof window.refreshSongBookCards === "function") {
                 try { window.refreshSongBookCards(window.currentOpenSongBookKey); } catch (_) {}
@@ -679,6 +692,52 @@
             newRec.author = newRec.author || newRec.composer || "Church Hymnal";
             newRec.composer = newRec.composer || newRec.author;
             newRec.book_reference = newRec.book_reference || "masihiGeet";
+
+            // Preserve chord_url: prioritize incoming if non-empty, otherwise retain local chord unless explicitly cleared
+            const incChord = (newRec.chord_url || newRec.chordUrl || newRec.chords || "").trim();
+            if (incChord) {
+              newRec.chord_url = incChord;
+              newRec.chordUrl = incChord;
+            } else if (!newRec._explicit_chord_removal && !newRec.deleted_at) {
+              try {
+                const chordsMap = JSON.parse(localStorage.getItem('sanctuary_hymn_chords') || '{}');
+                const sId = newRec.id;
+                const sTitle = (newRec.title || '').toLowerCase().trim();
+                const existing = (sId && chordsMap[sId]) || (sTitle && chordsMap[sTitle]) || null;
+                if (existing) {
+                  newRec.chord_url = existing;
+                  newRec.chordUrl = existing;
+                } else {
+                  newRec.chord_url = null;
+                  newRec.chordUrl = null;
+                }
+              } catch (_) {
+                newRec.chord_url = null;
+                newRec.chordUrl = null;
+              }
+            } else {
+              newRec.chord_url = null;
+              newRec.chordUrl = null;
+            }
+
+            newRec.youtube_url = (newRec.youtube_url || newRec.youtubeUrl || "").trim() || null;
+            newRec.youtubeUrl = newRec.youtube_url;
+
+            // Sync to persistent chords map in LocalStorage
+            try {
+              const chordsMap = JSON.parse(localStorage.getItem('sanctuary_hymn_chords') || '{}');
+              const sId = newRec.id;
+              const sTitle = (newRec.title || '').toLowerCase().trim();
+              if (newRec.chord_url) {
+                if (sId) chordsMap[sId] = newRec.chord_url;
+                if (sTitle) chordsMap[sTitle] = newRec.chord_url;
+              } else if (newRec._explicit_chord_removal || newRec.deleted_at) {
+                if (sId) delete chordsMap[sId];
+                if (sTitle) delete chordsMap[sTitle];
+              }
+              localStorage.setItem('sanctuary_hymn_chords', JSON.stringify(chordsMap));
+            } catch (_) {}
+
             try {
               const blKey = 'sanctuary_deleted_songs_blacklist';
               let bl = JSON.parse(localStorage.getItem(blKey) || '[]');
@@ -710,7 +769,7 @@
               try { window.renderAdditionalSongsFromDexie(); } catch (_) {}
             }
             // Update active open song in view in-place without switching tabs
-            if (window.currentOpenSong && (window.currentOpenSong.id === newRec.id || (window.currentOpenSong.title && window.currentOpenSong.title === newRec.title))) {
+            if (window.currentOpenSong && (window.currentOpenSong.id === newRec.id || (window.currentOpenSong.title && String(window.currentOpenSong.title).toLowerCase().trim() === String(newRec.title || '').toLowerCase().trim()))) {
               Object.assign(window.currentOpenSong, newRec);
               try {
                 const titleEl = document.querySelector('.song-lyrics-title');
@@ -719,6 +778,9 @@
                 if (bodyEl) bodyEl.innerHTML = (newRec.lyrics || '').replace(/\n/g, '<br>');
               } catch (_) {}
             }
+
+            // Dispatch standard songbook sync event so app.js updates currentSongList, active open song, and re-binds UI listeners safely
+            window.dispatchEvent(new CustomEvent('church:sync:songbook', { detail: { item: newRec, op: 'update' } }));
           } else if (table === "todays_song_selection") {
             try {
               const list = Array.isArray(newRec.songs) ? newRec.songs : [];
@@ -894,6 +956,7 @@
             }
           }
           _purgeLocalSong(delId, delTitle);
+          window.dispatchEvent(new CustomEvent('church:sync:songbook', { detail: { item: { id: delId, title: delTitle }, op: 'delete' } }));
           // Background non-jumping songbook UI refresh
           if (typeof window.refreshSongBookCards === "function") {
             try { window.refreshSongBookCards(window.currentOpenSongBookKey); } catch (_) {}
